@@ -27,7 +27,7 @@
 	"thirst-very": "nagyon szomjas",
 	"thirst-parched": "kiszáradt",
 	"thirst-percent": "Szomjúság: {0}%",
-	"water-natural": "természetes vízből iszik a közelben",
+	"water-natural": "természetes vízből iszik a közelben ({0}, eltérés x {1}, y {2}, z {3})",
 	"water-container": "hordóból vagy vödörből iszik (még {0} L)",
 	"water-undrinkable": "nincs iható víz {0} blokkon belül (a forró és a sós víz nem iható)",
 	"water-none": "nincs víz {0} blokkon belül"

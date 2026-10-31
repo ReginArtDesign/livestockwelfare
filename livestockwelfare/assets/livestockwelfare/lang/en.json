@@ -27,7 +27,7 @@
 	"thirst-very": "very thirsty",
 	"thirst-parched": "parched",
 	"thirst-percent": "Thirst: {0}%",
-	"water-natural": "drinks from fresh water nearby",
+	"water-natural": "drinks from fresh water nearby ({0}, offset x {1}, y {2}, z {3})",
 	"water-container": "drinks from a barrel or bucket ({0} L left)",
 	"water-undrinkable": "no drinkable water within {0} blocks (hot spring and salt water are not drinkable)",
 	"water-none": "no water within {0} blocks"

@@ -120,7 +120,7 @@ public class EntityBehaviorLivestockThirst : EntityBehavior
     }
 
     /// <summary>What water the animal can reach: fresh water nearby, or the closest container with water.</summary>
-    record WaterSearch(bool Natural, BlockEntityLiquidContainer? Container, bool SawUndrinkable);
+    record WaterSearch(bool Natural, BlockEntityLiquidContainer? Container, bool SawUndrinkable, string? NaturalBlock = null, Vec3i? NaturalOffset = null);
 
     WaterSearch FindWater(ThirstSettings settings)
     {
@@ -130,6 +130,8 @@ public class EntityBehaviorLivestockThirst : EntityBehavior
         var tmpPos = pos.Copy();
 
         bool natural = false, sawUndrinkable = false;
+        string? naturalBlock = null;
+        Vec3i? naturalOffset = null;
         BlockEntityLiquidContainer? closest = null;
         double closestDistance = double.MaxValue;
 
@@ -137,7 +139,11 @@ public class EntityBehaviorLivestockThirst : EntityBehavior
         {
             if (block.IsLiquid())
             {
-                if (block.LiquidCode == "water") natural |= settings.DrinkFromNaturalWater;
+                if (block.LiquidCode == "water" && settings.DrinkFromNaturalWater)
+                {
+                    if (!natural) { naturalBlock = block.Code?.ToShortString(); naturalOffset = new Vec3i(x - pos.X, y - pos.Y, z - pos.Z); }
+                    natural = true;
+                }
                 else if (UndrinkableLiquids.Contains(block.LiquidCode)) sawUndrinkable = true;
                 return;
             }
@@ -159,7 +165,7 @@ public class EntityBehaviorLivestockThirst : EntityBehavior
             }
         });
 
-        return new WaterSearch(natural, closest, sawUndrinkable);
+        return new WaterSearch(natural, closest, sawUndrinkable, naturalBlock, naturalOffset);
     }
 
     // Hot spring water and sea water: animals refuse them, so tell the player why they don't drink.
@@ -189,7 +195,9 @@ public class EntityBehaviorLivestockThirst : EntityBehavior
     {
         if (Settings is not { } settings) return "";
         var water = FindWater(settings);
-        if (water.Natural) return LivestockUtil.Translate(langCode, "livestockwelfare:water-natural");
+        // Says which block it found and where, so a stray water block is easy to find.
+        if (water.Natural) return LivestockUtil.Translate(langCode, "livestockwelfare:water-natural", water.NaturalBlock ?? "?",
+            water.NaturalOffset?.X ?? 0, water.NaturalOffset?.Y ?? 0, water.NaturalOffset?.Z ?? 0);
         if (water.Container != null)
         {
             var slot = WaterSlot(water.Container)!;
