@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
@@ -58,7 +60,7 @@ public class AiTaskLivestockSeekShelter : AiTaskLivestockGoTo
 
     // The body's centre must stand on the target block; the hitbox alone reaches it too early.
     protected override bool IsAtTarget(double hitboxDistance) =>
-        Target != null && entity.Pos.HorDistanceTo(Target) <= 0.45 && System.Math.Abs(entity.Pos.Y - Target.Y) < 1.5;
+        Target != null && entity.Pos.HorDistanceTo(Target) <= 0.45 && Math.Abs(entity.Pos.Y - Target.Y) < 1.5;
 
     protected override BlockPos? FindTarget()
     {
@@ -68,8 +70,12 @@ public class AiTaskLivestockSeekShelter : AiTaskLivestockGoTo
         var accessor = entity.World.BlockAccessor;
         var feet = entity.Pos.AsBlockPos;
         var pos = feet.Copy();
+        var occupied = OccupiedSpots(r + 2);
+
+        // Best = deep inside the shelter (much roof around it), not taken by another animal, and
+        // not too far. Depth counts more than distance, so animals walk past the edge to the inside.
         BlockPos? best = null;
-        int bestDistance = int.MaxValue;
+        double bestScore = double.MinValue;
         // Fallback for narrow shelters (e.g. a one block wide lean-to): roof above the spot only.
         BlockPos? partly = null;
         int partlyDistance = int.MaxValue;
@@ -79,16 +85,22 @@ public class AiTaskLivestockSeekShelter : AiTaskLivestockGoTo
             for (int dz = -r; dz <= r; dz++)
             {
                 int distance = dx * dx + dz * dz;
-                if (distance >= bestDistance || distance > r * r) continue;
+                if (distance > r * r) continue;
 
                 for (int dy = -2; dy <= 2; dy++)
                 {
                     pos.Set(feet.X + dx, feet.Y + dy, feet.Z + dz);
                     if (!CanStandAt(accessor, pos) || accessor.GetRainMapHeightAt(pos) <= pos.Y || IsFailed(pos)) continue;
-                    if (FullyRoofed(accessor, pos))
+                    bool taken = occupied.Contains(pos);
+
+                    if (!taken && FullyRoofed(accessor, pos))
                     {
-                        best = pos.Copy();
-                        bestDistance = distance;
+                        double score = RoofDepth(accessor, pos) - Math.Sqrt(distance) * 0.5;
+                        if (score > bestScore)
+                        {
+                            best = pos.Copy();
+                            bestScore = score;
+                        }
                     }
                     else if (distance < partlyDistance)
                     {
@@ -100,6 +112,34 @@ public class AiTaskLivestockSeekShelter : AiTaskLivestockGoTo
             }
         }
         return best ?? partly;
+    }
+
+    // How deep under the roof a spot is: roofed columns in the 5x5 area around it (max 25).
+    static int RoofDepth(IBlockAccessor accessor, BlockPos pos)
+    {
+        int roofed = 0;
+        var tmp = pos.Copy();
+        for (int dx = -2; dx <= 2; dx++)
+        {
+            for (int dz = -2; dz <= 2; dz++)
+            {
+                tmp.Set(pos.X + dx, pos.Y, pos.Z + dz);
+                if (accessor.GetRainMapHeightAt(tmp) > pos.Y) roofed++;
+            }
+        }
+        return roofed;
+    }
+
+    // Blocks where other livestock stands, so animals spread out instead of piling onto one spot.
+    HashSet<BlockPos> OccupiedSpots(int range)
+    {
+        var spots = new HashSet<BlockPos>();
+        foreach (var other in entity.World.GetEntitiesAround(entity.Pos.XYZ, range, 3,
+            e => e != entity && e.Alive && e.HasBehavior<EntityBehaviorLivestockShelter>()))
+        {
+            spots.Add(other.Pos.AsBlockPos);
+        }
+        return spots;
     }
 
     // Roof above this block and the four next to it, so the whole body (sheep are over a block
