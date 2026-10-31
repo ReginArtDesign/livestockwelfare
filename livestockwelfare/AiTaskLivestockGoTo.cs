@@ -76,6 +76,7 @@ public abstract class AiTaskLivestockGoTo : AiTaskBase
         stuck = false;
         timeAtTarget = 0;
         pathTraverser.NavigateTo_Async(Target!, MoveSpeed, ArriveDistance - 0.1f, OnGoalReached, OnStuck, OnStuck, 1000, 1);
+        Log("start, target {0}", TargetBlock);
     }
 
     public override bool CanContinueExecute() => pathTraverser.Ready;
@@ -91,6 +92,7 @@ public abstract class AiTaskLivestockGoTo : AiTaskBase
             if (!arrived)
             {
                 arrived = true;
+                Log("arrived at {0}", entity.Pos.AsBlockPos);
                 pathTraverser.Stop();
                 if (animMeta != null) entity.AnimManager.StopAnimation(animMeta.Code);
             }
@@ -114,6 +116,7 @@ public abstract class AiTaskLivestockGoTo : AiTaskBase
         base.FinishExecute(cancelled);
         pathTraverser.Stop();
         OnFinish(arrived);
+        Log("finished (cancelled {0}, arrived {1}, at {2})", cancelled, arrived, entity.Pos.AsBlockPos);
         // Interrupted (e.g. by fleeing): allow trying again soon.
         if (cancelled && !arrived) cooldownUntilTotalHours = 0;
     }
@@ -121,9 +124,14 @@ public abstract class AiTaskLivestockGoTo : AiTaskBase
     void OnStuck()
     {
         stuck = true;
+        Log("stuck on the way to {0}", TargetBlock);
         stuckAtMs = entity.World.ElapsedMilliseconds;
         if (TargetBlock != null) failedTargets[TargetBlock.Copy()] = stuckAtMs;
     }
+
+    // Goes to server-debug.log, to see in a test world what the animals are doing.
+    void Log(string message, params object?[] args) =>
+        entity.World.Logger.Debug("[livestockwelfare] {0} #{1} {2}: {3}", entity.Code.Path, entity.EntityId, GetType().Name, string.Format(message, args));
 
     void OnGoalReached()
     {
