@@ -49,6 +49,7 @@ public class SelfTest : ModSystem
         }
 
         ExportDirtPreviews();
+        CheckSchematic();
 
         if (Environment.GetEnvironmentVariable("LW_SELFTEST_NODEATH") == "1" && livestockwelfareModSystem.Config is { } config)
         {
@@ -91,6 +92,24 @@ public class SelfTest : ModSystem
             }
             sapi.Logger.Notification("[lwselftest] exported dirt previews for {0}", name);
         }
+    }
+
+    // Loads the schematic in LW_SELFTEST_SCHEMATIC and reports block codes the game doesn't know.
+    void CheckSchematic()
+    {
+        string? path = Environment.GetEnvironmentVariable("LW_SELFTEST_SCHEMATIC");
+        if (string.IsNullOrEmpty(path)) return;
+
+        string error = "";
+        var schematic = BlockSchematic.LoadFromFile(path, ref error);
+        if (schematic == null)
+        {
+            sapi.Logger.Warning("[lwselftest] schematic failed to load: {0}", error);
+            return;
+        }
+        var missing = schematic.BlockCodes.Values.Where(code => sapi.World.GetBlock(code) == null).ToList();
+        sapi.Logger.Notification("[lwselftest] schematic {0}x{1}x{2}, {3} blocks, unknown codes: {4}",
+            schematic.SizeX, schematic.SizeY, schematic.SizeZ, schematic.Indices.Count, missing.Count == 0 ? "none" : string.Join(", ", missing));
     }
 
     void SpawnAndWatch(BlockPos spawn)
