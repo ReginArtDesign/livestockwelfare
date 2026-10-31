@@ -12,10 +12,12 @@ public class AiTaskLivestockSeekShelter : AiTaskLivestockGoTo
 {
     public const string Code = "livestockwelfare-seekshelter";
 
-    // Stays this long, then looks again (lets it eat or drink in between, and leave when it clears).
-    const float MaxStaySeconds = 90;
+    // Safety limit; normally it stays until morning or the weather clears. Eating and drinking
+    // have a higher priority, so the animal can still go to the trough in between.
+    const float MaxStaySeconds = 600;
 
     EntityBehaviorLivestockShelter? shelter;
+    bool sleeping;
 
     public AiTaskLivestockSeekShelter(EntityAgent entity, JsonObject taskConfig, JsonObject aiConfig)
         : base(entity, taskConfig, aiConfig) { }
@@ -29,8 +31,17 @@ public class AiTaskLivestockSeekShelter : AiTaskLivestockGoTo
     static WeatherSettings? Settings =>
         livestockwelfareModSystem.Config?.Weather is { Enabled: true, SeekShelter: true } settings ? settings : null;
 
+    // At night it also runs for animals already under a roof: the nearest roofed spot is then right
+    // where they stand, and they lie down to sleep there.
     protected override bool Wanted() =>
-        shelter != null && Settings != null && shelter.BadWeather && !shelter.Roofed && LivestockUtil.ShouldSimulate(entity);
+        shelter != null && Settings != null && ShouldBeUnderRoof() && (!shelter.Roofed || SleepTime)
+        && LivestockUtil.ShouldSimulate(entity);
+
+    bool SleepTime => shelter != null && shelter.Night && Settings?.SleepUnderRoof == true;
+
+    // Bad weather, or night: animals go to sleep under the roof.
+    bool ShouldBeUnderRoof() =>
+        shelter != null && (shelter.BadWeather || (shelter.Night && Settings?.SleepUnderRoof == true));
 
     protected override float ArriveDistance => 0.6f;
 
@@ -75,9 +86,30 @@ public class AiTaskLivestockSeekShelter : AiTaskLivestockGoTo
     static bool IsFree(Block block) =>
         !block.IsLiquid() && (block.CollisionBoxes == null || block.CollisionBoxes.Length == 0);
 
+    public override void StartExecute()
+    {
+        base.StartExecute();
+        sleeping = false;
+    }
+
     protected override bool ActAtTarget(float dt, float timeAtTarget)
     {
+        if (shelter == null) return false;
+
+        // At night, lie down and sleep until morning.
+        if (shelter.Night && Settings?.SleepUnderRoof == true && !sleeping)
+        {
+            sleeping = true;
+            StartAnimationIfExists("sleep");
+        }
+
         // Stay put under the roof while it lasts.
-        return shelter != null && shelter.BadWeather && timeAtTarget < MaxStaySeconds;
+        return ShouldBeUnderRoof() && timeAtTarget < MaxStaySeconds;
+    }
+
+    protected override void OnFinish(bool arrivedAtTarget)
+    {
+        if (sleeping) entity.AnimManager.StopAnimation("sleep");
+        sleeping = false;
     }
 }

@@ -95,6 +95,8 @@ public class WeatherSettings
     public bool SeekShelter { get; set; } = true;
     /// <summary>How far (blocks) animals look for a roof.</summary>
     public int SeekShelterRadius { get; set; } = 12;
+    /// <summary>At night animals also go under the roof and sleep there until morning.</summary>
+    public bool SleepUnderRoof { get; set; } = true;
 
     /// <summary>Stress removed by petting (right click with an empty hand).</summary>
     public double PetStressReduction { get; set; } = 0.2;

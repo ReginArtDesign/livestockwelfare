@@ -35,7 +35,8 @@ public class EntityBehaviorLivestockShelter : EntityBehavior
         Roofed = 16,
         Enclosed = 32,
         // Rain, snow, strong heat or cold right now, whether or not this animal is sheltered from it.
-        BadWeather = 64
+        BadWeather = 64,
+        Night = 128
     }
 
     const float CheckIntervalSeconds = 5;
@@ -45,6 +46,8 @@ public class EntityBehaviorLivestockShelter : EntityBehavior
     const float MinPrecipitation = 0.05f;
     // Daylight strength above which the sun counts as strong (it ranges roughly 0..1.2).
     const float StrongSunlight = 0.7f;
+    // Daylight strength below which it counts as night (dusk and dawn included).
+    const float NightDaylight = 0.3f;
 
     string species = "";
     float accum;
@@ -85,6 +88,7 @@ public class EntityBehaviorLivestockShelter : EntityBehavior
     /// <summary>The weather is bad right now (as of the last check), even if this animal is sheltered.</summary>
     public bool BadWeather => (Current & Conditions.BadWeather) != 0;
     public bool Roofed => (Current & Conditions.Roofed) != 0;
+    public bool Night => (Current & Conditions.Night) != 0;
 
     static WeatherSettings? Settings =>
         livestockwelfareModSystem.Config?.Weather is { Enabled: true } settings ? settings : null;
@@ -179,6 +183,7 @@ public class EntityBehaviorLivestockShelter : EntityBehavior
         bool badWeather = climate.Rainfall > MinPrecipitation || temperature < tolerance.ColdBelowC
             || (temperature > tolerance.HotAboveC && world.Calendar.GetDayLightStrength(pos) > StrongSunlight);
         if (badWeather) conditions |= Conditions.BadWeather;
+        if (world.Calendar.GetDayLightStrength(pos) < NightDaylight) conditions |= Conditions.Night;
 
         targetStress = Math.Min(1, target);
         if (conditions != Current) entity.WatchedAttributes.SetInt(ConditionsAttr, (int)conditions);

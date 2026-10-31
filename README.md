@@ -1,4 +1,4 @@
-# Livestock Welfare (beta 0.10.0)
+# Livestock Welfare (beta 0.11.0)
 
 A Vintage Story mod that deepens animal husbandry: your livestock age, get dirty and sick, need shelter from the weather and water to drink. Keep them clean, groomed, sheltered and watered, and they'll thrive. Neglect them and they suffer.
 
@@ -35,6 +35,7 @@ A Vintage Story mod that deepens animal husbandry: your livestock age, get dirty
 - **Strong sun** stresses animals only when it's really hot (26–32 °C depending on species).
 - Weather stress makes animals **sick more easily** and stops breeding above 50%. Above 80% they stop healing and slowly lose health.
 - In bad weather, animals in the open **walk to the nearest roofed spot** (within 12 blocks) and stay there while it lasts.
+- At **night** they also go under the roof and **lie down to sleep** until morning.
 - **Pet** an animal (right click with an empty hand) to calm it down: -20% stress, once every 2 in-game hours.
 
 ### Thirst and water
