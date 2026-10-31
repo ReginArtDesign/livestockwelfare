@@ -36,6 +36,21 @@ public class EntityBehaviorLivestockThirst : EntityBehavior
     {
         base.Initialize(properties, attributes);
         species = attributes["species"].AsString("");
+        walkSpeed = attributes["walkSpeed"].AsFloat(0.006f);
+    }
+
+    float walkSpeed;
+    // Just above vanilla eating (1.25-1.35 depending on species): a thirsty animal goes to drink first.
+    const float SeekWaterPriority = 1.36f;
+
+    public override void AfterInitialized(bool onFirstSpawn)
+    {
+        base.AfterInitialized(onFirstSpawn);
+        if (entity.World.Side != EnumAppSide.Server || entity is not EntityAgent agent) return;
+        if (livestockwelfareModSystem.Config?.Thirst is not { Enabled: true, WalkToWater: true }) return;
+
+        LivestockUtil.AddAiTask(agent, AiTaskLivestockSeekWater.Code, SeekWaterPriority, walkSpeed, 0.25, 0.5,
+            (taskConfig, aiConfig) => new AiTaskLivestockSeekWater(agent, taskConfig, aiConfig));
     }
 
     public float Thirst => entity.WatchedAttributes.GetFloat(ThirstAttr);
@@ -74,7 +89,10 @@ public class EntityBehaviorLivestockThirst : EntityBehavior
         if (!LivestockUtil.ShouldSimulate(entity)) return;
 
         GetThirsty(settings, hours);
-        if (Thirst > settings.DrinkAboveThirst) TryDrink(settings);
+        // With walking to water, drinking from where they stand is only the fallback for animals
+        // that can't get there (e.g. a barrel just outside the fence).
+        double drinkAbove = settings.WalkToWater ? Math.Max(settings.DrinkAboveThirst, settings.RemoteDrinkAboveThirst) : settings.DrinkAboveThirst;
+        if (Thirst > drinkAbove) TryDrink(settings);
         ApplyEffects(settings, hours);
     }
 
@@ -104,10 +122,23 @@ public class EntityBehaviorLivestockThirst : EntityBehavior
             SetThirst(0);
             return;
         }
-        if (water.Container == null) return;
+        if (water.Container != null) DrinkFrom(water.Container);
+    }
 
-        var closestContainer = water.Container;
-        var slot = WaterSlot(closestContainer)!;
+    /// <summary>Drinks from a container, or from fresh water if it is null.</summary>
+    public void DrinkFrom(BlockEntityLiquidContainer? container)
+    {
+        var settings = Settings;
+        if (settings == null) return;
+        if (container == null)
+        {
+            SetThirst(0);
+            return;
+        }
+
+        var closestContainer = container;
+        var slot = WaterSlot(closestContainer);
+        if (slot == null) return;
         int itemsPerLitre = BlockLiquidContainerBase.GetContainableProps(slot.Itemstack)?.ItemsPerLitre is > 0 and var ipl ? (int)ipl : 100;
         double thirst = Thirst;
         int wanted = (int)Math.Ceiling(thirst * settings.LitresFor(species) * itemsPerLitre);
@@ -168,6 +199,49 @@ public class EntityBehaviorLivestockThirst : EntityBehavior
         });
 
         return new WaterSearch(natural, closest, sawUndrinkable, naturalBlock, naturalOffset);
+    }
+
+    /// <summary>
+    /// For the walk-to-water AI: the nearest place to drink within the radius, either surface fresh
+    /// water or a container with water. Returns the block to walk to and the container (null = fresh water).
+    /// </summary>
+    public (BlockPos Pos, BlockEntityLiquidContainer? Container)? FindDrinkTarget(int radius, System.Func<BlockPos, bool> isFailed)
+    {
+        var settings = Settings;
+        if (settings == null) return null;
+
+        var pos = entity.Pos.AsBlockPos;
+        var accessor = entity.World.BlockAccessor;
+        var tmpPos = pos.Copy();
+        BlockPos? bestPos = null;
+        BlockEntityLiquidContainer? bestContainer = null;
+        double bestDistance = double.MaxValue;
+
+        accessor.WalkBlocks(pos.AddCopy(-radius, -3, -radius), pos.AddCopy(radius, 2, radius), (block, x, y, z) =>
+        {
+            tmpPos.Set(x, y, z);
+            BlockEntityLiquidContainer? container = null;
+            if (block.IsLiquid())
+            {
+                // Only surface water an animal can reach from the bank.
+                if (!settings.DrinkFromNaturalWater || block.LiquidCode != "water") return;
+                if (accessor.GetBlock(tmpPos.UpCopy()).Id != 0) return;
+            }
+            else if (block.EntityClass != null)
+            {
+                container = accessor.GetBlockEntity(tmpPos) as BlockEntityLiquidContainer;
+                if (container == null || container is BlockEntityBarrel { Sealed: true } || WaterSlot(container) == null) return;
+            }
+            else return;
+
+            double distance = tmpPos.DistanceSqTo(entity.Pos.X, entity.Pos.Y, entity.Pos.Z);
+            if (distance >= bestDistance || isFailed(tmpPos)) return;
+            bestDistance = distance;
+            bestPos = tmpPos.Copy();
+            bestContainer = container;
+        });
+
+        return bestPos == null ? null : (bestPos, bestContainer);
     }
 
     // Hot spring water and sea water: animals refuse them, so tell the player why they don't drink.

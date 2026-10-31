@@ -1,4 +1,4 @@
-# Livestock Welfare (beta 0.9.0)
+# Livestock Welfare (beta 0.10.0)
 
 A Vintage Story mod that deepens animal husbandry: your livestock age, get dirty and sick, need shelter from the weather and water to drink. Keep them clean, groomed, sheltered and watered, and they'll thrive. Neglect them and they suffer.
 
@@ -34,12 +34,15 @@ A Vintage Story mod that deepens animal husbandry: your livestock age, get dirty
 - **Cold** below the species' limit stresses animals that aren't in a closed barn (same room rules as for players). Sheep handle the cold best (-10 °C), pigs the worst (+2 °C). A roof alone halves the cold.
 - **Strong sun** stresses animals only when it's really hot (26–32 °C depending on species).
 - Weather stress makes animals **sick more easily** and stops breeding above 50%. Above 80% they stop healing and slowly lose health.
+- In bad weather, animals in the open **walk to the nearest roofed spot** (within 12 blocks) and stay there while it lasts.
 - **Pet** an animal (right click with an empty hand) to calm it down: -20% stress, once every 2 in-game hours.
 
 ### Thirst and water
 - Animals get **thirsty** over time, faster above 20 °C and even faster in the hot sun.
-- They drink for free from **fresh water** (ponds, rivers) within 6 blocks.
+- Thirsty animals **walk to water and drink there**, just like they walk to a trough to eat: head down, splashes and a drinking sound. They look for water within 16 blocks.
+- Drinking from **fresh water** (ponds, rivers) is free.
 - From **barrels** and placed **buckets** of water the water is really **used up**: about 8 litres a day for 10 sheep. Refill them!
+- If an animal can't reach the water (e.g. a barrel just outside the fence) it still drinks from up to 6 blocks away once it gets very thirsty.
 - Hot spring water and salt water are not drinkable.
 - Very thirsty animals don't breed. Parched ones stop healing and lose health.
 
@@ -62,6 +65,5 @@ Everything is in `ModConfig/livestockwelfare.json` (created on first start): lif
 - Other mods' animals are not covered yet.
 
 ## Known limitations (beta)
-- Animals don't walk to water or shelter on their own yet. They drink from water within 6 blocks and are protected wherever they happen to stand.
 - Only vanilla sheep, goats, pigs and chickens are covered.
 - Balance needs testing in long-running worlds.

@@ -1,6 +1,7 @@
 ﻿using System;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
+using Vintagestory.GameContent;
 
 namespace livestockwelfare;
 
@@ -16,6 +17,9 @@ public class livestockwelfareModSystem : ModSystem
         api.RegisterEntityBehaviorClass(EntityBehaviorLivestockShelter.Code, typeof(EntityBehaviorLivestockShelter));
         api.RegisterEntityBehaviorClass(EntityBehaviorLivestockThirst.Code, typeof(EntityBehaviorLivestockThirst));
         api.RegisterCollectibleBehaviorClass(CollectibleBehaviorGroom.Code, typeof(CollectibleBehaviorGroom));
+        // Added to livestock in code (see the thirst and shelter behaviors), not through JSON.
+        AiTaskRegistry.Register<AiTaskLivestockSeekWater>(AiTaskLivestockSeekWater.Code);
+        AiTaskRegistry.Register<AiTaskLivestockSeekShelter>(AiTaskLivestockSeekShelter.Code);
     }
 
     public override void StartServerSide(ICoreServerAPI api)

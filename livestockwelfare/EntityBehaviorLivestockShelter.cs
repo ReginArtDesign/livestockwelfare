@@ -33,7 +33,9 @@ public class EntityBehaviorLivestockShelter : EntityBehavior
         Cold = 4,
         Hot = 8,
         Roofed = 16,
-        Enclosed = 32
+        Enclosed = 32,
+        // Rain, snow, strong heat or cold right now, whether or not this animal is sheltered from it.
+        BadWeather = 64
     }
 
     const float CheckIntervalSeconds = 5;
@@ -56,6 +58,21 @@ public class EntityBehaviorLivestockShelter : EntityBehavior
     {
         base.Initialize(properties, attributes);
         species = attributes["species"].AsString("");
+        walkSpeed = attributes["walkSpeed"].AsFloat(0.006f);
+    }
+
+    float walkSpeed;
+    // Above wandering and idling, below vanilla eating: sheltered animals still go to the trough.
+    const float SeekShelterPriority = 1.29f;
+
+    public override void AfterInitialized(bool onFirstSpawn)
+    {
+        base.AfterInitialized(onFirstSpawn);
+        if (entity.World.Side != EnumAppSide.Server || entity is not EntityAgent agent) return;
+        if (livestockwelfareModSystem.Config?.Weather is not { Enabled: true, SeekShelter: true }) return;
+
+        LivestockUtil.AddAiTask(agent, AiTaskLivestockSeekShelter.Code, SeekShelterPriority, walkSpeed, 0.05, 0.1,
+            (taskConfig, aiConfig) => new AiTaskLivestockSeekShelter(agent, taskConfig, aiConfig));
     }
 
     public float Stress => entity.WatchedAttributes.GetFloat(StressAttr);
@@ -64,6 +81,10 @@ public class EntityBehaviorLivestockShelter : EntityBehavior
 
     /// <summary>Standing in strong sun above the species' heat limit (as of the last check).</summary>
     public bool InHotSun => (Current & Conditions.Hot) != 0;
+
+    /// <summary>The weather is bad right now (as of the last check), even if this animal is sheltered.</summary>
+    public bool BadWeather => (Current & Conditions.BadWeather) != 0;
+    public bool Roofed => (Current & Conditions.Roofed) != 0;
 
     static WeatherSettings? Settings =>
         livestockwelfareModSystem.Config?.Weather is { Enabled: true } settings ? settings : null;
@@ -154,6 +175,10 @@ public class EntityBehaviorLivestockShelter : EntityBehavior
             conditions |= Conditions.Hot;
             target += (temperature - tolerance.HotAboveC) * settings.HeatStressPerDegree;
         }
+
+        bool badWeather = climate.Rainfall > MinPrecipitation || temperature < tolerance.ColdBelowC
+            || (temperature > tolerance.HotAboveC && world.Calendar.GetDayLightStrength(pos) > StrongSunlight);
+        if (badWeather) conditions |= Conditions.BadWeather;
 
         targetStress = Math.Min(1, target);
         if (conditions != Current) entity.WatchedAttributes.SetInt(ConditionsAttr, (int)conditions);

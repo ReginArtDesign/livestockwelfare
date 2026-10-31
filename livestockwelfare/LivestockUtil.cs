@@ -1,7 +1,9 @@
 using System;
+using System.Globalization;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
 using Vintagestory.API.Config;
+using Vintagestory.API.Datastructures;
 using Vintagestory.GameContent;
 
 namespace livestockwelfare;
@@ -78,6 +80,25 @@ public static class LivestockUtil
         var pos = entity.Pos;
         var player = entity.World.NearestPlayer(pos.X, pos.Y, pos.Z);
         return player?.Entity != null && player.Entity.Pos.SquareDistanceTo(pos) <= (double)safety.PlayerRadius * safety.PlayerRadius;
+    }
+
+    /// <summary>
+    /// Adds one of our AI tasks to an animal's vanilla task AI (server side), with the walk animation,
+    /// speed and priority given. Call from a behavior's AfterInitialized.
+    /// </summary>
+    public static void AddAiTask(EntityAgent agent, string code, float priority, float moveSpeed, double minCooldownHours, double maxCooldownHours,
+        System.Func<JsonObject, JsonObject, IAiTask> create)
+    {
+        var taskAi = agent.GetBehavior<EntityBehaviorTaskAI>();
+        if (taskAi?.TaskManager == null) return;
+
+        var inv = CultureInfo.InvariantCulture;
+        var taskConfig = JsonObject.FromJson(string.Format(inv,
+            "{{ \"code\": \"{0}\", \"animation\": \"walk\", \"movespeed\": {1}, \"priority\": {2}, \"mincooldownHours\": {3}, \"maxcooldownHours\": {4} }}",
+            code, moveSpeed, priority, minCooldownHours, maxCooldownHours));
+        var task = create(taskConfig, JsonObject.FromJson("{}"));
+        taskAi.TaskManager.AddTask(task);
+        task.AfterInitialize();
     }
 
     /// <summary>Kills the animal without a killer, remembering the cause for the info text and drops.</summary>

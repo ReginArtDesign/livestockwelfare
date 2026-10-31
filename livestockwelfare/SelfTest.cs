@@ -62,7 +62,7 @@ public class SelfTest : ModSystem
 
         var spawn = sapi.World.DefaultSpawnPosition.AsBlockPos;
         sapi.WorldManager.LoadChunkColumnPriority(spawn.X / GlobalConstants.ChunkSize, spawn.Z / GlobalConstants.ChunkSize,
-            new ChunkLoadOptions { OnLoaded = () => sapi.Event.EnqueueMainThreadTask(() => SpawnAndWatch(spawn), "lwselftest") });
+            new ChunkLoadOptions { KeepLoaded = true, OnLoaded = () => sapi.Event.EnqueueMainThreadTask(() => SpawnAndWatch(spawn), "lwselftest") });
     }
 
     // Paints a few vanilla textures with every mud stage and saves them as PNG into the folder in
@@ -101,8 +101,14 @@ public class SelfTest : ModSystem
         watched.Add(Spawn("game:sheep-bighorn-baby-female", spawn, 0, y, 4));
         this.spawn = spawn;
 
+        var tasks = watched[0].GetBehavior<Vintagestory.GameContent.EntityBehaviorTaskAI>()?.TaskManager.AllTasks;
+        sapi.Logger.Notification("[lwselftest] AI tasks: seek water {0}, seek shelter {1}",
+            tasks?.Any(t => t is AiTaskLivestockSeekWater) == true ? "added" : "MISSING",
+            tasks?.Any(t => t is AiTaskLivestockSeekShelter) == true ? "added" : "MISSING");
+
         // A full barrel (50 litres) of water next to the flock; the sheep in the hut has none.
-        PlaceWaterBarrel(spawn.AddCopy(0, 0, 0).Set(spawn.X - 2, y, spawn.Z), 50);
+        // 9 blocks away by default: beyond the 6-block radius for drinking without walking.
+        PlaceWaterBarrel(spawn.AddCopy(0, 0, 0).Set(spawn.X - BarrelDistance, y, spawn.Z), 50);
         // Control: an identical barrel far from any animal, to tell apart drinking from other effects.
         controlBarrel = spawn.Copy().Set(spawn.X - 25, sapi.World.BlockAccessor.GetTerrainMapheightAt(spawn.Copy().Set(spawn.X - 25, y, spawn.Z)) + 1, spawn.Z);
         sapi.World.BlockAccessor.SetBlock(sapi.World.GetBlock(new AssetLocation("game:barrel")).Id, controlBarrel);
@@ -119,8 +125,8 @@ public class SelfTest : ModSystem
         {
             step++;
             // Lambs grow up after 14 days.
-            if (step > 16) return;
-            sapi.World.Calendar.Add(24);
+            if (step > Steps) return;
+            sapi.World.Calendar.Add(StepHours);
             Log("day +" + step);
             if (step == 6 && watched.FirstOrDefault(e => e.Alive)?.GetBehavior<EntityBehaviorLivestockHygiene>() is { } h)
             {
@@ -134,6 +140,11 @@ public class SelfTest : ModSystem
     Entity? hutSheep;
     BlockPos? barrelPos;
     BlockPos? controlBarrel;
+
+    // Big steps test long-term effects; small steps (LW_SELFTEST_STEPHOURS=2) let the AI walk in between.
+    static readonly float StepHours = float.TryParse(Environment.GetEnvironmentVariable("LW_SELFTEST_STEPHOURS"), out float h) ? h : 24;
+    static int Steps => (int)(16 * 24 / StepHours);
+    const int BarrelDistance = 9;
 
     void PlaceWaterBarrel(BlockPos pos, int litres)
     {
@@ -201,8 +212,10 @@ public class SelfTest : ModSystem
                 where, climate?.Temperature, climate?.Rainfall, shelter.StatusText("en"),
                 e.GetBehavior<EntityBehaviorLivestockThirst>()?.Thirst, e.GetBehavior<EntityBehaviorLivestockThirst>()?.WaterSourceText("en"));
         }
-        sapi.Logger.Notification("[lwselftest]   barrel water: {0:0.00} L (block there: {1})", BarrelLitres(),
-            barrelPos == null ? "-" : sapi.World.BlockAccessor.GetBlock(barrelPos).Code + " " + sapi.World.BlockAccessor.GetBlock(barrelPos.DownCopy()).Code + ", control: " + (controlBarrel == null ? "-" : sapi.World.BlockAccessor.GetBlock(controlBarrel).Code));
+        double nearest = barrelPos == null ? -1 : watched.Where(e => e.Alive).Select(e => e.Pos.DistanceTo(barrelPos.ToVec3d().Add(0.5, 0, 0.5))).DefaultIfEmpty(-1).Min();
+        float maxThirst = watched.Where(e => e.Alive).Select(e => e.GetBehavior<EntityBehaviorLivestockThirst>()?.Thirst ?? 0).DefaultIfEmpty(0).Max();
+        sapi.Logger.Notification("[lwselftest]   barrel water: {0:0.00} L, nearest sheep {1:0.0} blocks away, highest thirst {2:0.00}",
+            BarrelLitres(), nearest, maxThirst);
         foreach (var e in watched.Where(e => e.Alive && (e == watched[0] || !e.Code.Path.Contains("female-") || e.Code.Path.Contains("baby") || e.WatchedAttributes.GetBool("lwSick"))).Take(4))
         {
             var a = e.WatchedAttributes;

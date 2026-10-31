@@ -91,6 +91,11 @@ public class WeatherSettings
     public double HarmAboveStress { get; set; } = 0.8;
     public double HarmPerDay { get; set; } = 2;
 
+    /// <summary>In bad weather, animals in the open walk to the nearest spot under a roof.</summary>
+    public bool SeekShelter { get; set; } = true;
+    /// <summary>How far (blocks) animals look for a roof.</summary>
+    public int SeekShelterRadius { get; set; } = 12;
+
     /// <summary>Stress removed by petting (right click with an empty hand).</summary>
     public double PetStressReduction { get; set; } = 0.2;
     /// <summary>An animal can be petted once per this many in-game hours.</summary>
@@ -116,6 +121,7 @@ public class WeatherSettings
         RoofColdFactor = Math.Clamp(RoofColdFactor, 0, 1);
         if (SicknessWeight < 0) SicknessWeight = 0;
         PetStressReduction = Math.Clamp(PetStressReduction, 0, 1);
+        SeekShelterRadius = Math.Clamp(SeekShelterRadius, 2, 24);
         if (PetCooldownHours < 0) PetCooldownHours = 0;
         if (HarmPerDay < 0) HarmPerDay = 0;
         Species ??= new();
@@ -140,6 +146,15 @@ public class ThirstSettings
 
     /// <summary>Animals drink once thirst is above this.</summary>
     public double DrinkAboveThirst { get; set; } = 0.25;
+
+    /// <summary>Thirsty animals walk to water (like to a trough) and drink there.</summary>
+    public bool WalkToWater { get; set; } = true;
+    /// <summary>Animals start looking for water above this thirst.</summary>
+    public double SeekWaterAboveThirst { get; set; } = 0.2;
+    /// <summary>How far (blocks) animals look for water to walk to.</summary>
+    public int SeekWaterRadius { get; set; } = 16;
+    /// <summary>With WalkToWater, animals only drink without walking (within DrinkRadius) above this.</summary>
+    public double RemoteDrinkAboveThirst { get; set; } = 0.6;
     /// <summary>Horizontal distance (blocks) an animal looks for water.</summary>
     public int DrinkRadius { get; set; } = 6;
     /// <summary>Animals may drink from ponds and rivers (never from salt water).</summary>
@@ -172,6 +187,9 @@ public class ThirstSettings
         if (HotSunMultiplier < 1) HotSunMultiplier = 1;
         DrinkAboveThirst = Math.Clamp(DrinkAboveThirst, 0, 1);
         DrinkRadius = Math.Clamp(DrinkRadius, 1, 16);
+        SeekWaterRadius = Math.Clamp(SeekWaterRadius, 2, 32);
+        SeekWaterAboveThirst = Math.Clamp(SeekWaterAboveThirst, 0, 1);
+        RemoteDrinkAboveThirst = Math.Clamp(RemoteDrinkAboveThirst, 0, 1);
         if (HarmPerDay < 0) HarmPerDay = 0;
         LitresPerFullDrink ??= new();
     }
