@@ -174,14 +174,16 @@ public class EntityBehaviorLivestockShelter : EntityBehavior
             target += roofed ? cold * settings.RoofColdFactor : cold;
         }
 
-        if (!roofed && temperature > tolerance.HotAboveC && world.Calendar.GetDayLightStrength(pos) > StrongSunlight)
+        // Strong sun needs a clear sky: GetDayLightStrength only knows the time of day, not the clouds.
+        bool sunny = climate.Rainfall <= MinPrecipitation && world.Calendar.GetDayLightStrength(pos) > StrongSunlight;
+        if (!roofed && temperature > tolerance.HotAboveC && sunny)
         {
             conditions |= Conditions.Hot;
             target += (temperature - tolerance.HotAboveC) * settings.HeatStressPerDegree;
         }
 
         bool badWeather = climate.Rainfall > MinPrecipitation || temperature < tolerance.ColdBelowC
-            || (temperature > tolerance.HotAboveC && world.Calendar.GetDayLightStrength(pos) > StrongSunlight);
+            || (temperature > tolerance.HotAboveC && sunny);
         if (badWeather) conditions |= Conditions.BadWeather;
         // Dark, or vanilla sleeping hours (22:00-05:00, when livestock lies down to sleep anyway).
         float hour = world.Calendar.HourOfDay;
