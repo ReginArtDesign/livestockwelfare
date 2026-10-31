@@ -46,6 +46,12 @@ public abstract class AiTaskLivestockGoTo : AiTaskBase
     /// <summary>How close (blocks, from the animal's hitbox) counts as arrived.</summary>
     protected virtual float ArriveDistance => 1f;
 
+    /// <summary>
+    /// Whether the animal is there. By default its hitbox is within ArriveDistance of the target
+    /// (right for things it stands next to, like water); override to require more.
+    /// </summary>
+    protected virtual bool IsAtTarget(double hitboxDistance) => hitboxDistance <= ArriveDistance;
+
     protected virtual void OnFinish(bool arrivedAtTarget) { }
 
     protected bool IsFailed(BlockPos pos) =>
@@ -80,7 +86,7 @@ public abstract class AiTaskLivestockGoTo : AiTaskBase
         if (!arrived && !Wanted()) return false;
 
         double distance = entity.SelectionBox.ToDouble().Translate(entity.Pos.X, entity.Pos.Y, entity.Pos.Z).ShortestDistanceFrom(Target);
-        if (arrived || distance <= ArriveDistance)
+        if (arrived || IsAtTarget(distance))
         {
             if (!arrived)
             {

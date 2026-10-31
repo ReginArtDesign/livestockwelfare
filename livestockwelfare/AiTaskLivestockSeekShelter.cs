@@ -53,7 +53,12 @@ public class AiTaskLivestockSeekShelter : AiTaskLivestockGoTo
     bool ShouldBeUnderRoof() =>
         shelter != null && (shelter.BadWeather || (shelter.Night && Settings?.SleepUnderRoof == true));
 
-    protected override float ArriveDistance => 0.6f;
+    // Walk right onto the spot: being "next to" a roof is not being under it.
+    protected override float ArriveDistance => 0.3f;
+
+    // The body's centre must stand on the target block; the hitbox alone reaches it too early.
+    protected override bool IsAtTarget(double hitboxDistance) =>
+        Target != null && entity.Pos.HorDistanceTo(Target) <= 0.45 && System.Math.Abs(entity.Pos.Y - Target.Y) < 1.5;
 
     protected override BlockPos? FindTarget()
     {
@@ -65,6 +70,9 @@ public class AiTaskLivestockSeekShelter : AiTaskLivestockGoTo
         var pos = feet.Copy();
         BlockPos? best = null;
         int bestDistance = int.MaxValue;
+        // Fallback for narrow shelters (e.g. a one block wide lean-to): roof above the spot only.
+        BlockPos? partly = null;
+        int partlyDistance = int.MaxValue;
 
         for (int dx = -r; dx <= r; dx++)
         {
@@ -77,13 +85,33 @@ public class AiTaskLivestockSeekShelter : AiTaskLivestockGoTo
                 {
                     pos.Set(feet.X + dx, feet.Y + dy, feet.Z + dz);
                     if (!CanStandAt(accessor, pos) || accessor.GetRainMapHeightAt(pos) <= pos.Y || IsFailed(pos)) continue;
-                    best = pos.Copy();
-                    bestDistance = distance;
+                    if (FullyRoofed(accessor, pos))
+                    {
+                        best = pos.Copy();
+                        bestDistance = distance;
+                    }
+                    else if (distance < partlyDistance)
+                    {
+                        partly = pos.Copy();
+                        partlyDistance = distance;
+                    }
                     break;
                 }
             }
         }
-        return best;
+        return best ?? partly;
+    }
+
+    // Roof above this block and the four next to it, so the whole body (sheep are over a block
+    // long) is under it, not just the head.
+    static bool FullyRoofed(IBlockAccessor accessor, BlockPos pos)
+    {
+        if (accessor.GetRainMapHeightAt(pos) <= pos.Y) return false;
+        foreach (var face in BlockFacing.HORIZONTALS)
+        {
+            if (accessor.GetRainMapHeightAt(pos.AddCopy(face)) <= pos.Y) return false;
+        }
+        return true;
     }
 
     // Two free blocks (most livestock is up to two blocks tall) on top of a solid block.
