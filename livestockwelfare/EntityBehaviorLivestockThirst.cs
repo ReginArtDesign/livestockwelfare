@@ -94,43 +94,17 @@ public class EntityBehaviorLivestockThirst : EntityBehavior
 
     void TryDrink(ThirstSettings settings)
     {
-        int r = settings.DrinkRadius;
-        var pos = entity.Pos.AsBlockPos;
-        var accessor = entity.World.BlockAccessor;
-        var tmpPos = pos.Copy();
-
-        bool naturalWater = false;
-        BlockEntityLiquidContainer? closestContainer = null;
-        double closestDistance = double.MaxValue;
-
-        accessor.WalkBlocks(pos.AddCopy(-r, -2, -r), pos.AddCopy(r, 1, r), (block, x, y, z) =>
-        {
-            if (settings.DrinkFromNaturalWater && !naturalWater && block.IsLiquid() && block.LiquidCode == "water")
-            {
-                naturalWater = true;
-                return;
-            }
-            if (block.EntityClass == null) return;
-
-            if (accessor.GetBlockEntity(tmpPos.Set(x, y, z)) is not BlockEntityLiquidContainer container) return;
-            if (container is BlockEntityBarrel { Sealed: true } || WaterSlot(container) == null) return;
-
-            double distance = tmpPos.DistanceSqTo(entity.Pos.X, entity.Pos.Y, entity.Pos.Z);
-            if (distance < closestDistance)
-            {
-                closestDistance = distance;
-                closestContainer = container;
-            }
-        });
+        var water = FindWater(settings);
 
         // Ponds and rivers never run dry, so prefer them and keep the barrels for when there is none.
-        if (naturalWater)
+        if (water.Natural)
         {
             SetThirst(0);
             return;
         }
-        if (closestContainer == null) return;
+        if (water.Container == null) return;
 
+        var closestContainer = water.Container;
         var slot = WaterSlot(closestContainer)!;
         int itemsPerLitre = BlockLiquidContainerBase.GetContainableProps(slot.Itemstack)?.ItemsPerLitre is > 0 and var ipl ? (int)ipl : 100;
         double thirst = Thirst;
@@ -145,6 +119,52 @@ public class EntityBehaviorLivestockThirst : EntityBehavior
         SetThirst(thirst * (1 - (double)taken / wanted));
     }
 
+    /// <summary>What water the animal can reach: fresh water nearby, or the closest container with water.</summary>
+    record WaterSearch(bool Natural, BlockEntityLiquidContainer? Container, bool SawUndrinkable);
+
+    WaterSearch FindWater(ThirstSettings settings)
+    {
+        int r = settings.DrinkRadius;
+        var pos = entity.Pos.AsBlockPos;
+        var accessor = entity.World.BlockAccessor;
+        var tmpPos = pos.Copy();
+
+        bool natural = false, sawUndrinkable = false;
+        BlockEntityLiquidContainer? closest = null;
+        double closestDistance = double.MaxValue;
+
+        accessor.WalkBlocks(pos.AddCopy(-r, -2, -r), pos.AddCopy(r, 1, r), (block, x, y, z) =>
+        {
+            if (block.IsLiquid())
+            {
+                if (block.LiquidCode == "water") natural |= settings.DrinkFromNaturalWater;
+                else if (UndrinkableLiquids.Contains(block.LiquidCode)) sawUndrinkable = true;
+                return;
+            }
+            if (block.EntityClass == null) return;
+
+            if (accessor.GetBlockEntity(tmpPos.Set(x, y, z)) is not BlockEntityLiquidContainer container) return;
+            if (container is BlockEntityBarrel { Sealed: true }) return;
+            if (WaterSlot(container) == null)
+            {
+                sawUndrinkable |= HoldsUndrinkable(container);
+                return;
+            }
+
+            double distance = tmpPos.DistanceSqTo(entity.Pos.X, entity.Pos.Y, entity.Pos.Z);
+            if (distance < closestDistance)
+            {
+                closestDistance = distance;
+                closest = container;
+            }
+        });
+
+        return new WaterSearch(natural, closest, sawUndrinkable);
+    }
+
+    // Hot spring water and sea water: animals refuse them, so tell the player why they don't drink.
+    static readonly string[] UndrinkableLiquids = { "boilingwater", "saltwater" };
+
     static ItemSlot? WaterSlot(BlockEntityLiquidContainer container)
     {
         foreach (var slot in container.Inventory)
@@ -152,6 +172,31 @@ public class EntityBehaviorLivestockThirst : EntityBehavior
             if (slot.Itemstack?.Collectible?.Code is { } code && code.Equals(WaterPortion) && slot.StackSize > 0) return slot;
         }
         return null;
+    }
+
+    static bool HoldsUndrinkable(BlockEntityLiquidContainer container)
+    {
+        foreach (var slot in container.Inventory)
+        {
+            string? path = slot.Itemstack?.Collectible?.Code?.Path;
+            if (path is "boilingwaterportion" or "saltwaterportion") return true;
+        }
+        return false;
+    }
+
+    /// <summary>Where this animal can drink, for the status chat (server side, scans the area).</summary>
+    public string WaterSourceText(string langCode)
+    {
+        if (Settings is not { } settings) return "";
+        var water = FindWater(settings);
+        if (water.Natural) return LivestockUtil.Translate(langCode, "livestockwelfare:water-natural");
+        if (water.Container != null)
+        {
+            var slot = WaterSlot(water.Container)!;
+            int itemsPerLitre = BlockLiquidContainerBase.GetContainableProps(slot.Itemstack)?.ItemsPerLitre is > 0 and var ipl ? (int)ipl : 100;
+            return LivestockUtil.Translate(langCode, "livestockwelfare:water-container", Math.Round((double)slot.StackSize / itemsPerLitre, 1));
+        }
+        return LivestockUtil.Translate(langCode, water.SawUndrinkable ? "livestockwelfare:water-undrinkable" : "livestockwelfare:water-none", settings.DrinkRadius);
     }
 
     void ApplyEffects(ThirstSettings settings, double hours)
@@ -175,20 +220,18 @@ public class EntityBehaviorLivestockThirst : EntityBehavior
         }
     }
 
-    /// <summary>Thirst status for the info text and chat; empty when the animal is not thirsty.</summary>
+    /// <summary>Thirst status for the info text and chat, e.g. "Thirst: 70% (very thirsty)".</summary>
     /// <param name="langCode">Language to use, or null for the local game language.</param>
     public string StatusText(string? langCode = null)
     {
         float thirst = Thirst;
-        if (thirst < 0.25f) return "";
-        string key = thirst >= 0.95f ? "livestockwelfare:thirst-parched" : thirst >= 0.6f ? "livestockwelfare:thirst-very" : "livestockwelfare:thirst-some";
-        return LivestockUtil.Translate(langCode, key) + " (" + LivestockUtil.Translate(langCode, "livestockwelfare:thirst-percent", (int)Math.Round(thirst * 100)) + ")";
+        string text = LivestockUtil.Translate(langCode, "livestockwelfare:thirst-percent", (int)Math.Round(thirst * 100));
+        string? key = thirst >= 0.95f ? "livestockwelfare:thirst-parched" : thirst >= 0.6f ? "livestockwelfare:thirst-very" : thirst >= 0.25f ? "livestockwelfare:thirst-some" : null;
+        return key == null ? text : text + " (" + LivestockUtil.Translate(langCode, key) + ")";
     }
 
     public override void GetInfoText(StringBuilder infotext)
     {
-        if (!entity.Alive) return;
-        string status = StatusText();
-        if (status.Length > 0) infotext.AppendLine(status);
+        if (entity.Alive) infotext.AppendLine(StatusText());
     }
 }

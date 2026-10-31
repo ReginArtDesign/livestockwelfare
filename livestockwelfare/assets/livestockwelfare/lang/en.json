@@ -23,8 +23,12 @@
 	"weather-roofed": "Under a roof",
 	"weather-open": "In the open",
 	"died-of-thirst": "Died of thirst",
-	"thirst-some": "Thirsty",
-	"thirst-very": "Very thirsty",
-	"thirst-parched": "Parched",
-	"thirst-percent": "thirst: {0}%"
+	"thirst-some": "thirsty",
+	"thirst-very": "very thirsty",
+	"thirst-parched": "parched",
+	"thirst-percent": "Thirst: {0}%",
+	"water-natural": "drinks from fresh water nearby",
+	"water-container": "drinks from a barrel or bucket ({0} L left)",
+	"water-undrinkable": "no drinkable water within {0} blocks (hot spring and salt water are not drinkable)",
+	"water-none": "no water within {0} blocks"
 }

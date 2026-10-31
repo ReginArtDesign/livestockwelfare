@@ -104,6 +104,8 @@ public class SelfTest : ModSystem
         // A small closed plank hut with one sheep, to check shelter detection.
         BuildHut(spawn.AddCopy(10, 0, 0).Set(spawn.X + 10, y, spawn.Z));
         hutSheep = Spawn("game:sheep-bighorn-adult-female", spawn, 12, y, 2);
+        // Hot spring water in the hut: not drinkable, the status should say so.
+        sapi.World.BlockAccessor.SetBlock(sapi.World.GetBlock(new AssetLocation("game:boilingwater-still-7")).Id, spawn.Copy().Set(spawn.X + 11, y, spawn.Z + 1));
         Log("spawned");
 
         int step = 0;
@@ -189,9 +191,9 @@ public class SelfTest : ModSystem
         foreach (var (where, e) in new[] { ("open", watched.FirstOrDefault(w => w.Alive)), ("hut", hutSheep) })
         {
             if (e?.GetBehavior<EntityBehaviorLivestockShelter>() is not { } shelter) continue;
-            sapi.Logger.Notification("[lwselftest]   weather {0}: {1}°C rain {2:0.00} -> {3}; thirst {4:0.00}",
+            sapi.Logger.Notification("[lwselftest]   weather {0}: {1}°C rain {2:0.00} -> {3}; thirst {4:0.00}, water: {5}",
                 where, climate?.Temperature, climate?.Rainfall, shelter.StatusText("en"),
-                e.GetBehavior<EntityBehaviorLivestockThirst>()?.Thirst);
+                e.GetBehavior<EntityBehaviorLivestockThirst>()?.Thirst, e.GetBehavior<EntityBehaviorLivestockThirst>()?.WaterSourceText("en"));
         }
         sapi.Logger.Notification("[lwselftest]   barrel water: {0:0.00} L (block there: {1})", BarrelLitres(),
             barrelPos == null ? "-" : sapi.World.BlockAccessor.GetBlock(barrelPos).Code + " " + sapi.World.BlockAccessor.GetBlock(barrelPos.DownCopy()).Code + ", control: " + (controlBarrel == null ? "-" : sapi.World.BlockAccessor.GetBlock(controlBarrel).Code));

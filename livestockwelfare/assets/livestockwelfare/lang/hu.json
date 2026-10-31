@@ -23,8 +23,12 @@
 	"weather-roofed": "Fedett helyen",
 	"weather-open": "Szabad ég alatt",
 	"died-of-thirst": "Szomjan pusztult el",
-	"thirst-some": "Szomjas",
-	"thirst-very": "Nagyon szomjas",
-	"thirst-parched": "Kiszáradt",
-	"thirst-percent": "szomjúság: {0}%"
+	"thirst-some": "szomjas",
+	"thirst-very": "nagyon szomjas",
+	"thirst-parched": "kiszáradt",
+	"thirst-percent": "Szomjúság: {0}%",
+	"water-natural": "természetes vízből iszik a közelben",
+	"water-container": "hordóból vagy vödörből iszik (még {0} L)",
+	"water-undrinkable": "nincs iható víz {0} blokkon belül (a forró és a sós víz nem iható)",
+	"water-none": "nincs víz {0} blokkon belül"
 }

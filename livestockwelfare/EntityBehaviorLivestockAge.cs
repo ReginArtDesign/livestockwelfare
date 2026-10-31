@@ -177,9 +177,10 @@ public class EntityBehaviorLivestockAge : EntityBehavior
         {
             message += " — " + shelter.StatusText(lang);
         }
-        if (entity.GetBehavior<EntityBehaviorLivestockThirst>() is { } thirst && thirst.StatusText(lang) is { Length: > 0 } thirstText)
+        if (entity.GetBehavior<EntityBehaviorLivestockThirst>() is { } thirst)
         {
-            message += " — " + thirstText;
+            message += " — " + thirst.StatusText(lang);
+            if (thirst.WaterSourceText(lang) is { Length: > 0 } water) message += " — " + water;
         }
         player.SendMessage(GlobalConstants.GeneralChatGroup, message, EnumChatType.Notification);
     }
