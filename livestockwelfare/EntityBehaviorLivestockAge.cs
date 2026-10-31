@@ -118,13 +118,15 @@ public class EntityBehaviorLivestockAge : EntityBehavior
         accum = 0;
 
         var config = livestockwelfareModSystem.Config;
+        if (config?.Safety.PauseWhenNoPlayerNearby == true) PauseAgingWhileAlone();
+
         double? ageDays = AgeDays;
         double lifespanYears = entity.WatchedAttributes.GetDouble(LifespanAttr);
         if (config == null || ageDays == null || lifespanYears <= 0) return;
 
         double ageYears = ageDays.Value / DaysPerYear;
 
-        if (config.DieOfOldAge && ageYears >= lifespanYears)
+        if (config.DieOfOldAge && ageYears >= lifespanYears && LivestockUtil.CanKill(LivestockUtil.OldAgeDeathCause))
         {
             entity.World.Logger.Notification("[livestockwelfare] {0} #{1} died of old age — {2}", entity.Code, entity.EntityId, DebugState());
             LivestockUtil.Kill(entity, LivestockUtil.OldAgeDeathCause);
@@ -135,6 +137,26 @@ public class EntityBehaviorLivestockAge : EntityBehavior
         if (old != IsOld) entity.WatchedAttributes.SetBool(OldAttr, old);
 
         if (old && config.OldAnimalsInfertile) LivestockUtil.BlockBreeding(entity);
+    }
+
+    const string LastAgingTickAttr = "lwAgingLastDays";
+    // Like the other needs, at most one day counts after a gap (e.g. the chunk was unloaded).
+    const double MaxCountedGapDays = 1;
+
+    // Age is "now minus birth", so time that should not count is skipped by moving the birth date
+    // forward: time with no player nearby, and anything beyond a day after the animal was unloaded.
+    void PauseAgingWhileAlone()
+    {
+        var attrs = entity.WatchedAttributes;
+        double now = entity.World.Calendar.TotalDays;
+        double last = attrs.GetDouble(LastAgingTickAttr, now);
+        attrs.SetDouble(LastAgingTickAttr, now);
+
+        double gap = now - last;
+        if (gap <= 0 || !attrs.HasAttribute(BirthAttr)) return;
+
+        double notCounted = LivestockUtil.ShouldSimulate(entity) ? Math.Max(0, gap - MaxCountedGapDays) : gap;
+        if (notCounted > 0) attrs.SetDouble(BirthAttr, attrs.GetDouble(BirthAttr) + notCounted);
     }
 
     /// <param name="langCode">Language to use, or null for the local game language.</param>

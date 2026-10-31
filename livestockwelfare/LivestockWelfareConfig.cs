@@ -40,6 +40,8 @@ public class LivestockWelfareConfig
 
     public ThirstSettings Thirst { get; set; } = new();
 
+    public SafetySettings Safety { get; set; } = new();
+
     public void Sanitize()
     {
         if (OldAgeFraction is < 0.1 or > 1) OldAgeFraction = 0.75;
@@ -51,6 +53,7 @@ public class LivestockWelfareConfig
         Hygiene.Sanitize();
         Weather.Sanitize();
         Thirst.Sanitize();
+        Safety.Sanitize();
     }
 }
 
@@ -171,6 +174,32 @@ public class ThirstSettings
         DrinkRadius = Math.Clamp(DrinkRadius, 1, 16);
         if (HarmPerDay < 0) HarmPerDay = 0;
         LitresPerFullDrink ??= new();
+    }
+}
+
+/// <summary>
+/// Ways to make the mod gentler, e.g. for multiplayer servers where owners are not always online.
+/// </summary>
+public class SafetySettings
+{
+    /// <summary>Master switch: false = no animal ever dies from this mod (they still get old, sick, weak).</summary>
+    public bool AnimalsCanDie { get; set; } = true;
+    /// <summary>Per cause. A cause that cannot kill leaves the animal at 1 health instead.</summary>
+    public bool OldAgeCanKill { get; set; } = true;
+    public bool DiseaseCanKill { get; set; } = true;
+    public bool ExposureCanKill { get; set; } = true;
+    public bool ThirstCanKill { get; set; } = true;
+
+    /// <summary>
+    /// Pause everything (aging, dirt, sickness, weather, thirst) for animals with no player within
+    /// PlayerRadius blocks, so animals don't suffer or age while their owner is away or offline.
+    /// </summary>
+    public bool PauseWhenNoPlayerNearby { get; set; } = false;
+    public int PlayerRadius { get; set; } = 64;
+
+    public void Sanitize()
+    {
+        PlayerRadius = Math.Clamp(PlayerRadius, 8, 512);
     }
 }
 

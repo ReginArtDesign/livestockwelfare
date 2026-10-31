@@ -98,6 +98,8 @@ public class EntityBehaviorLivestockShelter : EntityBehavior
         double hours = Math.Min(nowHours - attrs.GetDouble(LastUpdateAttr), MaxCatchUpHours);
         if (hours < 1) return;
         attrs.SetDouble(LastUpdateAttr, nowHours);
+        // Nobody around (option): the time passes without the animal getting dirtier, sicker, thirstier.
+        if (!LivestockUtil.ShouldSimulate(entity)) return;
 
         UpdateStress(settings, hours);
         ApplyEffects(settings, hours);
@@ -177,13 +179,7 @@ public class EntityBehaviorLivestockShelter : EntityBehavior
         var health = entity.GetBehavior<EntityBehaviorHealth>();
         if (health == null) return;
 
-        health.Health -= (float)(settings.HarmPerDay * hours / 24);
-        if (health.Health <= 0)
-        {
-            health.Health = 0;
-            entity.World.Logger.Notification("[livestockwelfare] {0} #{1} died of exposure (stress {2:0.00})", entity.Code, entity.EntityId, stress);
-            LivestockUtil.Kill(entity, LivestockUtil.ExposureDeathCause);
-        }
+        LivestockUtil.Harm(entity, health, settings.HarmPerDay * hours / 24, LivestockUtil.ExposureDeathCause, $"exposure (stress {stress:0.00})");
     }
 
     const string LastPettedAttr = "lwLastPettedHours";

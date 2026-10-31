@@ -53,7 +53,19 @@ public static class DirtTextures
         return new string(chars);
     }
 
-    static IBitmap Paint(IBitmap source, int stage) => new BitmapExternal(PaintBitmap(source, stage));
+    // A texture that fails to load must never crash the client: then the coat simply stays clean.
+    static IBitmap Paint(IBitmap? source, int stage)
+    {
+        if (source == null || source.Width <= 0 || source.Height <= 0) return source ?? new BitmapExternal(1, 1);
+        try
+        {
+            return new BitmapExternal(PaintBitmap(source, stage));
+        }
+        catch (Exception)
+        {
+            return source;
+        }
+    }
 
     /// <summary>The muddy copy of a texture; internal so the self-test can export previews.</summary>
     internal static SKBitmap PaintBitmap(IBitmap source, int stage)

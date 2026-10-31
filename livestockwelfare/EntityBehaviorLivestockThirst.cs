@@ -70,6 +70,8 @@ public class EntityBehaviorLivestockThirst : EntityBehavior
         double hours = Math.Min(nowHours - attrs.GetDouble(LastUpdateAttr), MaxCatchUpHours);
         if (hours < 1) return;
         attrs.SetDouble(LastUpdateAttr, nowHours);
+        // Nobody around (option): the time passes without the animal getting dirtier, sicker, thirstier.
+        if (!LivestockUtil.ShouldSimulate(entity)) return;
 
         GetThirsty(settings, hours);
         if (Thirst > settings.DrinkAboveThirst) TryDrink(settings);
@@ -219,13 +221,7 @@ public class EntityBehaviorLivestockThirst : EntityBehavior
         var health = entity.GetBehavior<EntityBehaviorHealth>();
         if (health == null) return;
 
-        health.Health -= (float)(settings.HarmPerDay * hours / 24);
-        if (health.Health <= 0)
-        {
-            health.Health = 0;
-            entity.World.Logger.Notification("[livestockwelfare] {0} #{1} died of thirst", entity.Code, entity.EntityId);
-            LivestockUtil.Kill(entity, LivestockUtil.ThirstDeathCause);
-        }
+        LivestockUtil.Harm(entity, health, settings.HarmPerDay * hours / 24, LivestockUtil.ThirstDeathCause, "thirst");
     }
 
     /// <summary>Thirst status for the info text and chat, e.g. "Thirst: 70% (very thirsty)".</summary>

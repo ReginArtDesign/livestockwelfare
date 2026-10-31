@@ -213,6 +213,8 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
         double hours = Math.Min(nowHours - attrs.GetDouble(LastUpdateAttr), MaxCatchUpHours);
         if (hours < 1) return;
         attrs.SetDouble(LastUpdateAttr, nowHours);
+        // Nobody around (option): the time passes without the animal getting dirtier, sicker, thirstier.
+        if (!LivestockUtil.ShouldSimulate(entity)) return;
 
         int extraAnimals = ExtraAnimalsNearby(settings);
         TryDepositMuck(settings, hours, extraAnimals);
@@ -330,8 +332,9 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
             }
             else
             {
-                // Only on open ground: air or trampled-down plants, on top of a solid block.
-                bool open = block.Id == 0 || (block.Replaceable >= 5000 && !block.IsLiquid());
+                // Only on open ground: air or trampled-down plants (not droppings from other mods,
+                // which are also replaceable), on top of a solid block.
+                bool open = block.Id == 0 || (block.BlockMaterial == EnumBlockMaterial.Plant && block.Replaceable >= 5000 && block.EntityClass == null);
                 if (!open || !accessor.GetBlock(pos.DownCopy()).SideSolid[BlockFacing.UP.Index]) continue;
             }
 
@@ -372,18 +375,11 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
         var health = entity.GetBehavior<EntityBehaviorHealth>();
         if (health == null) return;
 
-        health.Health -= (float)(settings.SickDamagePerDay * hours / 24);
-        if (!IsCollapsed && health.Health > 0 && health.Health <= health.MaxHealth * settings.CollapseHealthFraction)
+        LivestockUtil.Harm(entity, health, settings.SickDamagePerDay * hours / 24, LivestockUtil.DiseaseDeathCause, $"disease (filth {Filth:0.00})");
+        if (entity.Alive && !IsCollapsed && health.Health <= health.MaxHealth * settings.CollapseHealthFraction)
         {
             entity.WatchedAttributes.SetBool(CollapsedAttr, true);
             LieDown();
-        }
-
-        if (health.Health <= 0)
-        {
-            health.Health = 0;
-            entity.World.Logger.Notification("[livestockwelfare] {0} #{1} died of disease (filth {2:0.00})", entity.Code, entity.EntityId, Filth);
-            LivestockUtil.Kill(entity, LivestockUtil.DiseaseDeathCause);
         }
     }
 

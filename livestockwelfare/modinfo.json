@@ -6,8 +6,8 @@
     "authors": [
         "ReginArt"
     ],
-    "description": "Livestock age over time. Shelter, hygiene and old age matter.",
-    "version": "0.8.3",
+    "description": "Livestock that age, get dirty and sick, need shelter from the weather and water to drink. Clean, groom, pet and care for your animals.",
+    "version": "0.9.0",
     "side": "Universal",
     "dependencies": {
         "game": "1.22.0"

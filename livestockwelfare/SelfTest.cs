@@ -50,6 +50,12 @@ public class SelfTest : ModSystem
 
         ExportDirtPreviews();
 
+        if (Environment.GetEnvironmentVariable("LW_SELFTEST_NODEATH") == "1" && livestockwelfareModSystem.Config is { } config)
+        {
+            config.Safety.AnimalsCanDie = false;
+            sapi.Logger.Notification("[lwselftest] death disabled for this run");
+        }
+
         var drygrass = sapi.World.GetItem(new AssetLocation("game:drygrass"));
         sapi.Logger.Notification("[lwselftest] dry grass grooming behavior: {0}",
             drygrass?.CollectibleBehaviors.Any(b => b is CollectibleBehaviorGroom) == true ? "found" : "MISSING");

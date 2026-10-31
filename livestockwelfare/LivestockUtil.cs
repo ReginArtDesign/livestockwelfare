@@ -1,6 +1,8 @@
+using System;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
 using Vintagestory.API.Config;
+using Vintagestory.GameContent;
 
 namespace livestockwelfare;
 
@@ -32,6 +34,50 @@ public static class LivestockUtil
 
         multiply.SetDouble("totalDaysCooldownUntil", blockUntil);
         entity.WatchedAttributes.MarkPathDirty("multiply");
+    }
+
+    /// <summary>Whether the given death cause is allowed to kill (see SafetySettings).</summary>
+    public static bool CanKill(string cause)
+    {
+        var safety = livestockwelfareModSystem.Config?.Safety;
+        if (safety == null) return true;
+        if (!safety.AnimalsCanDie) return false;
+        return cause switch
+        {
+            OldAgeDeathCause => safety.OldAgeCanKill,
+            DiseaseDeathCause => safety.DiseaseCanKill,
+            ExposureDeathCause => safety.ExposureCanKill,
+            ThirstDeathCause => safety.ThirstCanKill,
+            _ => true
+        };
+    }
+
+    /// <summary>
+    /// Takes health from a suffering animal. If that empties its health it dies of the given cause,
+    /// unless that cause may not kill; then it is left at 1 health.
+    /// </summary>
+    public static void Harm(Entity entity, EntityBehaviorHealth health, double amount, string cause, string logReason)
+    {
+        float floor = CanKill(cause) ? 0 : Math.Min(1, health.Health);
+        health.Health = Math.Max(floor, health.Health - (float)amount);
+        if (health.Health > 0) return;
+
+        entity.World.Logger.Notification("[livestockwelfare] {0} #{1} died of {2}", entity.Code, entity.EntityId, logReason);
+        Kill(entity, cause);
+    }
+
+    /// <summary>
+    /// False while the animal's needs should be paused because no player is near
+    /// (SafetySettings.PauseWhenNoPlayerNearby).
+    /// </summary>
+    public static bool ShouldSimulate(Entity entity)
+    {
+        var safety = livestockwelfareModSystem.Config?.Safety;
+        if (safety is not { PauseWhenNoPlayerNearby: true }) return true;
+
+        var pos = entity.Pos;
+        var player = entity.World.NearestPlayer(pos.X, pos.Y, pos.Z);
+        return player?.Entity != null && player.Entity.Pos.SquareDistanceTo(pos) <= (double)safety.PlayerRadius * safety.PlayerRadius;
     }
 
     /// <summary>Kills the animal without a killer, remembering the cause for the info text and drops.</summary>
