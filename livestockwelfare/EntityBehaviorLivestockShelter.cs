@@ -183,7 +183,9 @@ public class EntityBehaviorLivestockShelter : EntityBehavior
         bool badWeather = climate.Rainfall > MinPrecipitation || temperature < tolerance.ColdBelowC
             || (temperature > tolerance.HotAboveC && world.Calendar.GetDayLightStrength(pos) > StrongSunlight);
         if (badWeather) conditions |= Conditions.BadWeather;
-        if (world.Calendar.GetDayLightStrength(pos) < NightDaylight) conditions |= Conditions.Night;
+        // Dark, or vanilla sleeping hours (22:00-05:00, when livestock lies down to sleep anyway).
+        float hour = world.Calendar.HourOfDay;
+        if (world.Calendar.GetDayLightStrength(pos) < NightDaylight || hour >= 22 || hour < 5) conditions |= Conditions.Night;
 
         targetStress = Math.Min(1, target);
         if (conditions != Current) entity.WatchedAttributes.SetInt(ConditionsAttr, (int)conditions);

@@ -39,6 +39,16 @@ public class AiTaskLivestockSeekShelter : AiTaskLivestockGoTo
 
     bool SleepTime => shelter != null && shelter.Night && Settings?.SleepUnderRoof == true;
 
+    // Vanilla livestock has an "idle: sleep" task (priority 1.35, 22:00-05:00) that makes them lie
+    // down wherever they are. At night ours must win, so they first walk under the roof.
+    const float NightPriority = 1.37f;
+
+    public override float Priority
+    {
+        get => SleepTime ? NightPriority : base.Priority;
+        set => base.Priority = value;
+    }
+
     // Bad weather, or night: animals go to sleep under the roof.
     bool ShouldBeUnderRoof() =>
         shelter != null && (shelter.BadWeather || (shelter.Night && Settings?.SleepUnderRoof == true));
