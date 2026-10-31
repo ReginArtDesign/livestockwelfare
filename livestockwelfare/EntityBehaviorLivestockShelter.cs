@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
 using Vintagestory.API.Datastructures;
+using Vintagestory.API.MathTools;
 using Vintagestory.GameContent;
 
 namespace livestockwelfare;
@@ -182,6 +184,41 @@ public class EntityBehaviorLivestockShelter : EntityBehavior
             entity.World.Logger.Notification("[livestockwelfare] {0} #{1} died of exposure (stress {2:0.00})", entity.Code, entity.EntityId, stress);
             LivestockUtil.Kill(entity, LivestockUtil.ExposureDeathCause);
         }
+    }
+
+    const string LastPettedAttr = "lwLastPettedHours";
+    static SimpleParticleProperties? hearts;
+
+    // Petting: right click with an empty hand (without sneaking, which shows the status in chat)
+    // calms the animal down. Handled on the server; the particles are sent to nearby players.
+    // Other mods' petting (e.g. Better Husbandry) still runs, as we don't stop the interaction.
+    public override void OnInteract(EntityAgent byEntity, ItemSlot itemslot, Vec3d hitPosition, EnumInteractMode mode, ref EnumHandling handled)
+    {
+        if (mode != EnumInteractMode.Interact || byEntity.Controls.ShiftKey || !itemslot.Empty) return;
+        if (entity.World.Side != EnumAppSide.Server || !entity.Alive || Settings is not { } settings) return;
+
+        double now = entity.World.Calendar.TotalHours;
+        var attrs = entity.WatchedAttributes;
+        if (attrs.HasAttribute(LastPettedAttr) && now - attrs.GetDouble(LastPettedAttr) < settings.PetCooldownHours) return;
+        attrs.SetDouble(LastPettedAttr, now);
+
+        attrs.SetFloat(StressAttr, (float)Math.Max(0, Stress - settings.PetStressReduction));
+        SpawnHearts();
+    }
+
+    void SpawnHearts()
+    {
+        hearts ??= new SimpleParticleProperties(
+            4, 6, ColorUtil.ToRgba(230, 240, 120, 170),
+            new Vec3d(), new Vec3d(),
+            new Vec3f(-0.15f, 0.25f, -0.15f), new Vec3f(0.15f, 0.5f, 0.15f),
+            1.2f, -0.05f, 0.15f, 0.25f, EnumParticleModel.Quad);
+
+        var box = entity.SelectionBox;
+        var pos = entity.Pos;
+        hearts.MinPos.Set(pos.X + box.X1, pos.Y + box.Y2, pos.Z + box.Z1);
+        hearts.AddPos.Set(box.Width, 0.2, box.Length);
+        entity.World.SpawnParticles(hearts);
     }
 
     /// <summary>Weather status for the info text and chat, e.g. "Getting wet, cold (weather stress: 45%)".</summary>

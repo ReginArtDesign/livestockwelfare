@@ -88,6 +88,11 @@ public class WeatherSettings
     public double HarmAboveStress { get; set; } = 0.8;
     public double HarmPerDay { get; set; } = 2;
 
+    /// <summary>Stress removed by petting (right click with an empty hand).</summary>
+    public double PetStressReduction { get; set; } = 0.2;
+    /// <summary>An animal can be petted once per this many in-game hours.</summary>
+    public double PetCooldownHours { get; set; } = 2;
+
     /// <summary>Temperatures (°C) each species copes with; "default" is used for others.</summary>
     public Dictionary<string, WeatherTolerance> Species { get; set; } = new()
     {
@@ -107,6 +112,8 @@ public class WeatherSettings
         if (StressAdaptHours < 1) StressAdaptHours = 1;
         RoofColdFactor = Math.Clamp(RoofColdFactor, 0, 1);
         if (SicknessWeight < 0) SicknessWeight = 0;
+        PetStressReduction = Math.Clamp(PetStressReduction, 0, 1);
+        if (PetCooldownHours < 0) PetCooldownHours = 0;
         if (HarmPerDay < 0) HarmPerDay = 0;
         Species ??= new();
     }
