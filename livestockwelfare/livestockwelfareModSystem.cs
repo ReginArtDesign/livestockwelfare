@@ -14,6 +14,7 @@ public class livestockwelfareModSystem : ModSystem
         api.RegisterEntityBehaviorClass(EntityBehaviorLivestockAge.Code, typeof(EntityBehaviorLivestockAge));
         api.RegisterEntityBehaviorClass(EntityBehaviorLivestockHygiene.Code, typeof(EntityBehaviorLivestockHygiene));
         api.RegisterEntityBehaviorClass(EntityBehaviorLivestockShelter.Code, typeof(EntityBehaviorLivestockShelter));
+        api.RegisterEntityBehaviorClass(EntityBehaviorLivestockThirst.Code, typeof(EntityBehaviorLivestockThirst));
         api.RegisterCollectibleBehaviorClass(CollectibleBehaviorGroom.Code, typeof(CollectibleBehaviorGroom));
     }
 

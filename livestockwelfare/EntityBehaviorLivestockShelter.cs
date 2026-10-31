@@ -60,6 +60,9 @@ public class EntityBehaviorLivestockShelter : EntityBehavior
 
     Conditions Current => (Conditions)entity.WatchedAttributes.GetInt(ConditionsAttr);
 
+    /// <summary>Standing in strong sun above the species' heat limit (as of the last check).</summary>
+    public bool InHotSun => (Current & Conditions.Hot) != 0;
+
     static WeatherSettings? Settings =>
         livestockwelfareModSystem.Config?.Weather is { Enabled: true } settings ? settings : null;
 

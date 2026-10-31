@@ -16,6 +16,7 @@ public static class LivestockUtil
     public const string OldAgeDeathCause = "livestockwelfare:deathcause-oldage";
     public const string DiseaseDeathCause = "livestockwelfare:deathcause-disease";
     public const string ExposureDeathCause = "livestockwelfare:deathcause-exposure";
+    public const string ThirstDeathCause = "livestockwelfare:deathcause-thirst";
 
     /// <summary>
     /// Keeps the vanilla mating cooldown just ahead of the current time, so EntityBehaviorMultiply
@@ -50,7 +51,7 @@ public static class LivestockUtil
     const string RegenBlockedAttr = "lwRegenSuppressed";
     const string RegenReasonPrefix = "lwRegenBlocked-";
     const string VanillaRegenSpeedAttr = "regenSpeed";
-    static readonly string[] RegenReasons = { "sick", "weather" };
+    static readonly string[] RegenReasons = { "sick", "weather", "thirst" };
 
     public static void SetRegenBlocked(Entity entity, string reason, bool blocked)
     {

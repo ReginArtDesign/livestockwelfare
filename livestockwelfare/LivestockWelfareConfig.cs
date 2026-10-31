@@ -38,6 +38,8 @@ public class LivestockWelfareConfig
 
     public WeatherSettings Weather { get; set; } = new();
 
+    public ThirstSettings Thirst { get; set; } = new();
+
     public void Sanitize()
     {
         if (OldAgeFraction is < 0.1 or > 1) OldAgeFraction = 0.75;
@@ -48,6 +50,7 @@ public class LivestockWelfareConfig
         }
         Hygiene.Sanitize();
         Weather.Sanitize();
+        Thirst.Sanitize();
     }
 }
 
@@ -106,6 +109,61 @@ public class WeatherSettings
         if (SicknessWeight < 0) SicknessWeight = 0;
         if (HarmPerDay < 0) HarmPerDay = 0;
         Species ??= new();
+    }
+}
+
+/// <summary>
+/// Animals get thirsty over time, faster in warm weather and much faster in the hot sun. They drink
+/// for free from fresh water (ponds, rivers) nearby; from barrels and placed buckets the water is
+/// really used up, so they have to be refilled.
+/// </summary>
+public class ThirstSettings
+{
+    public bool Enabled { get; set; } = true;
+
+    /// <summary>Thirst gained per in-game day at mild temperatures (1.0 = fully parched).</summary>
+    public double ThirstPerDay { get; set; } = 0.8;
+    /// <summary>Above this temperature (°C) thirst grows faster: +10% per degree.</summary>
+    public double WarmAboveC { get; set; } = 20;
+    /// <summary>In the hot sun (see Weather) thirst grows this many times faster on top.</summary>
+    public double HotSunMultiplier { get; set; } = 1.5;
+
+    /// <summary>Animals drink once thirst is above this.</summary>
+    public double DrinkAboveThirst { get; set; } = 0.25;
+    /// <summary>Horizontal distance (blocks) an animal looks for water.</summary>
+    public int DrinkRadius { get; set; } = 6;
+    /// <summary>Animals may drink from ponds and rivers (never from salt water).</summary>
+    public bool DrinkFromNaturalWater { get; set; } = true;
+
+    /// <summary>Animals this thirsty do not breed.</summary>
+    public double NoBreedingAboveThirst { get; set; } = 0.6;
+    /// <summary>Animals this thirsty stop healing and slowly lose health.</summary>
+    public double HarmAboveThirst { get; set; } = 0.95;
+    public double HarmPerDay { get; set; } = 3;
+
+    /// <summary>Litres of water a fully parched animal drinks from a barrel; "default" for others.</summary>
+    // Less than real animals drink: at these amounts 10 sheep use about 8 litres a day, so a full
+    // 50 litre barrel lasts roughly 6 in-game days in mild weather (half that in a heat wave).
+    public Dictionary<string, double> LitresPerFullDrink { get; set; } = new()
+    {
+        ["default"] = 1,
+        ["sheep"] = 1,
+        ["goat"] = 1,
+        ["pig"] = 1.5,
+        ["chicken"] = 0.1,
+    };
+
+    public double LitresFor(string species) =>
+        LitresPerFullDrink.TryGetValue(species, out double l) ? l : LitresPerFullDrink.TryGetValue("default", out double d) ? d : 2;
+
+    public void Sanitize()
+    {
+        if (ThirstPerDay < 0) ThirstPerDay = 0;
+        if (HotSunMultiplier < 1) HotSunMultiplier = 1;
+        DrinkAboveThirst = Math.Clamp(DrinkAboveThirst, 0, 1);
+        DrinkRadius = Math.Clamp(DrinkRadius, 1, 16);
+        if (HarmPerDay < 0) HarmPerDay = 0;
+        LitresPerFullDrink ??= new();
     }
 }
 

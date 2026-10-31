@@ -95,6 +95,12 @@ public class SelfTest : ModSystem
         watched.Add(Spawn("game:sheep-bighorn-baby-female", spawn, 0, y, 4));
         this.spawn = spawn;
 
+        // A full barrel (50 litres) of water next to the flock; the sheep in the hut has none.
+        PlaceWaterBarrel(spawn.AddCopy(0, 0, 0).Set(spawn.X - 2, y, spawn.Z), 50);
+        // Control: an identical barrel far from any animal, to tell apart drinking from other effects.
+        controlBarrel = spawn.Copy().Set(spawn.X - 25, sapi.World.BlockAccessor.GetTerrainMapheightAt(spawn.Copy().Set(spawn.X - 25, y, spawn.Z)) + 1, spawn.Z);
+        sapi.World.BlockAccessor.SetBlock(sapi.World.GetBlock(new AssetLocation("game:barrel")).Id, controlBarrel);
+
         // A small closed plank hut with one sheep, to check shelter detection.
         BuildHut(spawn.AddCopy(10, 0, 0).Set(spawn.X + 10, y, spawn.Z));
         hutSheep = Spawn("game:sheep-bighorn-adult-female", spawn, 12, y, 2);
@@ -118,6 +124,26 @@ public class SelfTest : ModSystem
     }
 
     Entity? hutSheep;
+    BlockPos? barrelPos;
+    BlockPos? controlBarrel;
+
+    void PlaceWaterBarrel(BlockPos pos, int litres)
+    {
+        var accessor = sapi.World.BlockAccessor;
+        accessor.SetBlock(sapi.World.GetBlock(new AssetLocation("game:barrel")).Id, pos);
+        if (accessor.GetBlockEntity(pos) is not Vintagestory.GameContent.BlockEntityBarrel barrel)
+        {
+            sapi.Logger.Warning("[lwselftest] barrel block entity missing");
+            return;
+        }
+        barrel.Inventory[1].Itemstack = new ItemStack(sapi.World.GetItem(new AssetLocation("game:waterportion")), litres * 100);
+        barrel.MarkDirty(true);
+        barrelPos = pos;
+    }
+
+    float BarrelLitres() =>
+        barrelPos != null && sapi.World.BlockAccessor.GetBlockEntity(barrelPos) is Vintagestory.GameContent.BlockEntityBarrel b
+            ? b.Inventory[1].StackSize / 100f : -1;
 
     // Walls, floor and roof of planks around a 3x3x2 inside space starting at corner + (1, 0, 1).
     void BuildHut(BlockPos corner)
@@ -163,9 +189,12 @@ public class SelfTest : ModSystem
         foreach (var (where, e) in new[] { ("open", watched.FirstOrDefault(w => w.Alive)), ("hut", hutSheep) })
         {
             if (e?.GetBehavior<EntityBehaviorLivestockShelter>() is not { } shelter) continue;
-            sapi.Logger.Notification("[lwselftest]   weather {0}: {1}°C rain {2:0.00} -> {3}",
-                where, climate?.Temperature, climate?.Rainfall, shelter.StatusText("en"));
+            sapi.Logger.Notification("[lwselftest]   weather {0}: {1}°C rain {2:0.00} -> {3}; thirst {4:0.00}",
+                where, climate?.Temperature, climate?.Rainfall, shelter.StatusText("en"),
+                e.GetBehavior<EntityBehaviorLivestockThirst>()?.Thirst);
         }
+        sapi.Logger.Notification("[lwselftest]   barrel water: {0:0.00} L (block there: {1})", BarrelLitres(),
+            barrelPos == null ? "-" : sapi.World.BlockAccessor.GetBlock(barrelPos).Code + " " + sapi.World.BlockAccessor.GetBlock(barrelPos.DownCopy()).Code + ", control: " + (controlBarrel == null ? "-" : sapi.World.BlockAccessor.GetBlock(controlBarrel).Code));
         foreach (var e in watched.Where(e => e.Alive && (e == watched[0] || !e.Code.Path.Contains("female-") || e.Code.Path.Contains("baby") || e.WatchedAttributes.GetBool("lwSick"))).Take(4))
         {
             var a = e.WatchedAttributes;
