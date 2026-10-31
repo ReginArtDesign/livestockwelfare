@@ -1,0 +1,15 @@
+{
+    "$schema": "https://moddbcdn.vintagestory.at/schema/modinfo.latest.json",
+    "type": "Code",
+    "modid": "livestockwelfare",
+    "name": "Livestock Welfare",
+    "authors": [
+        "ReginArt"
+    ],
+    "description": "Livestock age over time. Shelter, hygiene and old age matter.",
+    "version": "0.6.0",
+    "side": "Universal",
+    "dependencies": {
+        "game": "1.22.0"
+    }
+}

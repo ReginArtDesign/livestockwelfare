@@ -1,0 +1,21 @@
+[
+	{ "op": "add", "path": "/client/behaviors/-", "value": { "code": "livestockwelfare.age" }, "file": "game:entities/animal/mammal/hooved/sheep-adult.json" },
+	{ "op": "add", "path": "/server/behaviors/-", "value": { "code": "livestockwelfare.age", "species": "sheep" }, "file": "game:entities/animal/mammal/hooved/sheep-adult.json" },
+	{ "op": "add", "path": "/client/behaviors/-", "value": { "code": "livestockwelfare.hygiene" }, "file": "game:entities/animal/mammal/hooved/sheep-adult.json" },
+	{ "op": "add", "path": "/server/behaviors/0", "value": { "code": "livestockwelfare.hygiene", "species": "sheep" }, "file": "game:entities/animal/mammal/hooved/sheep-adult.json" }
+,
+	{ "op": "add", "path": "/client/behaviors/-", "value": { "code": "livestockwelfare.age" }, "file": "game:entities/animal/mammal/hooved/goat-adult.json" },
+	{ "op": "add", "path": "/server/behaviors/-", "value": { "code": "livestockwelfare.age", "species": "goat" }, "file": "game:entities/animal/mammal/hooved/goat-adult.json" },
+	{ "op": "add", "path": "/client/behaviors/-", "value": { "code": "livestockwelfare.hygiene" }, "file": "game:entities/animal/mammal/hooved/goat-adult.json" },
+	{ "op": "add", "path": "/server/behaviors/0", "value": { "code": "livestockwelfare.hygiene", "species": "goat" }, "file": "game:entities/animal/mammal/hooved/goat-adult.json" }
+,
+	{ "op": "add", "path": "/client/behaviors/-", "value": { "code": "livestockwelfare.age" }, "file": "game:entities/animal/mammal/hooved/pig-adult.json" },
+	{ "op": "add", "path": "/server/behaviors/-", "value": { "code": "livestockwelfare.age", "species": "pig" }, "file": "game:entities/animal/mammal/hooved/pig-adult.json" },
+	{ "op": "add", "path": "/client/behaviors/-", "value": { "code": "livestockwelfare.hygiene" }, "file": "game:entities/animal/mammal/hooved/pig-adult.json" },
+	{ "op": "add", "path": "/server/behaviors/0", "value": { "code": "livestockwelfare.hygiene", "species": "pig" }, "file": "game:entities/animal/mammal/hooved/pig-adult.json" }
+,
+	{ "op": "add", "path": "/client/behaviors/-", "value": { "code": "livestockwelfare.age" }, "file": "game:entities/animal/bird/chicken-adult.json" },
+	{ "op": "add", "path": "/server/behaviors/-", "value": { "code": "livestockwelfare.age", "species": "chicken" }, "file": "game:entities/animal/bird/chicken-adult.json" },
+	{ "op": "add", "path": "/client/behaviors/-", "value": { "code": "livestockwelfare.hygiene" }, "file": "game:entities/animal/bird/chicken-adult.json" },
+	{ "op": "add", "path": "/server/behaviors/0", "value": { "code": "livestockwelfare.hygiene", "species": "chicken" }, "file": "game:entities/animal/bird/chicken-adult.json" }
+]

@@ -1,0 +1,22 @@
+{
+	// Never spawned. Livestock that die of old age or disease store one of these codes as
+	// "deathByEntity", so the vanilla carcass shows our text and gives reduced drops.
+	code: "deathcause",
+	class: "EntityAgent",
+	tags: ["inanimate"],
+	variantgroups: [
+		{ code: "cause", states: ["oldage", "disease"] }
+	],
+	hitboxSize: { x: 0.1, y: 0.1 },
+	attributesByType: {
+		"*-oldage": { killedByInfoText: "livestockwelfare:died-of-old-age", deathByMultiplier: 0.4 },
+		"*-disease": { killedByInfoText: "livestockwelfare:died-of-disease", deathByMultiplier: 0.4 }
+	},
+	client: {
+		renderer: "Dummy",
+		behaviors: []
+	},
+	server: {
+		behaviors: []
+	}
+}

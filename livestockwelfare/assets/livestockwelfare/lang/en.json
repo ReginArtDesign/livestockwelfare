@@ -1,0 +1,16 @@
+{
+	"block-muck-*": "Muck",
+	"age-info": "Age: {0}",
+	"age-value": "{p0:0 years|# year|# years}, {p1:0 days|# day|# days}",
+	"age-unknown": "unknown",
+	"age-chat": "{0} — age: {1}",
+	"old": "Old, can no longer breed",
+	"died-of-old-age": "Died of old age",
+	"sick": "Sick",
+	"collapsed": "too weak to stand",
+	"heldhelp-groom": "Groom (rub off dirt)",
+	"filth-medium": "dirty surroundings",
+	"filth-high": "very dirty surroundings",
+	"filth-percent": "Filth: {0}%",
+	"died-of-disease": "Died of disease"
+}

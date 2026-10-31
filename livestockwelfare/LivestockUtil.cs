@@ -1,0 +1,49 @@
+using Vintagestory.API.Common;
+using Vintagestory.API.Common.Entities;
+using Vintagestory.API.Config;
+
+namespace livestockwelfare;
+
+/// <summary>Helpers shared by the livestock behaviors.</summary>
+public static class LivestockUtil
+{
+    public const string Domain = "livestockwelfare";
+
+    // Vanilla EntityBehaviorHarvestable reads the killer's entity type from this attribute: its
+    // "killedByInfoText" is shown on the carcass and its "deathByMultiplier" scales the drops.
+    // The codes below are never-spawned entity types from entities/deathcause.json.
+    public const string DeathByEntityAttr = "deathByEntity";
+    public const string OldAgeDeathCause = "livestockwelfare:deathcause-oldage";
+    public const string DiseaseDeathCause = "livestockwelfare:deathcause-disease";
+
+    /// <summary>
+    /// Keeps the vanilla mating cooldown just ahead of the current time, so EntityBehaviorMultiply
+    /// never lets the animal get pregnant. An already pregnant animal still gives birth.
+    /// </summary>
+    public static void BlockBreeding(Entity entity)
+    {
+        var multiply = entity.WatchedAttributes.GetTreeAttribute("multiply");
+        if (multiply == null || multiply.GetBool("isPregnant")) return;
+
+        double blockUntil = entity.World.Calendar.TotalDays + 1;
+        if (multiply.GetDouble("totalDaysCooldownUntil") >= blockUntil) return;
+
+        multiply.SetDouble("totalDaysCooldownUntil", blockUntil);
+        entity.WatchedAttributes.MarkPathDirty("multiply");
+    }
+
+    /// <summary>Kills the animal without a killer, remembering the cause for the info text and drops.</summary>
+    public static void Kill(Entity entity, string cause)
+    {
+        entity.WatchedAttributes.SetString(DeathByEntityAttr, cause);
+        entity.Die(EnumDespawnReason.Death, new DamageSource
+        {
+            Source = EnumDamageSource.Internal,
+            Type = EnumDamageType.Injury
+        });
+    }
+
+    /// <param name="langCode">Language to use, or null for the local game language.</param>
+    public static string Translate(string? langCode, string key, params object[] args) =>
+        langCode == null ? Lang.Get(key, args) : Lang.GetL(langCode, key, args);
+}

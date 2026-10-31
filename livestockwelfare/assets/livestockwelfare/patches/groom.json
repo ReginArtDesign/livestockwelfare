@@ -1,0 +1,8 @@
+[
+	{
+		"op": "addmerge",
+		"path": "/behaviors",
+		"value": [ { "name": "livestockwelfare.groom", "properties": { "groomSeconds": 2 } } ],
+		"file": "game:itemtypes/resource/drygrass.json"
+	}
+]
