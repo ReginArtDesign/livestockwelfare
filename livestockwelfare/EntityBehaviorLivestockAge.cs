@@ -173,6 +173,10 @@ public class EntityBehaviorLivestockAge : EntityBehavior
         {
             message += " — " + hygiene.StatusText(lang);
         }
+        if (entity.GetBehavior<EntityBehaviorLivestockShelter>() is { } shelter)
+        {
+            message += " — " + shelter.StatusText(lang);
+        }
         player.SendMessage(GlobalConstants.GeneralChatGroup, message, EnumChatType.Notification);
     }
 }

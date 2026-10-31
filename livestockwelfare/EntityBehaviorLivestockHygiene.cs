@@ -25,9 +25,6 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
     const string SickAttr = "lwSick";
     const string ImmuneUntilAttr = "lwImmuneUntilDays";
     const string LastUpdateAttr = "lwHygieneLastHours";
-    // Remembers that we turned off vanilla health regeneration, so we can turn it back on.
-    const string RegenSuppressedAttr = "lwRegenSuppressed";
-    const string VanillaRegenSpeedAttr = "regenSpeed";
     // Badly sick animal lying on the ground until it recovers or dies.
     const string CollapsedAttr = "lwCollapsed";
 
@@ -161,6 +158,8 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
     public bool IsSick => entity.WatchedAttributes.GetBool(SickAttr);
     public bool IsCollapsed => entity.WatchedAttributes.GetBool(CollapsedAttr);
 
+    float WeatherStress => entity.GetBehavior<EntityBehaviorLivestockShelter>()?.Stress ?? 0;
+
     bool IsImmune => entity.WatchedAttributes.GetDouble(ImmuneUntilAttr) > entity.World.Calendar.TotalDays;
 
     static HygieneSettings? Settings =>
@@ -169,15 +168,15 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
     public override void OnEntityLoaded()
     {
         base.OnEntityLoaded();
-        if (entity.World.Side == EnumAppSide.Server && IsSick) SuppressRegen(true);
+        if (entity.World.Side != EnumAppSide.Server) return;
+        // Also sets the "sick" reason for animals saved by versions that had no reasons yet.
+        LivestockUtil.SetRegenBlocked(entity, "sick", IsSick);
     }
 
     public override void OnEntityDespawn(EntityDespawnData despawn)
     {
         base.OnEntityDespawn(despawn);
-        // Turn regeneration back on while the animal is unloaded, so removing the mod
-        // never leaves animals that can no longer heal. It is turned off again on load.
-        if (entity.World.Side == EnumAppSide.Server && entity.Alive) SuppressRegen(false);
+        if (entity.World.Side == EnumAppSide.Server && entity.Alive) LivestockUtil.ReleaseRegen(entity);
     }
 
     public override void OnGameTick(float deltaTime)
@@ -348,7 +347,9 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
         if (IsImmune) return;
 
         double filth = Filth;
-        double chancePerDay = settings.SicknessChancePerDay * filth * filth;
+        // Bad weather counts too: a cold, wet animal falls sick even in a clean pen.
+        double weather = WeatherStress * (livestockwelfareModSystem.Config?.Weather.SicknessWeight ?? 0);
+        double chancePerDay = settings.SicknessChancePerDay * (filth * filth + weather * weather);
         if (entity.GetBehavior<EntityBehaviorLivestockAge>()?.IsOld == true)
         {
             chancePerDay *= settings.OldAgeSicknessMultiplier;
@@ -359,7 +360,7 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
 
     void UpdateSick(HygieneSettings settings, double hours)
     {
-        if (Roll(settings.RecoveryChancePerDay * (1 - Filth), hours))
+        if (Roll(settings.RecoveryChancePerDay * (1 - Filth) * (1 - WeatherStress), hours))
         {
             Recover(settings.ImmunityDays);
             return;
@@ -410,7 +411,7 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
     void FallSick()
     {
         entity.WatchedAttributes.SetBool(SickAttr, true);
-        SuppressRegen(true);
+        LivestockUtil.SetRegenBlocked(entity, "sick", true);
         LivestockUtil.BlockBreeding(entity);
     }
 
@@ -418,7 +419,7 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
     {
         entity.WatchedAttributes.SetBool(SickAttr, false);
         entity.WatchedAttributes.SetDouble(ImmuneUntilAttr, entity.World.Calendar.TotalDays + immunityDays);
-        SuppressRegen(false);
+        LivestockUtil.SetRegenBlocked(entity, "sick", false);
         if (IsCollapsed) StandUp();
     }
 
@@ -465,15 +466,6 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
         entity.WatchedAttributes.SetBool(CollapsedAttr, false);
         entity.AnimManager.StopAnimation(collapseAnimation);
         entity.AnimManager.StartAnimation("idle");
-    }
-
-    void SuppressRegen(bool suppress)
-    {
-        var attrs = entity.WatchedAttributes;
-        if (attrs.GetBool(RegenSuppressedAttr) == suppress) return;
-
-        attrs.SetFloat(VanillaRegenSpeedAttr, suppress ? 0 : 1);
-        attrs.SetBool(RegenSuppressedAttr, suppress);
     }
 
     /// <summary>Sickness and filth status for the info text and chat, e.g. "Sick, filth: 45% (dirty surroundings)".</summary>

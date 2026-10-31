@@ -12,5 +12,14 @@
 	"filth-medium": "piszkos környezet",
 	"filth-high": "nagyon piszkos környezet",
 	"filth-percent": "Szennyezettség: {0}%",
-	"died-of-disease": "Betegségben pusztult el"
+	"died-of-disease": "Betegségben pusztult el",
+	"died-of-exposure": "Az időjárás végzett vele",
+	"weather-wet": "Ázik",
+	"weather-snow": "Havazik rá",
+	"weather-cold": "Fázik",
+	"weather-hot": "Szenved a tűző napon",
+	"weather-stress": "időjárás-stressz: {0}%",
+	"weather-enclosed": "Védett helyen, zárt ólban",
+	"weather-roofed": "Fedett helyen",
+	"weather-open": "Szabad ég alatt"
 }

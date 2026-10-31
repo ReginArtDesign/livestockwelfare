@@ -94,6 +94,10 @@ public class SelfTest : ModSystem
         for (int i = 0; i < 10; i++) watched.Add(Spawn("game:sheep-bighorn-adult-female", spawn, i % 4, y, i / 4));
         watched.Add(Spawn("game:sheep-bighorn-baby-female", spawn, 0, y, 4));
         this.spawn = spawn;
+
+        // A small closed plank hut with one sheep, to check shelter detection.
+        BuildHut(spawn.AddCopy(10, 0, 0).Set(spawn.X + 10, y, spawn.Z));
+        hutSheep = Spawn("game:sheep-bighorn-adult-female", spawn, 12, y, 2);
         Log("spawned");
 
         int step = 0;
@@ -111,6 +115,22 @@ public class SelfTest : ModSystem
                 sapi.Logger.Notification("[lwselftest] groomed: filth {0:0.00} -> {1:0.00}", before, h.Filth);
             }
         }, 7000);
+    }
+
+    Entity? hutSheep;
+
+    // Walls, floor and roof of planks around a 3x3x2 inside space starting at corner + (1, 0, 1).
+    void BuildHut(BlockPos corner)
+    {
+        var planks = sapi.World.GetBlock(new AssetLocation("game:planks-aged-ud"));
+        var accessor = sapi.World.BlockAccessor;
+        for (int dx = 0; dx <= 4; dx++)
+        for (int dy = -1; dy <= 2; dy++)
+        for (int dz = 0; dz <= 4; dz++)
+        {
+            bool inside = dx is >= 1 and <= 3 && dz is >= 1 and <= 3 && dy is >= 0 and <= 1;
+            accessor.SetBlock(inside ? 0 : planks.Id, corner.AddCopy(dx, dy, dz));
+        }
     }
 
     Entity Spawn(string code, BlockPos at, int dx, int y, int dz)
@@ -138,6 +158,14 @@ public class SelfTest : ModSystem
         });
         sapi.Logger.Notification("[lwselftest] {0}: day {1:0.0}, {2}/{3} alive, {4} sick, muck: {5} blocks / {6} levels",
             label, sapi.World.Calendar.TotalDays, alive, watched.Count, sick, muckBlocks, muckLevels);
+
+        var climate = sapi.World.BlockAccessor.GetClimateAt(spawn, EnumGetClimateMode.NowValues);
+        foreach (var (where, e) in new[] { ("open", watched.FirstOrDefault(w => w.Alive)), ("hut", hutSheep) })
+        {
+            if (e?.GetBehavior<EntityBehaviorLivestockShelter>() is not { } shelter) continue;
+            sapi.Logger.Notification("[lwselftest]   weather {0}: {1}°C rain {2:0.00} -> {3}",
+                where, climate?.Temperature, climate?.Rainfall, shelter.StatusText("en"));
+        }
         foreach (var e in watched.Where(e => e.Alive && (e == watched[0] || !e.Code.Path.Contains("female-") || e.Code.Path.Contains("baby") || e.WatchedAttributes.GetBool("lwSick"))).Take(4))
         {
             var a = e.WatchedAttributes;

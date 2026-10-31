@@ -36,6 +36,8 @@ public class LivestockWelfareConfig
 
     public HygieneSettings Hygiene { get; set; } = new();
 
+    public WeatherSettings Weather { get; set; } = new();
+
     public void Sanitize()
     {
         if (OldAgeFraction is < 0.1 or > 1) OldAgeFraction = 0.75;
@@ -45,7 +47,72 @@ public class LivestockWelfareConfig
             if (aging.LifespanYearsMax < aging.LifespanYearsMin) aging.LifespanYearsMax = aging.LifespanYearsMin;
         }
         Hygiene.Sanitize();
+        Weather.Sanitize();
     }
+}
+
+/// <summary>
+/// Rain, snow, cold and strong sun stress animals that have no shelter. A roof keeps off rain,
+/// snow and sun; a closed room (no open exits) also keeps out the cold. Stress makes animals
+/// sick more easily, stops breeding and, when severe, slowly hurts them.
+/// </summary>
+public class WeatherSettings
+{
+    public bool Enabled { get; set; } = true;
+
+    /// <summary>Stress while standing in rain (scaled by how hard it rains).</summary>
+    public double RainStress { get; set; } = 0.35;
+    /// <summary>Stress while standing in snowfall (scaled by how hard it snows).</summary>
+    public double SnowStress { get; set; } = 0.45;
+    /// <summary>Stress per degree below the species' cold limit, outside a closed room.</summary>
+    public double ColdStressPerDegree { get; set; } = 0.05;
+    /// <summary>Under a roof but not in a closed room, cold stress is multiplied by this.</summary>
+    public double RoofColdFactor { get; set; } = 0.5;
+    /// <summary>Stress per degree above the species' heat limit, in direct daytime sun.</summary>
+    public double HeatStressPerDegree { get; set; } = 0.06;
+
+    /// <summary>How quickly stress follows the weather, in in-game hours.</summary>
+    public double StressAdaptHours { get; set; } = 12;
+
+    /// <summary>
+    /// How much weather stress counts towards falling sick, compared to filth: the daily sickness
+    /// chance scales with filth² + (stress × this)². 1 = stress is as bad as dirt.
+    /// </summary>
+    public double SicknessWeight { get; set; } = 1;
+    /// <summary>Animals this stressed do not breed.</summary>
+    public double NoBreedingAboveStress { get; set; } = 0.5;
+    /// <summary>Animals this stressed stop healing and slowly lose health.</summary>
+    public double HarmAboveStress { get; set; } = 0.8;
+    public double HarmPerDay { get; set; } = 2;
+
+    /// <summary>Temperatures (°C) each species copes with; "default" is used for others.</summary>
+    public Dictionary<string, WeatherTolerance> Species { get; set; } = new()
+    {
+        // Wool and thick coats handle cold well; pigs and chickens much less.
+        ["default"] = new WeatherTolerance { ColdBelowC = -2, HotAboveC = 30 },
+        ["sheep"] = new WeatherTolerance { ColdBelowC = -10, HotAboveC = 27 },
+        ["goat"] = new WeatherTolerance { ColdBelowC = -6, HotAboveC = 32 },
+        ["pig"] = new WeatherTolerance { ColdBelowC = 2, HotAboveC = 26 },
+        ["chicken"] = new WeatherTolerance { ColdBelowC = 0, HotAboveC = 30 },
+    };
+
+    public WeatherTolerance ToleranceFor(string species) =>
+        Species.TryGetValue(species, out var t) ? t : Species.TryGetValue("default", out var d) ? d : new WeatherTolerance();
+
+    public void Sanitize()
+    {
+        if (StressAdaptHours < 1) StressAdaptHours = 1;
+        RoofColdFactor = Math.Clamp(RoofColdFactor, 0, 1);
+        if (SicknessWeight < 0) SicknessWeight = 0;
+        if (HarmPerDay < 0) HarmPerDay = 0;
+        Species ??= new();
+    }
+}
+
+public class WeatherTolerance
+{
+    public double ColdBelowC { get; set; } = -2;
+    public double HotAboveC { get; set; } = 30;
 }
 
 /// <summary>

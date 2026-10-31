@@ -12,5 +12,14 @@
 	"filth-medium": "dirty surroundings",
 	"filth-high": "very dirty surroundings",
 	"filth-percent": "Filth: {0}%",
-	"died-of-disease": "Died of disease"
+	"died-of-disease": "Died of disease",
+	"died-of-exposure": "Died of exposure",
+	"weather-wet": "Getting wet",
+	"weather-snow": "Snowed on",
+	"weather-cold": "Cold",
+	"weather-hot": "Suffering in the hot sun",
+	"weather-stress": "weather stress: {0}%",
+	"weather-enclosed": "Sheltered in a closed barn",
+	"weather-roofed": "Under a roof",
+	"weather-open": "In the open"
 }

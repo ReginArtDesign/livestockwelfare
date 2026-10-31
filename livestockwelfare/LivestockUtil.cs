@@ -15,6 +15,7 @@ public static class LivestockUtil
     public const string DeathByEntityAttr = "deathByEntity";
     public const string OldAgeDeathCause = "livestockwelfare:deathcause-oldage";
     public const string DiseaseDeathCause = "livestockwelfare:deathcause-disease";
+    public const string ExposureDeathCause = "livestockwelfare:deathcause-exposure";
 
     /// <summary>
     /// Keeps the vanilla mating cooldown just ahead of the current time, so EntityBehaviorMultiply
@@ -41,6 +42,42 @@ public static class LivestockUtil
             Source = EnumDamageSource.Internal,
             Type = EnumDamageType.Injury
         });
+    }
+
+    // Several things (sickness, bad weather) can stop an animal's vanilla health regeneration.
+    // Each sets its own reason; regeneration is off while any reason is set. We only write
+    // "regenSpeed" when our overall state changes, so other mods that use it are left alone.
+    const string RegenBlockedAttr = "lwRegenSuppressed";
+    const string RegenReasonPrefix = "lwRegenBlocked-";
+    const string VanillaRegenSpeedAttr = "regenSpeed";
+    static readonly string[] RegenReasons = { "sick", "weather" };
+
+    public static void SetRegenBlocked(Entity entity, string reason, bool blocked)
+    {
+        entity.WatchedAttributes.SetBool(RegenReasonPrefix + reason, blocked);
+        ApplyRegen(entity);
+    }
+
+    /// <summary>Re-applies the regeneration state, e.g. after the animal was loaded.</summary>
+    public static void ApplyRegen(Entity entity)
+    {
+        bool blocked = false;
+        foreach (string reason in RegenReasons) blocked |= entity.WatchedAttributes.GetBool(RegenReasonPrefix + reason);
+        SetRegen(entity, blocked);
+    }
+
+    /// <summary>
+    /// Turns regeneration back on while the animal is unloaded (reasons are kept), so removing
+    /// the mod never leaves animals that can no longer heal.
+    /// </summary>
+    public static void ReleaseRegen(Entity entity) => SetRegen(entity, false);
+
+    static void SetRegen(Entity entity, bool blocked)
+    {
+        var attrs = entity.WatchedAttributes;
+        if (attrs.GetBool(RegenBlockedAttr) == blocked) return;
+        attrs.SetFloat(VanillaRegenSpeedAttr, blocked ? 0 : 1);
+        attrs.SetBool(RegenBlockedAttr, blocked);
     }
 
     /// <param name="langCode">Language to use, or null for the local game language.</param>
