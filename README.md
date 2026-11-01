@@ -68,6 +68,7 @@ Everything is in `ModConfig/livestockwelfare.json` (created on first start): lif
 ## Known limitations (beta)
 - Only vanilla sheep, goats, pigs and chickens are covered.
 - Balance needs testing in long-running worlds.
+- Not tested yet in existing world saves (added to a world that was already running) or in multiplayer. Back up your world first.
 
 ## How this mod was made
 Livestock Welfare is designed and tested by ReginArtDesign and written with the help of an AI assistant (Claude by Anthropic). I'm not a programmer: I came up with the ideas, decided how the animals should behave, and tested every feature in game. The AI wrote the code, looked up how the base game works (decompiling the game's own code to follow its rules, e.g. for rooms, rain and animal AI) and ran automated tests on a headless server. Ideas and feedback from the Vintage Story community shaped many features, like the safety options for servers.
