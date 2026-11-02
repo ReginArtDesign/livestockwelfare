@@ -43,7 +43,7 @@ Fixes
 PLANNED FOR LATER
 
 - Milking vs. nursing: milking a nursing mother leaves less milk for her baby.
-- Support for other mods' animals: Feverstone Wilds first, then Teapot's animals, Equus (horses), Traditional Livestock, The Critters Pack, FotSA Bovinae and Cuniculture. Smaller critters will get a lighter set of needs, since some mechanics would just be annoying at that size.
+- Support for other mods' animals: Teapot's Giant Boar, Great Bighorn and Giant Redriver are done; next come Traditional Livestock, Feverstone Wilds, The Critters Pack, Equus (horses), Genealogy, FotSA Bovinae and Cuniculture. Smaller critters will get a lighter set of needs, since some mechanics would just be annoying at that size.
 - Rotting carcasses: after a while flies gather over a dead animal (wild or kept), a sign that its meat is no longer fresh, and butchering it then gives rot instead of meat.
 - In-game settings menu (with the ConfigLib mod), so you can tune the animals' needs without editing files.
 - Testing in existing world saves and in multiplayer.

@@ -32,6 +32,10 @@ public class LivestockWelfareConfig
         ["goat"] = new SpeciesAging { LifespanYearsMin = 4, LifespanYearsMax = 6 },
         ["pig"] = new SpeciesAging { LifespanYearsMin = 3, LifespanYearsMax = 4 },
         ["chicken"] = new SpeciesAging { LifespanYearsMin = 2, LifespanYearsMax = 3 },
+        // Other mods' animals (patches/othermods).
+        ["giantboar"] = new SpeciesAging { LifespanYearsMin = 4, LifespanYearsMax = 6 },
+        ["greathorn"] = new SpeciesAging { LifespanYearsMin = 4, LifespanYearsMax = 6 },
+        ["giantredriver"] = new SpeciesAging { LifespanYearsMin = 3, LifespanYearsMax = 5 },
     };
 
     public HygieneSettings Hygiene { get; set; } = new();
@@ -201,6 +205,11 @@ public class WeatherSettings
         ["goat"] = new WeatherTolerance { ColdBelowC = -6, HotAboveC = 32 },
         ["pig"] = new WeatherTolerance { ColdBelowC = 2, HotAboveC = 26 },
         ["chicken"] = new WeatherTolerance { ColdBelowC = 0, HotAboveC = 30 },
+        // Giant boars have a thick bristly coat, great bighorns live in the mountains, and giant
+        // red river hogs come from the warm south.
+        ["giantboar"] = new WeatherTolerance { ColdBelowC = -8, HotAboveC = 27 },
+        ["greathorn"] = new WeatherTolerance { ColdBelowC = -15, HotAboveC = 25 },
+        ["giantredriver"] = new WeatherTolerance { ColdBelowC = 6, HotAboveC = 33 },
     };
 
     public WeatherTolerance ToleranceFor(string species) =>
@@ -270,6 +279,9 @@ public class ThirstSettings
         ["goat"] = 1,
         ["pig"] = 1.5,
         ["chicken"] = 0.1,
+        ["giantboar"] = 2.5,
+        ["greathorn"] = 2,
+        ["giantredriver"] = 2,
     };
 
     public double LitresFor(string species) =>
