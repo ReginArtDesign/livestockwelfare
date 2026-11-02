@@ -6,6 +6,8 @@
 		{ code: "level", states: ["1", "2", "3", "4"] }
 	],
 	creativeinventory: { "general": ["muck-1"] },
+	// Breaks (dropping its rot) when the ground under it is dug out.
+	behaviors: [{ name: "livestockwelfare.needsground" }],
 	blockmaterial: "Soil",
 	drawtype: "JSON",
 	shapebytype: {
@@ -20,7 +22,9 @@
 	randomizeRotations: true,
 	resistance: 0.3,
 	lightabsorption: 0,
-	sideopaque: { all: false, down: true },
+	// Not opaque downwards either: otherwise the block below stops drawing its top face, while the
+	// muck's own bottom face is culled against it, leaving a see-through hole (x-ray).
+	sideopaque: { all: false },
 	sidesolid: { all: false },
 	emitsideao: { all: false },
 	replaceable: 6000,

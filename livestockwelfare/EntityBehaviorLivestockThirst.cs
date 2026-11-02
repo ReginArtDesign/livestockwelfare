@@ -23,6 +23,8 @@ public class EntityBehaviorLivestockThirst : EntityBehavior
     const float CheckIntervalSeconds = 5;
     // Longer gaps (e.g. the chunk was unloaded) are not simulated, like the other behaviors.
     const double MaxCatchUpHours = 24;
+    // Normally an update covers about an hour; a gap this long means the time passed at once.
+    const double CatchUpDrinkHours = 3;
     static readonly AssetLocation WaterPortion = new("game", "waterportion");
 
     string species = "";
@@ -89,6 +91,13 @@ public class EntityBehaviorLivestockThirst : EntityBehavior
         if (!LivestockUtil.ShouldSimulate(entity)) return;
 
         GetThirsty(settings, hours);
+        // Time that passed at once (a time skip, a long sleep, a reloaded chunk): the animal would
+        // have walked to water in between, so it drinks from the nearest it could walk to now.
+        if (settings.WalkToWater && hours >= CatchUpDrinkHours && Thirst > settings.DrinkAboveThirst
+            && FindDrinkTarget(settings.SeekWaterRadius, _ => false) is { } target)
+        {
+            DrinkFrom(target.Container);
+        }
         // With walking to water, drinking from where they stand is only the fallback for animals
         // that can't get there (e.g. a barrel just outside the fence).
         double drinkAbove = settings.WalkToWater ? Math.Max(settings.DrinkAboveThirst, settings.RemoteDrinkAboveThirst) : settings.DrinkAboveThirst;
@@ -172,12 +181,12 @@ public class EntityBehaviorLivestockThirst : EntityBehavior
         {
             if (block.IsLiquid())
             {
-                if (block.LiquidCode == "water" && settings.DrinkFromNaturalWater)
+                if (IsDrinkableWaterBlock(block) && settings.DrinkFromNaturalWater)
                 {
                     if (!natural) { naturalBlock = block.Code?.ToShortString(); naturalOffset = new Vec3i(x - pos.X, y - pos.Y, z - pos.Z); }
                     natural = true;
                 }
-                else if (UndrinkableLiquids.Contains(block.LiquidCode)) sawUndrinkable = true;
+                else if (UndrinkableLiquids.Contains(block.LiquidCode) || (block.LiquidCode == "water" && !IsDrinkableWaterBlock(block))) sawUndrinkable = true;
                 return;
             }
             if (block.EntityClass == null) return;
@@ -224,7 +233,7 @@ public class EntityBehaviorLivestockThirst : EntityBehavior
             if (block.IsLiquid())
             {
                 // Only surface water an animal can reach from the bank.
-                if (!settings.DrinkFromNaturalWater || block.LiquidCode != "water") return;
+                if (!settings.DrinkFromNaturalWater || !IsDrinkableWaterBlock(block)) return;
                 if (accessor.GetBlock(tmpPos.UpCopy()).Id != 0) return;
             }
             else if (block.EntityClass != null)
@@ -247,11 +256,23 @@ public class EntityBehaviorLivestockThirst : EntityBehavior
     // Hot spring water and sea water: animals refuse them, so tell the player why they don't drink.
     static readonly string[] UndrinkableLiquids = { "boilingwater", "saltwater" };
 
+    // Hydrate or Diedrate has its own water: rain, well, distilled and boiled water portions, and
+    // well water blocks, each clean, muddy, tainted or poisoned, fresh or salt. Animals drink only
+    // the fresh (or boiled) clean kinds.
+    const string HydrateOrDiedrate = "hydrateordiedrate";
+
+    static bool IsDrinkableWaterPortion(AssetLocation code) =>
+        code.Equals(WaterPortion)
+        || (code.Domain == HydrateOrDiedrate && (code.Path.StartsWith("waterportion-fresh-") || code.Path.StartsWith("waterportion-boiled-")) && code.Path.EndsWith("-clean"));
+
+    static bool IsDrinkableWaterBlock(Block block) =>
+        block.LiquidCode == "water" && (block.Code?.Domain != HydrateOrDiedrate || block.Code.Path.StartsWith("wellwater-fresh-clean-"));
+
     static ItemSlot? WaterSlot(BlockEntityLiquidContainer container)
     {
         foreach (var slot in container.Inventory)
         {
-            if (slot.Itemstack?.Collectible?.Code is { } code && code.Equals(WaterPortion) && slot.StackSize > 0) return slot;
+            if (slot.Itemstack?.Collectible?.Code is { } code && IsDrinkableWaterPortion(code) && slot.StackSize > 0) return slot;
         }
         return null;
     }
@@ -260,8 +281,9 @@ public class EntityBehaviorLivestockThirst : EntityBehavior
     {
         foreach (var slot in container.Inventory)
         {
-            string? path = slot.Itemstack?.Collectible?.Code?.Path;
-            if (path is "boilingwaterportion" or "saltwaterportion") return true;
+            if (slot.Itemstack?.Collectible?.Code is not { } code) continue;
+            if (code.Path is "boilingwaterportion" or "saltwaterportion") return true;
+            if (code.Domain == HydrateOrDiedrate && code.Path.StartsWith("waterportion-") && !IsDrinkableWaterPortion(code)) return true;
         }
         return false;
     }
@@ -288,7 +310,8 @@ public class EntityBehaviorLivestockThirst : EntityBehavior
         float thirst = Thirst;
         if (thirst >= settings.NoBreedingAboveThirst) LivestockUtil.BlockBreeding(entity);
 
-        bool harmed = thirst >= settings.HarmAboveThirst;
+        // Wild animals get thirsty but don't die of it: they may live far from water.
+        bool harmed = thirst >= settings.HarmAboveThirst && LivestockUtil.IsKept(entity);
         LivestockUtil.SetRegenBlocked(entity, "thirst", harmed);
         if (!harmed) return;
 

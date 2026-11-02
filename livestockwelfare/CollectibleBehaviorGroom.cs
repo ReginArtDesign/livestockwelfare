@@ -9,7 +9,7 @@ namespace livestockwelfare;
 
 /// <summary>
 /// Lets an item (dry grass, patched in JSON) be used as a grooming wisp: sneak + hold right click
-/// on a livestock animal rubs off some of its dirt. Without sneaking the item works as usual
+/// on a livestock animal rubs off some of its dirt; it lies down meanwhile. Without sneaking the item works as usual
 /// (e.g. feeding), so this does not get in the way.
 /// </summary>
 public class CollectibleBehaviorGroom : CollectibleBehavior
@@ -19,6 +19,9 @@ public class CollectibleBehaviorGroom : CollectibleBehavior
     // Vanilla butchering animation: a back-and-forth arm motion that loops while held.
     const string PlayerAnimation = "knifecut";
     static readonly AssetLocation Sound = new("game", "sounds/block/plant");
+    // The animal lies down while groomed, and stays down this long after the last stroke so the
+    // player can start the next one; it gets up as soon as it is clean.
+    const float LieDownSeconds = 8;
 
     float groomSeconds = 2;
     SimpleParticleProperties? dust;
@@ -32,25 +35,28 @@ public class CollectibleBehaviorGroom : CollectibleBehavior
         groomSeconds = properties["groomSeconds"].AsFloat(2);
     }
 
+    // Babies and chickens keep clean without help, so dry grass works as usual on them (e.g. feeding).
     static EntityBehaviorLivestockHygiene? Target(EntitySelection? entitySel) =>
-        entitySel?.Entity is { Alive: true } e ? e.GetBehavior<EntityBehaviorLivestockHygiene>() : null;
+        entitySel?.Entity is { Alive: true } e && e.GetBehavior<EntityBehaviorLivestockHygiene>() is { CanBeGroomed: true } hygiene ? hygiene : null;
 
     public override void OnHeldInteractStart(ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel, bool firstEvent, ref EnumHandHandling handHandling, ref EnumHandling handling)
     {
-        if (!firstEvent || !byEntity.Controls.ShiftKey || Target(entitySel) == null) return;
+        if (!firstEvent || !byEntity.Controls.ShiftKey || Target(entitySel) is not { } hygiene) return;
 
         // Take over the click, so the animal is not fed or petted instead.
         handHandling = EnumHandHandling.PreventDefault;
         handling = EnumHandling.PreventSubsequent;
         byEntity.World.PlaySoundAt(Sound, entitySel.Entity, (byEntity as EntityPlayer)?.Player, randomizePitch: true, range: 12);
+        if (byEntity.World.Side == EnumAppSide.Server) hygiene.HoldStill(LieDownSeconds);
     }
 
     public override bool OnHeldInteractStep(float secondsUsed, ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel, ref EnumHandling handling)
     {
-        if (Target(entitySel) == null || !byEntity.Controls.ShiftKey) return true;
+        if (Target(entitySel) is not { } hygiene || !byEntity.Controls.ShiftKey) return true;
 
         handling = EnumHandling.PreventSubsequent;
         if (byEntity.World.Side == EnumAppSide.Client) SpawnDust(byEntity.World, entitySel.Entity);
+        else hygiene.HoldStill(LieDownSeconds);
         return secondsUsed < groomSeconds;
     }
 
@@ -65,7 +71,9 @@ public class CollectibleBehaviorGroom : CollectibleBehavior
         var settings = livestockwelfareModSystem.Config?.Hygiene;
         if (settings is not { Enabled: true }) return;
 
-        if (!hygiene.Groom(settings.GroomFilthReduction)) return;
+        bool groomed = hygiene.Groom(settings.GroomFilthReduction);
+        if (hygiene.Filth <= 0) hygiene.StopHoldingStill();
+        if (!groomed) return;
 
         var player = (byEntity as EntityPlayer)?.Player as IServerPlayer;
         bool creative = player?.WorldData.CurrentGameMode == EnumGameMode.Creative;

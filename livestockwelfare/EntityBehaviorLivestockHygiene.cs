@@ -34,6 +34,8 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
 
     string species = "";
     string collapseAnimation = "sleep";
+    // Babies never get dirty (their mother keeps them clean), but can still fall sick.
+    bool baby;
     float accum;
 
     public EntityBehaviorLivestockHygiene(Entity entity) : base(entity) { }
@@ -44,6 +46,7 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
     {
         base.Initialize(properties, attributes);
         species = attributes["species"].AsString("");
+        baby = attributes["baby"].AsBool(false);
         collapseAnimation = attributes["collapseAnimation"].AsString("sleep");
         entity.AnimManager.OnStartAnimation += OnStartAnimation;
 
@@ -60,7 +63,7 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
         }
     }
 
-    // Flies buzz around very dirty and sick animals (client side only).
+    // Flies buzz around very dirty animals (client side only).
     const float FliesFromFilth = 0.66f;
     float fliesAccum;
     static SimpleParticleProperties? flies;
@@ -70,7 +73,8 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
         fliesAccum += deltaTime;
         if (fliesAccum < 0.3f) return;
         fliesAccum = 0;
-        if (!IsSick && Filth < FliesFromFilth) return;
+        // Only dirt draws flies; a sick animal shows it by being listless instead (see UpdateListless).
+        if (Filth < FliesFromFilth) return;
 
         flies ??= new SimpleParticleProperties(
             1, 2, ColorUtil.ToRgba(255, 20, 20, 15),
@@ -135,10 +139,11 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
     {
         base.AfterInitialized(onFirstSpawn);
         if (entity.World.Side != EnumAppSide.Server) return;
+        UpdateSelfCleaning();
 
         // Same approach as vanilla EntityBehaviorMortallyWoundable: no AI tasks while lying down.
         var taskAi = entity.GetBehavior<EntityBehaviorTaskAI>();
-        if (taskAi != null) taskAi.TaskManager.OnShouldExecuteTask += _ => !IsCollapsed;
+        if (taskAi != null) taskAi.TaskManager.OnShouldExecuteTask += _ => !IsCollapsed && !IsHeldStill;
         if (IsCollapsed) LieDown();
     }
 
@@ -154,7 +159,24 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
     }
 
     public string Species => species;
+    public bool IsBaby => baby;
     public float Filth => entity.WatchedAttributes.GetFloat(FilthAttr);
+
+    /// <summary>
+    /// Chickens and other self-cleaning species get clean on their own; like babies they need no grooming.
+    /// Set by the server from the config and synced, so the client knows not to start grooming them.
+    /// </summary>
+    bool SelfCleaning => entity.WatchedAttributes.GetBool(SelfCleaningAttr);
+    const string SelfCleaningAttr = "lwSelfCleaning";
+
+    void UpdateSelfCleaning()
+    {
+        bool selfCleaning = livestockwelfareModSystem.Config?.Hygiene.SelfCleaningSpecies is { } list && Array.IndexOf(list, species) >= 0;
+        if (selfCleaning != SelfCleaning) entity.WatchedAttributes.SetBool(SelfCleaningAttr, selfCleaning);
+    }
+
+    /// <summary>Whether grooming can help this animal (adults of species that don't clean themselves).</summary>
+    public bool CanBeGroomed => !baby && !SelfCleaning;
     public bool IsSick => entity.WatchedAttributes.GetBool(SickAttr);
     public bool IsCollapsed => entity.WatchedAttributes.GetBool(CollapsedAttr);
 
@@ -162,8 +184,8 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
 
     bool IsImmune => entity.WatchedAttributes.GetDouble(ImmuneUntilAttr) > entity.World.Calendar.TotalDays;
 
-    static HygieneSettings? Settings =>
-        livestockwelfareModSystem.Config?.Hygiene is { Enabled: true } settings ? settings : null;
+    HygieneSettings? Settings =>
+        livestockwelfareModSystem.Config?.Hygiene is { Enabled: true } settings && (!baby || LivestockUtil.BabySettings != null) ? settings : null;
 
     public override void OnEntityLoaded()
     {
@@ -188,12 +210,15 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
             return;
         }
 
+        if (holdStillAnimation != null && !IsHeldStill) StopHoldingStill();
+
         accum += deltaTime;
         if (accum < CheckIntervalSeconds) return;
         accum = 0;
 
         // Something (e.g. being pushed or hit) may have started other movement or animations.
         if (IsCollapsed) LieDown();
+        UpdateListless();
 
         var settings = Settings;
         if (settings == null)
@@ -216,9 +241,12 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
         // Nobody around (option): the time passes without the animal getting dirtier, sicker, thirstier.
         if (!LivestockUtil.ShouldSimulate(entity)) return;
 
-        int extraAnimals = ExtraAnimalsNearby(settings);
-        TryDepositMuck(settings, hours, extraAnimals);
-        UpdateFilth(settings, hours, extraAnimals);
+        if (!baby)
+        {
+            int extraAnimals = ExtraAnimalsNearby(settings);
+            TryDepositMuck(settings, hours, extraAnimals);
+            UpdateFilth(settings, hours, extraAnimals);
+        }
         if (IsSick) UpdateSick(settings, hours);
         else TryFallSick(settings, hours);
     }
@@ -229,7 +257,8 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
         double filth = Filth;
         // Moves towards the current dirt level; after the adapt time about 63% of the way.
         // Getting dirty is quick, getting clean on its own is slow: that is what grooming is for.
-        double adaptHours = dirt > filth ? settings.FilthAdaptHours : settings.FilthCleanHours;
+        // Self-cleaning species (chickens) only need clean surroundings.
+        double adaptHours = dirt > filth ? settings.FilthAdaptHours : SelfCleaning ? settings.SelfCleaningHours : settings.FilthCleanHours;
         filth += (dirt - filth) * (1 - Math.Exp(-hours / adaptHours));
         entity.WatchedAttributes.SetFloat(FilthAttr, (float)Math.Clamp(filth, 0, 1));
     }
@@ -288,13 +317,13 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
         return last.Length > 0 && char.IsDigit(last[0]) ? last[0] - '0' : 1;
     }
 
-    /// <summary>Other livestock nearby beyond the number that is fine (0 if not crowded).</summary>
+    /// <summary>Other livestock nearby beyond the number that is fine (0 if not crowded). Babies don't count.</summary>
     int ExtraAnimalsNearby(HygieneSettings settings)
     {
         if (settings.CrowdingRadius <= 0) return 0;
 
         int others = entity.World.GetEntitiesAround(entity.Pos.XYZ, settings.CrowdingRadius, 2,
-            e => e != entity && e.Alive && e.HasBehavior<EntityBehaviorLivestockHygiene>()).Length;
+            e => e != entity && e.Alive && e.GetBehavior<EntityBehaviorLivestockHygiene>() is { IsBaby: false }).Length;
         return Math.Max(0, others - settings.CrowdingFreeAnimals);
     }
 
@@ -307,9 +336,7 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
     {
         if (settings.MuckChancePerDay <= 0) return;
 
-        bool kept = entity.WatchedAttributes.GetInt("generation") >= settings.MuckMinGeneration
-            || entity.Attributes.GetString("origin") == "playerplaced";
-        if (!kept) return;
+        if (!LivestockUtil.IsKept(entity)) return;
 
         double chancePerDay = settings.MuckChancePerDay * (1 + extraAnimals * settings.MuckCrowdingBonus);
         if (!Roll(chancePerDay, hours)) return;
@@ -372,8 +399,9 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
         LivestockUtil.BlockBreeding(entity);
         SpreadDisease(settings, hours);
 
+        // A sick wild animal can still pass the illness on, but it doesn't die of it.
         var health = entity.GetBehavior<EntityBehaviorHealth>();
-        if (health == null) return;
+        if (health == null || !LivestockUtil.IsKept(entity)) return;
 
         LivestockUtil.Harm(entity, health, settings.SickDamagePerDay * hours / 24, LivestockUtil.DiseaseDeathCause, $"disease (filth {Filth:0.00})");
         if (entity.Alive && !IsCollapsed && health.Health <= health.MaxHealth * settings.CollapseHealthFraction)
@@ -391,17 +419,32 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
         foreach (var other in others)
         {
             var hygiene = other.GetBehavior<EntityBehaviorLivestockHygiene>();
-            if (hygiene == null || hygiene.species != species || hygiene.IsSick || hygiene.IsImmune) continue;
-            if (Roll(settings.ContagionChancePerDay, hours)) hygiene.FallSick();
+            if (hygiene == null || hygiene.species != species) continue;
+            if (Roll(settings.ContagionChancePerDay, hours)) hygiene.Infect();
         }
     }
 
-    // Converts a daily chance into the chance over the given number of in-game hours.
-    bool Roll(double chancePerDay, double hours)
+    bool Roll(double chancePerDay, double hours) => LivestockUtil.Roll(entity, chancePerDay, hours);
+
+    /// <summary>Makes the animal sick unless it already is, is immune, or sickness is switched off.</summary>
+    public void Infect()
     {
-        if (chancePerDay <= 0) return false;
-        double chance = 1 - Math.Pow(1 - Math.Min(chancePerDay, 1), hours / 24);
-        return entity.World.Rand.NextDouble() < chance;
+        if (Settings == null || IsSick || IsImmune) return;
+        FallSick();
+    }
+
+    // A sick animal is listless: it often lies down for a while.
+    // Chance per check (every CheckIntervalSeconds) to lie down; with the rest times below a sick
+    // animal spends about a third of its time lying.
+    const double SickRestChance = 0.07;
+    const float SickRestMinSeconds = 20, SickRestMaxSeconds = 60;
+
+    void UpdateListless()
+    {
+        if (IsSick && entity.Alive && !IsCollapsed && !IsHeldStill && entity.World.Rand.NextDouble() < SickRestChance)
+        {
+            HoldStill(SickRestMinSeconds + (float)entity.World.Rand.NextDouble() * (SickRestMaxSeconds - SickRestMinSeconds));
+        }
     }
 
     void FallSick()
@@ -449,6 +492,52 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
         return true;
     }
 
+    // Server side: while being groomed or fed by hand, the animal stays put (no AI tasks) and plays
+    // an animation, until this time.
+    long holdStillUntilMs;
+    string? holdStillAnimation;
+
+    public bool IsHeldStill => holdStillUntilMs > entity.World.ElapsedMilliseconds;
+
+    /// <summary>
+    /// Keeps the animal still for the given time, playing the animation (null: lie down, as when
+    /// collapsed). Called again while the player keeps going, to extend the time.
+    /// </summary>
+    public void HoldStill(float seconds, string? animation = null)
+    {
+        animation ??= collapseAnimation;
+        bool already = IsHeldStill && holdStillAnimation == animation;
+        holdStillUntilMs = entity.World.ElapsedMilliseconds + (long)(seconds * 1000);
+        if (already) return;
+
+        if (holdStillAnimation != null) entity.AnimManager.StopAnimation(holdStillAnimation);
+        holdStillAnimation = animation;
+        entity.GetBehavior<EntityBehaviorTaskAI>()?.TaskManager.StopTasks();
+        (entity as EntityAgent)?.Controls.StopAllMovement();
+        if (!IsCollapsed) StartAnimation(animation);
+    }
+
+    // Plays one of the shape's animations, also those the entity type lists no settings for (e.g.
+    // "eat", which vanilla only plays through an AI task).
+    void StartAnimation(string code)
+    {
+        if (entity.AnimManager.StartAnimation(code)) return;
+        entity.AnimManager.StartAnimation(new AnimationMetaData { Code = code, Animation = code }.Init());
+    }
+
+    /// <summary>Lets the animal move on (e.g. once it is clean).</summary>
+    public void StopHoldingStill()
+    {
+        holdStillUntilMs = 0;
+        if (holdStillAnimation == null) return;
+        if (!IsCollapsed)
+        {
+            entity.AnimManager.StopAnimation(holdStillAnimation);
+            entity.AnimManager.StartAnimation("idle");
+        }
+        holdStillAnimation = null;
+    }
+
     void LieDown()
     {
         entity.GetBehavior<EntityBehaviorTaskAI>()?.TaskManager.StopTasks();
@@ -471,6 +560,8 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
         var parts = new StringBuilder();
         if (IsSick) parts.Append(LivestockUtil.Translate(langCode, "livestockwelfare:sick")).Append(", ");
         if (IsCollapsed) parts.Append(LivestockUtil.Translate(langCode, "livestockwelfare:collapsed")).Append(", ");
+        // Babies are never dirty, so only their sickness is worth showing.
+        if (baby) return parts.Length == 0 ? "" : parts.ToString(0, parts.Length - 2);
 
         float filth = Filth;
         parts.Append(LivestockUtil.Translate(langCode, "livestockwelfare:filth-percent", (int)Math.Round(filth * 100)));
@@ -486,6 +577,6 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
     {
         if (!entity.Alive) return;
 
-        infotext.AppendLine(StatusText());
+        if (StatusText() is { Length: > 0 } status) infotext.AppendLine(status);
     }
 }

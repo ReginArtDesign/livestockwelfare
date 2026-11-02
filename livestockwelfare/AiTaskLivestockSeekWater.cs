@@ -44,6 +44,10 @@ public class AiTaskLivestockSeekWater : AiTaskLivestockGoTo
         return found?.Pos;
     }
 
+    // Fresh water: its surface, not the bottom of the water block. Measured from the bottom, an
+    // animal on a bank above the water (often a small one, like a chicken) never got close enough.
+    protected override Vec3d TargetPoint(BlockPos block) => block.ToVec3d().Add(0.5, container != null ? 0 : 0.9, 0.5);
+
     // A barrel is a whole block: count from its edge, not from its middle.
     protected override float ArriveDistance => container != null ? 1.1f : 1.3f;
 
@@ -85,7 +89,7 @@ public class AiTaskLivestockSeekWater : AiTaskLivestockGoTo
             0.6f, 1f, 0.08f, 0.15f, EnumParticleModel.Cube);
 
         // Fresh water: at the surface; a barrel: at its rim.
-        double y = Target!.Y + (container != null ? 1 : 0.9);
+        double y = container != null ? Target!.Y + 1 : Target!.Y;
         splash.MinPos.Set(Target.X - 0.3, y, Target.Z - 0.3);
         splash.AddPos.Set(0.6, 0.1, 0.6);
         entity.World.SpawnParticles(splash);

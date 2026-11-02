@@ -21,6 +21,7 @@ public static class LivestockUtil
     public const string DiseaseDeathCause = "livestockwelfare:deathcause-disease";
     public const string ExposureDeathCause = "livestockwelfare:deathcause-exposure";
     public const string ThirstDeathCause = "livestockwelfare:deathcause-thirst";
+    public const string MalnutritionDeathCause = "livestockwelfare:deathcause-malnutrition";
 
     /// <summary>
     /// Keeps the vanilla mating cooldown just ahead of the current time, so EntityBehaviorMultiply
@@ -50,9 +51,19 @@ public static class LivestockUtil
             DiseaseDeathCause => safety.DiseaseCanKill,
             ExposureDeathCause => safety.ExposureCanKill,
             ThirstDeathCause => safety.ThirstCanKill,
+            MalnutritionDeathCause => safety.MalnutritionCanKill,
             _ => true
         };
     }
+
+    /// <summary>
+    /// Kept animals were bred by the player (generation at least Hygiene.MuckMinGeneration) or placed
+    /// by them. Only these make muck, suffer from thirst, weather and disease, or need a safe place to
+    /// sleep, so wild animals don't die off all over the world.
+    /// </summary>
+    public static bool IsKept(Entity entity) =>
+        entity.WatchedAttributes.GetInt("generation") >= (livestockwelfareModSystem.Config?.Hygiene.MuckMinGeneration ?? 1)
+        || entity.Attributes.GetString("origin") == "playerplaced";
 
     /// <summary>
     /// Takes health from a suffering animal. If that empties its health it dies of the given cause,
@@ -101,6 +112,18 @@ public static class LivestockUtil
         task.AfterInitialize();
     }
 
+    /// <summary>Settings for lambs, kids, piglets and chicks, or null if babies are switched off.</summary>
+    public static BabySettings? BabySettings =>
+        livestockwelfareModSystem.Config?.Babies is { Enabled: true } settings ? settings : null;
+
+    /// <summary>Converts a daily chance into a roll over the given number of in-game hours.</summary>
+    public static bool Roll(Entity entity, double chancePerDay, double hours)
+    {
+        if (chancePerDay <= 0) return false;
+        double chance = 1 - Math.Pow(1 - Math.Min(chancePerDay, 1), hours / 24);
+        return entity.World.Rand.NextDouble() < chance;
+    }
+
     /// <summary>Kills the animal without a killer, remembering the cause for the info text and drops.</summary>
     public static void Kill(Entity entity, string cause)
     {
@@ -118,7 +141,7 @@ public static class LivestockUtil
     const string RegenBlockedAttr = "lwRegenSuppressed";
     const string RegenReasonPrefix = "lwRegenBlocked-";
     const string VanillaRegenSpeedAttr = "regenSpeed";
-    static readonly string[] RegenReasons = { "sick", "weather", "thirst" };
+    static readonly string[] RegenReasons = { "sick", "weather", "thirst", "nursing" };
 
     public static void SetRegenBlocked(Entity entity, string reason, bool blocked)
     {

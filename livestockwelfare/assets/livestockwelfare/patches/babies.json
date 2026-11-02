@@ -1,0 +1,35 @@
+[
+	{ "op": "add", "path": "/client/behaviors/-", "value": { "code": "livestockwelfare.age", "baby": true }, "file": "game:entities/animal/mammal/hooved/sheep-baby.json" },
+	{ "op": "add", "path": "/server/behaviors/-", "value": { "code": "livestockwelfare.age", "species": "sheep", "baby": true }, "file": "game:entities/animal/mammal/hooved/sheep-baby.json" },
+	{ "op": "add", "path": "/client/behaviors/-", "value": { "code": "livestockwelfare.hygiene", "baby": true }, "file": "game:entities/animal/mammal/hooved/sheep-baby.json" },
+	{ "op": "add", "path": "/server/behaviors/0", "value": { "code": "livestockwelfare.hygiene", "species": "sheep", "baby": true }, "file": "game:entities/animal/mammal/hooved/sheep-baby.json" },
+	{ "op": "add", "path": "/client/behaviors/-", "value": { "code": "livestockwelfare.shelter", "baby": true }, "file": "game:entities/animal/mammal/hooved/sheep-baby.json" },
+	{ "op": "add", "path": "/server/behaviors/-", "value": { "code": "livestockwelfare.shelter", "species": "sheep", "baby": true, "walkSpeed": 0.008 }, "file": "game:entities/animal/mammal/hooved/sheep-baby.json" },
+	{ "op": "add", "path": "/client/behaviors/-", "value": { "code": "livestockwelfare.nursing" }, "file": "game:entities/animal/mammal/hooved/sheep-baby.json" },
+	{ "op": "add", "path": "/server/behaviors/-", "value": { "code": "livestockwelfare.nursing", "species": "sheep" }, "file": "game:entities/animal/mammal/hooved/sheep-baby.json" }
+,
+	{ "op": "add", "path": "/client/behaviors/-", "value": { "code": "livestockwelfare.age", "baby": true }, "file": "game:entities/animal/mammal/hooved/goat-baby.json" },
+	{ "op": "add", "path": "/server/behaviors/-", "value": { "code": "livestockwelfare.age", "species": "goat", "baby": true }, "file": "game:entities/animal/mammal/hooved/goat-baby.json" },
+	{ "op": "add", "path": "/client/behaviors/-", "value": { "code": "livestockwelfare.hygiene", "baby": true }, "file": "game:entities/animal/mammal/hooved/goat-baby.json" },
+	{ "op": "add", "path": "/server/behaviors/0", "value": { "code": "livestockwelfare.hygiene", "species": "goat", "baby": true }, "file": "game:entities/animal/mammal/hooved/goat-baby.json" },
+	{ "op": "add", "path": "/client/behaviors/-", "value": { "code": "livestockwelfare.shelter", "baby": true }, "file": "game:entities/animal/mammal/hooved/goat-baby.json" },
+	{ "op": "add", "path": "/server/behaviors/-", "value": { "code": "livestockwelfare.shelter", "species": "goat", "baby": true, "walkSpeed": 0.008 }, "file": "game:entities/animal/mammal/hooved/goat-baby.json" },
+	{ "op": "add", "path": "/client/behaviors/-", "value": { "code": "livestockwelfare.nursing" }, "file": "game:entities/animal/mammal/hooved/goat-baby.json" },
+	{ "op": "add", "path": "/server/behaviors/-", "value": { "code": "livestockwelfare.nursing", "species": "goat" }, "file": "game:entities/animal/mammal/hooved/goat-baby.json" }
+,
+	{ "op": "add", "path": "/client/behaviors/-", "value": { "code": "livestockwelfare.age", "baby": true }, "file": "game:entities/animal/mammal/hooved/pig-baby.json" },
+	{ "op": "add", "path": "/server/behaviors/-", "value": { "code": "livestockwelfare.age", "species": "pig", "baby": true }, "file": "game:entities/animal/mammal/hooved/pig-baby.json" },
+	{ "op": "add", "path": "/client/behaviors/-", "value": { "code": "livestockwelfare.hygiene", "baby": true }, "file": "game:entities/animal/mammal/hooved/pig-baby.json" },
+	{ "op": "add", "path": "/server/behaviors/0", "value": { "code": "livestockwelfare.hygiene", "species": "pig", "baby": true }, "file": "game:entities/animal/mammal/hooved/pig-baby.json" },
+	{ "op": "add", "path": "/client/behaviors/-", "value": { "code": "livestockwelfare.shelter", "baby": true }, "file": "game:entities/animal/mammal/hooved/pig-baby.json" },
+	{ "op": "add", "path": "/server/behaviors/-", "value": { "code": "livestockwelfare.shelter", "species": "pig", "baby": true, "walkSpeed": 0.005 }, "file": "game:entities/animal/mammal/hooved/pig-baby.json" },
+	{ "op": "add", "path": "/client/behaviors/-", "value": { "code": "livestockwelfare.nursing" }, "file": "game:entities/animal/mammal/hooved/pig-baby.json" },
+	{ "op": "add", "path": "/server/behaviors/-", "value": { "code": "livestockwelfare.nursing", "species": "pig" }, "file": "game:entities/animal/mammal/hooved/pig-baby.json" }
+,
+	{ "op": "add", "path": "/client/behaviors/-", "value": { "code": "livestockwelfare.age", "baby": true }, "file": "game:entities/animal/bird/chicken-baby.json" },
+	{ "op": "add", "path": "/server/behaviors/-", "value": { "code": "livestockwelfare.age", "species": "chicken", "baby": true }, "file": "game:entities/animal/bird/chicken-baby.json" },
+	{ "op": "add", "path": "/client/behaviors/-", "value": { "code": "livestockwelfare.hygiene", "baby": true }, "file": "game:entities/animal/bird/chicken-baby.json" },
+	{ "op": "add", "path": "/server/behaviors/0", "value": { "code": "livestockwelfare.hygiene", "species": "chicken", "baby": true }, "file": "game:entities/animal/bird/chicken-baby.json" },
+	{ "op": "add", "path": "/client/behaviors/-", "value": { "code": "livestockwelfare.shelter", "baby": true }, "file": "game:entities/animal/bird/chicken-baby.json" },
+	{ "op": "add", "path": "/server/behaviors/-", "value": { "code": "livestockwelfare.shelter", "species": "chicken", "baby": true, "walkSpeed": 0.0065 }, "file": "game:entities/animal/bird/chicken-baby.json" }
+]

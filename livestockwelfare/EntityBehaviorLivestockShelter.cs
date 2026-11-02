@@ -14,7 +14,9 @@ namespace livestockwelfare;
 /// Weather stress: rain, snow, cold and strong sun stress animals without shelter. A roof keeps
 /// off rain, snow and sun; a closed room (vanilla room rules, as for the player) also keeps out
 /// the cold. Stress counts towards sickness (see EntityBehaviorLivestockHygiene), stops breeding
-/// and, when severe, stops healing and slowly hurts the animal.
+/// and, when severe, stops healing and slowly hurts the animal. In the hot sun animals also lose
+/// their appetite (they skip the trough) and, once stressed, are listless and lie down now and then.
+/// Kept animals with no roof over them at night are stressed too: they have no safe place to sleep.
 /// </summary>
 public class EntityBehaviorLivestockShelter : EntityBehavior
 {
@@ -36,7 +38,11 @@ public class EntityBehaviorLivestockShelter : EntityBehavior
         Enclosed = 32,
         // Rain, snow, strong heat or cold right now, whether or not this animal is sheltered from it.
         BadWeather = 64,
-        Night = 128
+        Night = 128,
+        // Too hot to eat (in the hot sun, with HeatLossOfAppetite on); kept here so the client can show it.
+        NoAppetite = 256,
+        // Kept animal out in the open at night, with no safe place to sleep.
+        SleepingOutside = 512
     }
 
     const float CheckIntervalSeconds = 5;
@@ -62,7 +68,11 @@ public class EntityBehaviorLivestockShelter : EntityBehavior
         base.Initialize(properties, attributes);
         species = attributes["species"].AsString("");
         walkSpeed = attributes["walkSpeed"].AsFloat(0.006f);
+        baby = attributes["baby"].AsBool(false);
     }
+
+    // Babies feel the cold and the heat sooner (see BabySettings).
+    bool baby;
 
     float walkSpeed;
     // Above wandering and idling, below vanilla eating: sheltered animals still go to the trough.
@@ -72,7 +82,12 @@ public class EntityBehaviorLivestockShelter : EntityBehavior
     {
         base.AfterInitialized(onFirstSpawn);
         if (entity.World.Side != EnumAppSide.Server || entity is not EntityAgent agent) return;
-        if (livestockwelfareModSystem.Config?.Weather is not { Enabled: true, SeekShelter: true }) return;
+        // Off its food in the heat: no trough until it is cooler or in the shade.
+        if (entity.GetBehavior<EntityBehaviorTaskAI>() is { } taskAi)
+        {
+            taskAi.TaskManager.OnShouldExecuteTask += task => task is not AiTaskSeekFoodAndEat || !NoAppetite;
+        }
+        if (livestockwelfareModSystem.Config?.Weather is not { Enabled: true, SeekShelter: true } || Settings == null) return;
 
         LivestockUtil.AddAiTask(agent, AiTaskLivestockSeekShelter.Code, SeekShelterPriority, walkSpeed, 0.05, 0.1,
             (taskConfig, aiConfig) => new AiTaskLivestockSeekShelter(agent, taskConfig, aiConfig));
@@ -89,9 +104,10 @@ public class EntityBehaviorLivestockShelter : EntityBehavior
     public bool BadWeather => (Current & Conditions.BadWeather) != 0;
     public bool Roofed => (Current & Conditions.Roofed) != 0;
     public bool Night => (Current & Conditions.Night) != 0;
+    public bool NoAppetite => (Current & Conditions.NoAppetite) != 0;
 
-    static WeatherSettings? Settings =>
-        livestockwelfareModSystem.Config?.Weather is { Enabled: true } settings ? settings : null;
+    WeatherSettings? Settings =>
+        livestockwelfareModSystem.Config?.Weather is { Enabled: true } settings && (!baby || LivestockUtil.BabySettings != null) ? settings : null;
 
     public override void OnGameTick(float deltaTime)
     {
@@ -111,6 +127,7 @@ public class EntityBehaviorLivestockShelter : EntityBehavior
 
         // Conditions are checked often so the info text stays current; stress changes hourly.
         CheckConditions(settings);
+        UpdateListless(settings);
 
         var attrs = entity.WatchedAttributes;
         double nowHours = entity.World.Calendar.TotalHours;
@@ -151,6 +168,14 @@ public class EntityBehaviorLivestockShelter : EntityBehavior
         double target = 0;
         float temperature = climate.Temperature;
         var tolerance = settings.ToleranceFor(species);
+        if (baby && LivestockUtil.BabySettings is { } babies)
+        {
+            tolerance = new WeatherTolerance
+            {
+                ColdBelowC = tolerance.ColdBelowC + babies.ColdSensitivityC,
+                HotAboveC = tolerance.HotAboveC - babies.HeatSensitivityC
+            };
+        }
 
         if (!roofed && climate.Rainfall > MinPrecipitation)
         {
@@ -179,6 +204,7 @@ public class EntityBehaviorLivestockShelter : EntityBehavior
         if (!roofed && temperature > tolerance.HotAboveC && sunny)
         {
             conditions |= Conditions.Hot;
+            if (settings.HeatLossOfAppetite) conditions |= Conditions.NoAppetite;
             target += (temperature - tolerance.HotAboveC) * settings.HeatStressPerDegree;
         }
 
@@ -188,9 +214,25 @@ public class EntityBehaviorLivestockShelter : EntityBehavior
         // Dark, or vanilla sleeping hours (22:00-05:00, when livestock lies down to sleep anyway).
         float hour = world.Calendar.HourOfDay;
         if (world.Calendar.GetDayLightStrength(pos) < NightDaylight || hour >= 22 || hour < 5) conditions |= Conditions.Night;
+        if ((conditions & Conditions.Night) != 0 && !roofed && settings.SleepOutsideStress > 0 && LivestockUtil.IsKept(entity))
+        {
+            conditions |= Conditions.SleepingOutside;
+            target += settings.SleepOutsideStress;
+        }
 
         targetStress = Math.Min(1, target);
         if (conditions != Current) entity.WatchedAttributes.SetInt(ConditionsAttr, (int)conditions);
+    }
+
+    const float HeatRestMinSeconds = 20, HeatRestMaxSeconds = 60;
+
+    // Worn out by the heat: now and then it lies down where it is (like a sick animal does).
+    void UpdateListless(WeatherSettings settings)
+    {
+        if (!InHotSun || Stress < settings.HeatListlessAboveStress) return;
+        if (entity.GetBehavior<EntityBehaviorLivestockHygiene>() is not { IsCollapsed: false, IsHeldStill: false } hygiene) return;
+        if (entity.World.Rand.NextDouble() >= settings.HeatLieDownChance) return;
+        hygiene.HoldStill(HeatRestMinSeconds + (float)entity.World.Rand.NextDouble() * (HeatRestMaxSeconds - HeatRestMinSeconds));
     }
 
     void UpdateStress(WeatherSettings settings, double hours)
@@ -206,7 +248,8 @@ public class EntityBehaviorLivestockShelter : EntityBehavior
         float stress = Stress;
         if (stress >= settings.NoBreedingAboveStress) LivestockUtil.BlockBreeding(entity);
 
-        bool harmed = stress >= settings.HarmAboveStress;
+        // Wild animals feel the weather but don't die of it.
+        bool harmed = stress >= settings.HarmAboveStress && LivestockUtil.IsKept(entity);
         LivestockUtil.SetRegenBlocked(entity, "weather", harmed);
         if (!harmed) return;
 
@@ -263,6 +306,8 @@ public class EntityBehaviorLivestockShelter : EntityBehavior
         if ((conditions & Conditions.Snowed) != 0) problems.Add("livestockwelfare:weather-snow");
         if ((conditions & Conditions.Cold) != 0) problems.Add("livestockwelfare:weather-cold");
         if ((conditions & Conditions.Hot) != 0) problems.Add("livestockwelfare:weather-hot");
+        if ((conditions & Conditions.NoAppetite) != 0) problems.Add("livestockwelfare:weather-noappetite");
+        if ((conditions & Conditions.SleepingOutside) != 0) problems.Add("livestockwelfare:weather-sleepoutside");
 
         var text = new StringBuilder();
         if (problems.Count > 0)

@@ -40,6 +40,8 @@ public class LivestockWelfareConfig
 
     public ThirstSettings Thirst { get; set; } = new();
 
+    public BabySettings Babies { get; set; } = new();
+
     public SafetySettings Safety { get; set; } = new();
 
     public void Sanitize()
@@ -53,7 +55,78 @@ public class LivestockWelfareConfig
         Hygiene.Sanitize();
         Weather.Sanitize();
         Thirst.Sanitize();
+        Babies ??= new();
+        Babies.Sanitize();
         Safety.Sanitize();
+    }
+}
+
+/// <summary>
+/// Lambs, kids, piglets and chicks. They never get dirty (their mother keeps them clean) and don't
+/// need water, but they feel the weather more than adults and can fall sick. Lambs, kids and piglets
+/// suckle from their mother: the healthier she is, the better fed they are. Orphans and babies of
+/// unwell mothers can be fed at a trough. Chicks hatch from eggs, so they have no mother.
+/// </summary>
+public class BabySettings
+{
+    public bool Enabled { get; set; } = true;
+
+    /// <summary>A baby suckles while its mother is within this many blocks.</summary>
+    public int NursingDistance { get; set; } = 10;
+    /// <summary>How quickly a suckling baby's nourishment follows the mother's milk, in in-game hours.</summary>
+    public double NourishAdaptHours { get; set; } = 6;
+    /// <summary>Nourishment lost per in-game day while the baby cannot suckle (1.0 = fully fed).</summary>
+    public double HungerPerDay { get; set; } = 0.6;
+    /// <summary>Nourishment gained per portion of food eaten at a trough.</summary>
+    public double NourishmentPerPortion { get; set; } = 0.25;
+
+    /// <summary>
+    /// A newborn does not know how to eat from a trough yet. It learns by spending this many days with
+    /// its mother, or by being fed by hand (sneak + right click with milk or its food) this many times.
+    /// </summary>
+    public double LearnTroughWithMotherDays { get; set; } = 2;
+    public int HandFeedingsToLearnTrough { get; set; } = 3;
+    /// <summary>Milk (litres) taken from the container per hand feeding, and the nourishment it gives.</summary>
+    public double HandFeedMilkLitres { get; set; } = 0.5;
+    public double HandFeedMilkNourishment { get; set; } = 0.35;
+    /// <summary>Nourishment from one food item (e.g. grain) given by hand.</summary>
+    public double HandFeedFoodNourishment { get; set; } = 0.2;
+
+    /// <summary>A sick mother gives this much milk compared to a healthy one.</summary>
+    public double SickMotherMilk { get; set; } = 0.5;
+    /// <summary>A mother at 100% weather stress gives this much less milk.</summary>
+    public double StressedMotherMilkLoss { get; set; } = 0.5;
+    /// <summary>Daily chance that a suckling baby catches its sick mother's illness.</summary>
+    public double SickMotherContagionPerDay { get; set; } = 0.3;
+
+    /// <summary>Below this nourishment the baby grows more slowly (not at all at 0).</summary>
+    public double SlowGrowthBelow { get; set; } = 0.5;
+    /// <summary>Below this nourishment the baby stops healing and slowly loses health.</summary>
+    public double HarmBelow { get; set; } = 0.15;
+    public double HarmPerDay { get; set; } = 2;
+
+    /// <summary>Babies feel the cold this many degrees (°C) sooner than adults of their species.</summary>
+    public double ColdSensitivityC { get; set; } = 5;
+    /// <summary>Babies suffer in the hot sun this many degrees (°C) sooner than adults.</summary>
+    public double HeatSensitivityC { get; set; } = 2;
+
+    public void Sanitize()
+    {
+        NursingDistance = Math.Clamp(NursingDistance, 2, 32);
+        if (NourishAdaptHours < 1) NourishAdaptHours = 1;
+        if (HungerPerDay < 0) HungerPerDay = 0;
+        if (NourishmentPerPortion < 0) NourishmentPerPortion = 0;
+        if (LearnTroughWithMotherDays < 0) LearnTroughWithMotherDays = 0;
+        if (HandFeedingsToLearnTrough < 0) HandFeedingsToLearnTrough = 0;
+        HandFeedMilkLitres = Math.Clamp(HandFeedMilkLitres, 0.1, 10);
+        HandFeedMilkNourishment = Math.Clamp(HandFeedMilkNourishment, 0, 1);
+        HandFeedFoodNourishment = Math.Clamp(HandFeedFoodNourishment, 0, 1);
+        SickMotherMilk = Math.Clamp(SickMotherMilk, 0, 1);
+        StressedMotherMilkLoss = Math.Clamp(StressedMotherMilkLoss, 0, 1);
+        SickMotherContagionPerDay = Math.Clamp(SickMotherContagionPerDay, 0, 1);
+        SlowGrowthBelow = Math.Clamp(SlowGrowthBelow, 0, 1);
+        HarmBelow = Math.Clamp(HarmBelow, 0, 1);
+        if (HarmPerDay < 0) HarmPerDay = 0;
     }
 }
 
@@ -76,6 +149,22 @@ public class WeatherSettings
     public double RoofColdFactor { get; set; } = 0.5;
     /// <summary>Stress per degree above the species' heat limit, in direct daytime sun.</summary>
     public double HeatStressPerDegree { get; set; } = 0.06;
+
+    /// <summary>
+    /// In the hot sun, animals this stressed are listless: now and then they lie down for a while.
+    /// Above 1 turns it off.
+    /// </summary>
+    public double HeatListlessAboveStress { get; set; } = 0.25;
+    /// <summary>Chance per check (every 5 seconds) that a listless animal lies down for 20-60 seconds.</summary>
+    public double HeatLieDownChance { get; set; } = 0.05;
+    /// <summary>In the hot sun animals lose their appetite: they don't go to the trough until it is cooler or they are in the shade.</summary>
+    public bool HeatLossOfAppetite { get; set; } = true;
+
+    /// <summary>
+    /// At night, kept animals (see Hygiene.MuckMinGeneration) with no roof over them have no safe
+    /// place to sleep: stress this much (like rain). Wild animals don't mind. 0 turns it off.
+    /// </summary>
+    public double SleepOutsideStress { get; set; } = 0.3;
 
     /// <summary>How quickly stress follows the weather, in in-game hours.</summary>
     public double StressAdaptHours { get; set; } = 12;
@@ -126,6 +215,9 @@ public class WeatherSettings
         SeekShelterRadius = Math.Clamp(SeekShelterRadius, 2, 24);
         if (PetCooldownHours < 0) PetCooldownHours = 0;
         if (HarmPerDay < 0) HarmPerDay = 0;
+        if (HeatListlessAboveStress < 0) HeatListlessAboveStress = 0;
+        HeatLieDownChance = Math.Clamp(HeatLieDownChance, 0, 1);
+        SleepOutsideStress = Math.Clamp(SleepOutsideStress, 0, 1);
         Species ??= new();
     }
 }
@@ -209,6 +301,7 @@ public class SafetySettings
     public bool DiseaseCanKill { get; set; } = true;
     public bool ExposureCanKill { get; set; } = true;
     public bool ThirstCanKill { get; set; } = true;
+    public bool MalnutritionCanKill { get; set; } = true;
 
     /// <summary>
     /// Pause everything (aging, dirt, sickness, weather, thirst) for animals with no player within
@@ -266,7 +359,10 @@ public class HygieneSettings
     public double MuckChancePerDay { get; set; } = 0.15;
     /// <summary>Each crowding animal above the limit raises the muck chance by this fraction.</summary>
     public double MuckCrowdingBonus { get; set; } = 0.15;
-    /// <summary>Animals of at least this generation count as kept (player-placed ones always do).</summary>
+    /// <summary>
+    /// Animals of at least this generation count as kept (player-placed ones always do). Only kept
+    /// animals make muck and can die of thirst, weather or disease.
+    /// </summary>
     public int MuckMinGeneration { get; set; } = 1;
 
     /// <summary>Distance (blocks) in which other livestock count as crowding.</summary>
@@ -279,6 +375,13 @@ public class HygieneSettings
     public double FilthAdaptHours { get; set; } = 24;
     /// <summary>How slowly an animal gets clean on its own in cleaner surroundings, in in-game hours.</summary>
     public double FilthCleanHours { get; set; } = 96;
+
+    /// <summary>
+    /// Species that keep themselves clean (chickens take dust baths): in clean surroundings they
+    /// get clean within SelfCleaningHours and cannot be groomed. Dirty surroundings still soil them.
+    /// </summary>
+    public string[] SelfCleaningSpecies { get; set; } = { "chicken" };
+    public double SelfCleaningHours { get; set; } = 12;
 
     /// <summary>Hitting livestock with a shovel does no damage, so muck can be cleaned up around them.</summary>
     public bool ShovelsHarmless { get; set; } = true;
@@ -319,6 +422,8 @@ public class HygieneSettings
         ContagionRadius = Math.Clamp(ContagionRadius, 0, 16);
         if (FilthAdaptHours < 1) FilthAdaptHours = 1;
         if (FilthCleanHours < 1) FilthCleanHours = 1;
+        if (SelfCleaningHours < 1) SelfCleaningHours = 1;
+        SelfCleaningSpecies ??= Array.Empty<string>();
         GroomFilthReduction = Math.Clamp(GroomFilthReduction, 0, 1);
         GroomItemUseChance = Math.Clamp(GroomItemUseChance, 0, 1);
         SicknessChancePerDay = Math.Clamp(SicknessChancePerDay, 0, 1);

@@ -40,7 +40,11 @@ public class EntityBehaviorLivestockAge : EntityBehavior
     {
         base.Initialize(properties, attributes);
         species = attributes["species"].AsString("");
+        baby = attributes["baby"].AsBool(false);
     }
+
+    // Babies only count their age; old age starts once they have grown up (and their age is carried over).
+    bool baby;
 
     public override void OnEntitySpawn()
     {
@@ -64,6 +68,13 @@ public class EntityBehaviorLivestockAge : EntityBehavior
         if (entity.World.Side != EnumAppSide.Server) return;
         var attrs = entity.WatchedAttributes;
         var rand = entity.World.Rand;
+
+        if (baby)
+        {
+            // Newborn, or a baby whose real age is unknown: either way young enough to start now.
+            if (!attrs.HasAttribute(BirthAttr)) attrs.SetDouble(BirthAttr, entity.World.Calendar.TotalDays);
+            return;
+        }
 
         if (!attrs.HasAttribute(LifespanAttr) && Aging is { } aging)
         {
@@ -108,10 +119,12 @@ public class EntityBehaviorLivestockAge : EntityBehavior
     }
 
     public bool IsOld => entity.WatchedAttributes.GetBool(OldAttr);
+    public string Species => species;
+    public bool IsBaby => baby;
 
     public override void OnGameTick(float deltaTime)
     {
-        if (entity.World.Side != EnumAppSide.Server || !entity.Alive) return;
+        if (entity.World.Side != EnumAppSide.Server || !entity.Alive || baby) return;
 
         accum += deltaTime;
         if (accum < CheckIntervalSeconds) return;
@@ -179,6 +192,11 @@ public class EntityBehaviorLivestockAge : EntityBehavior
         if (IsOld) infotext.AppendLine(Lang.Get("livestockwelfare:old"));
     }
 
+    // Holding the button (e.g. petting) repeats the interaction several times a second; only a new
+    // click, after this long without one, prints the status again.
+    const long StatusRepeatMs = 1000;
+    long lastStatusInteractMs = -StatusRepeatMs;
+
     // Sneak + right-click with an empty hand prints the age to chat, so it can be checked
     // without relying on the hover info.
     public override void OnInteract(EntityAgent byEntity, ItemSlot itemslot, Vec3d hitPosition, EnumInteractMode mode, ref EnumHandling handled)
@@ -187,13 +205,22 @@ public class EntityBehaviorLivestockAge : EntityBehavior
         if (entity.World.Side != EnumAppSide.Server || !entity.Alive) return;
         if (byEntity is not EntityPlayer { Player: IServerPlayer player }) return;
 
+        long now = entity.World.ElapsedMilliseconds;
+        bool held = now - lastStatusInteractMs < StatusRepeatMs;
+        lastStatusInteractMs = now;
+        if (held) return;
+
         string lang = player.LanguageCode;
         string message = LivestockUtil.Translate(lang, "livestockwelfare:age-chat", entity.GetName(), FormatAge(lang));
         if (IsOld) message += " — " + LivestockUtil.Translate(lang, "livestockwelfare:old");
 
-        if (entity.GetBehavior<EntityBehaviorLivestockHygiene>() is { } hygiene)
+        if (entity.GetBehavior<EntityBehaviorLivestockHygiene>() is { } hygiene && hygiene.StatusText(lang) is { Length: > 0 } hygieneText)
         {
-            message += " — " + hygiene.StatusText(lang);
+            message += " — " + hygieneText;
+        }
+        if (entity.GetBehavior<EntityBehaviorLivestockNursing>() is { } nursing)
+        {
+            message += " — " + nursing.StatusText(lang);
         }
         if (entity.GetBehavior<EntityBehaviorLivestockShelter>() is { } shelter)
         {

@@ -5,14 +5,15 @@
 	class: "EntityAgent",
 	tags: ["inanimate"],
 	variantgroups: [
-		{ code: "cause", states: ["oldage", "disease", "exposure", "thirst"] }
+		{ code: "cause", states: ["oldage", "disease", "exposure", "thirst", "malnutrition"] }
 	],
 	hitboxSize: { x: 0.1, y: 0.1 },
 	attributesByType: {
 		"*-oldage": { killedByInfoText: "livestockwelfare:died-of-old-age", deathByMultiplier: 0.4 },
 		"*-disease": { killedByInfoText: "livestockwelfare:died-of-disease", deathByMultiplier: 0.4 },
 		"*-exposure": { killedByInfoText: "livestockwelfare:died-of-exposure", deathByMultiplier: 0.4 },
-		"*-thirst": { killedByInfoText: "livestockwelfare:died-of-thirst", deathByMultiplier: 0.4 }
+		"*-thirst": { killedByInfoText: "livestockwelfare:died-of-thirst", deathByMultiplier: 0.4 },
+		"*-malnutrition": { killedByInfoText: "livestockwelfare:died-of-malnutrition", deathByMultiplier: 0.4 }
 	},
 	client: {
 		renderer: "Dummy",

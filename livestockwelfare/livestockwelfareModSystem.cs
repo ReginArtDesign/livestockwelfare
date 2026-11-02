@@ -1,6 +1,8 @@
 ﻿using System;
 using Vintagestory.API.Common;
+using Vintagestory.API.Common.Entities;
 using Vintagestory.API.Server;
+using Vintagestory.API.Util;
 using Vintagestory.GameContent;
 
 namespace livestockwelfare;
@@ -16,10 +18,25 @@ public class livestockwelfareModSystem : ModSystem
         api.RegisterEntityBehaviorClass(EntityBehaviorLivestockHygiene.Code, typeof(EntityBehaviorLivestockHygiene));
         api.RegisterEntityBehaviorClass(EntityBehaviorLivestockShelter.Code, typeof(EntityBehaviorLivestockShelter));
         api.RegisterEntityBehaviorClass(EntityBehaviorLivestockThirst.Code, typeof(EntityBehaviorLivestockThirst));
+        api.RegisterEntityBehaviorClass(EntityBehaviorLivestockNursing.Code, typeof(EntityBehaviorLivestockNursing));
+        api.RegisterEntityBehaviorClass(EntityBehaviorLivestockMouth.Code, typeof(EntityBehaviorLivestockMouth));
         api.RegisterCollectibleBehaviorClass(CollectibleBehaviorGroom.Code, typeof(CollectibleBehaviorGroom));
+        api.RegisterCollectibleBehaviorClass(CollectibleBehaviorHandFeed.Code, typeof(CollectibleBehaviorHandFeed));
+        api.RegisterBlockBehaviorClass(BlockBehaviorMuckNeedsGround.Code, typeof(BlockBehaviorMuckNeedsGround));
         // Added to livestock in code (see the thirst and shelter behaviors), not through JSON.
         AiTaskRegistry.Register<AiTaskLivestockSeekWater>(AiTaskLivestockSeekWater.Code);
         AiTaskRegistry.Register<AiTaskLivestockSeekShelter>(AiTaskLivestockSeekShelter.Code);
+    }
+
+    // Hand feeding works with any food or liquid container (milk is checked on use), so it is added in
+    // code rather than patched into each item. Runs on both sides, so they agree on the behaviors.
+    public override void AssetsFinalize(ICoreAPI api)
+    {
+        foreach (var collectible in api.World.Collectibles)
+        {
+            if (collectible?.Code == null || (collectible.NutritionProps == null && collectible is not BlockLiquidContainerBase)) continue;
+            collectible.CollectibleBehaviors = collectible.CollectibleBehaviors.Append(new CollectibleBehaviorHandFeed(collectible));
+        }
     }
 
     public override void StartServerSide(ICoreServerAPI api)
@@ -40,6 +57,30 @@ public class livestockwelfareModSystem : ModSystem
         }
 
         Config = config;
+        api.Event.OnEntitySpawn += CarryOverFromBaby;
+    }
+
+    // Kept when a baby grows up: its age, sickness and how stressed it is by the weather.
+    static readonly string[] GrownUpKeepsAttrs = { "lwBirthTotalDays", "lwSick", "lwImmuneUntilDays", "lwWeatherStress" };
+
+    // Vanilla EntityBehaviorGrow turns a baby into an adult by killing the baby (reason "expire") and
+    // spawning a new adult entity at the same spot, marked with "wasFedToAdulthood". The baby is still
+    // in the world at that moment, so the adult picks up what is worth keeping from it.
+    static void CarryOverFromBaby(Entity adult)
+    {
+        if (!adult.Attributes.HasAttribute("wasFedToAdulthood") || !adult.HasBehavior<EntityBehaviorLivestockAge>()) return;
+
+        var baby = adult.World.GetNearestEntity(adult.Pos.XYZ, 0.5f, 0.5f, e =>
+            e != adult && !e.Alive && e.DespawnReason?.Reason == EnumDespawnReason.Expire
+            && e.GetBehavior<EntityBehaviorLivestockAge>() is { IsBaby: true });
+        if (baby == null) return;
+
+        foreach (string attr in GrownUpKeepsAttrs)
+        {
+            if (baby.WatchedAttributes.HasAttribute(attr)) adult.WatchedAttributes[attr] = baby.WatchedAttributes[attr].Clone();
+        }
+        LivestockUtil.SetRegenBlocked(adult, "sick", adult.WatchedAttributes.GetBool("lwSick"));
+        adult.World.Logger.Debug("[livestockwelfare] {0} #{1} grew up from #{2}, sick: {3}", adult.Code, adult.EntityId, baby.EntityId, adult.WatchedAttributes.GetBool("lwSick"));
     }
 
     public override void Dispose()

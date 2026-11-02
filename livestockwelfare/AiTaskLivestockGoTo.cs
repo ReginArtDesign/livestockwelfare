@@ -40,6 +40,9 @@ public abstract class AiTaskLivestockGoTo : AiTaskBase
     /// <summary>Finds a target block, skipping those for which IsFailed is true; null if there is none.</summary>
     protected abstract BlockPos? FindTarget();
 
+    /// <summary>The point in the target block to walk to and measure from: by default the middle of its bottom.</summary>
+    protected virtual Vec3d TargetPoint(BlockPos block) => block.ToVec3d().Add(0.5, 0, 0.5);
+
     /// <summary>Called every tick once at the target; return false when done.</summary>
     protected abstract bool ActAtTarget(float dt, float timeAtTarget);
 
@@ -65,7 +68,7 @@ public abstract class AiTaskLivestockGoTo : AiTaskBase
         lastSearchMs = now;
 
         TargetBlock = FindTarget();
-        Target = TargetBlock?.ToVec3d().Add(0.5, 0, 0.5);
+        Target = TargetBlock == null ? null : TargetPoint(TargetBlock);
         return Target != null;
     }
 
@@ -75,7 +78,10 @@ public abstract class AiTaskLivestockGoTo : AiTaskBase
         arrived = false;
         stuck = false;
         timeAtTarget = 0;
-        pathTraverser.NavigateTo_Async(Target!, MoveSpeed, ArriveDistance - 0.1f, OnGoalReached, OnStuck, OnStuck, 1000, 1);
+        // Like vanilla AiTaskSeekFoodAndEat, no path found is not a failure: ContinueExecute then
+        // heads straight for the target, and only really getting stuck gives up. (Giving up at once
+        // left animals next to a barrel the pathfinder couldn't plan to, dying of thirst.)
+        pathTraverser.NavigateTo_Async(Target!, MoveSpeed, ArriveDistance - 0.1f, OnGoalReached, OnStuck, null, 1000, 1);
         Log("start, target {0}", TargetBlock);
     }
 

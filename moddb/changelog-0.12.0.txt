@@ -1,0 +1,43 @@
+Version 0.12.0
+
+Note: this update has not been tested on multiplayer servers yet, and not fully in existing saves. Please back up your world before updating, and tell me if something goes wrong.
+
+Baby animals
+- Lambs, kids, piglets and chicks are now part of the mod.
+- Lambs, kids and piglets suckle from their mother, so her condition matters: a thirsty, sick or stressed mother has less milk, and a sick mother can pass her illness on to her baby.
+- Poorly fed babies grow more slowly; starving ones stop healing and can die of malnutrition.
+- Babies feel the cold and the heat sooner than adults.
+- A baby keeps its age and health when it grows up.
+
+Orphans and hand feeding
+- If the mother dies, her baby becomes an orphan. A newborn does not know how to eat from a trough yet.
+- Feed it by hand: sneak and hold right click with milk (bucket or jug) or with food it eats (grain, vegetables...). The baby takes the food from your hand and chews it.
+- After three feedings by hand (or a couple of days spent with its mother) it learns to eat from a trough.
+
+Cleaner, calmer care
+- Babies never get dirty: their mother keeps them clean. Chicks don't get dirty either, only their pen does.
+- Chickens clean themselves in clean surroundings and don't need grooming.
+- Animals lie down while you groom them and get up once they are clean, so they don't wander off mid-brush.
+
+Sickness
+- Flies now only mean dirt. A sick animal shows it by being listless and lying down often, and a very sick one stays down until it recovers.
+
+Hot sun
+- Animals in the hot sun lose their appetite: they skip the trough until it is cooler or they are in the shade.
+- After a while in the heat they become listless and lie down now and then, so give them shade.
+
+A safe place to sleep
+- Kept animals with no roof over them at night have no safe place to sleep, and that stresses them. Wild animals don't mind.
+- "Weather stress" is now simply "stress", as not all of it comes from the weather. The info text still names each cause: getting wet, cold, hot sun, no safe place to sleep.
+
+Compatibility
+- Hydrate or Diedrate: animals drink its clean rainwater, well water, distilled and boiled water (from barrels too), but not its salt, muddy, tainted or poisoned water.
+
+Fixes
+- Wild animals no longer die of thirst, bad weather or disease: only kept animals (placed by you or born in your care) can. Wild ones still get thirsty, stressed and sick, they just don't die of it.
+- Animals, chickens above all, can now drink from ponds whose water lies a block below the bank. Before, they stood at the edge and never got close enough.
+- Muck no longer leaves a see-through hole in the block under it (which could be used as x-ray).
+- Muck no longer floats in the air when the ground under it is dug out: it breaks and drops its rot.
+- Animals no longer give up walking to a water barrel when the way there is tricky, which could leave them dying of thirst next to water.
+- Animals drink after time skips (sleeping, /time add, unloaded areas).
+- Sneak + right click (petting, checking an animal) no longer makes the game stutter.
