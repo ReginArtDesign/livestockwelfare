@@ -677,3 +677,5 @@ fabric.properties
 .devdata/
 
 moddb/_preview.html
+
+.secrets/
