@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
@@ -57,8 +58,27 @@ public abstract class AiTaskLivestockGoTo : AiTaskBase
 
     protected virtual void OnFinish(bool arrivedAtTarget) { }
 
-    protected bool IsFailed(BlockPos pos) =>
-        failedTargets.TryGetValue(pos, out long ms) && entity.World.ElapsedMilliseconds - ms < FailedTargetMemoryMs;
+    /// <summary>Whether the animal has reached the target in the current run.</summary>
+    protected bool Arrived => arrived;
+
+    // Blocks next to an unreachable target are usually just as unreachable (the same closed barn,
+    // the same pond behind a fence), so trying them one by one only repeats the same failed walk.
+    const int FailedTargetRadius = 3;
+
+    protected bool IsFailed(BlockPos pos)
+    {
+        long now = entity.World.ElapsedMilliseconds;
+        foreach (var (failed, ms) in failedTargets)
+        {
+            if (now - ms < FailedTargetMemoryMs
+                && Math.Abs(failed.X - pos.X) <= FailedTargetRadius && Math.Abs(failed.Z - pos.Z) <= FailedTargetRadius
+                && Math.Abs(failed.Y - pos.Y) <= 2)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
 
     public override bool ShouldExecute()
     {
@@ -132,6 +152,10 @@ public abstract class AiTaskLivestockGoTo : AiTaskBase
         stuck = true;
         Log("stuck on the way to {0}", TargetBlock);
         stuckAtMs = entity.World.ElapsedMilliseconds;
+        foreach (var old in failedTargets.Where(f => stuckAtMs - f.Value >= FailedTargetMemoryMs).Select(f => f.Key).ToList())
+        {
+            failedTargets.Remove(old);
+        }
         if (TargetBlock != null) failedTargets[TargetBlock.Copy()] = stuckAtMs;
     }
 

@@ -37,6 +37,25 @@ public class livestockwelfareModSystem : ModSystem
             if (collectible?.Code == null || (collectible.NutritionProps == null && collectible is not BlockLiquidContainerBase)) continue;
             collectible.CollectibleBehaviors = collectible.CollectibleBehaviors.Append(new CollectibleBehaviorHandFeed(collectible));
         }
+        if (api.Side == EnumAppSide.Server) MoveHygieneBeforeHealth(api);
+    }
+
+    // Hygiene must run before vanilla "health" so it can cancel shovel damage. The patches append it
+    // at the end, because inserting it at the front would shift the behavior indices that other mods'
+    // patches use ("/server/behaviors/10/aitasks/..."), so it is moved here, once all patches are in.
+    static void MoveHygieneBeforeHealth(ICoreAPI api)
+    {
+        foreach (var type in api.World.EntityTypes)
+        {
+            if (type?.Server?.BehaviorsAsJsonObj is not { } behaviors) continue;
+            int hygiene = Array.FindIndex(behaviors, b => b["code"].AsString() == EntityBehaviorLivestockHygiene.Code);
+            int health = Array.FindIndex(behaviors, b => b["code"].AsString() == "health");
+            if (hygiene < 0 || health < 0 || hygiene < health) continue;
+
+            var moved = behaviors[hygiene];
+            Array.Copy(behaviors, health, behaviors, health + 1, hygiene - health);
+            behaviors[health] = moved;
+        }
     }
 
     public override void StartServerSide(ICoreServerAPI api)

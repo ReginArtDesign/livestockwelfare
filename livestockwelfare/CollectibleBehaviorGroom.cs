@@ -47,7 +47,7 @@ public class CollectibleBehaviorGroom : CollectibleBehavior
         handHandling = EnumHandHandling.PreventDefault;
         handling = EnumHandling.PreventSubsequent;
         byEntity.World.PlaySoundAt(Sound, entitySel.Entity, (byEntity as EntityPlayer)?.Player, randomizePitch: true, range: 12);
-        if (byEntity.World.Side == EnumAppSide.Server) hygiene.HoldStill(LieDownSeconds);
+        if (byEntity.World.Side == EnumAppSide.Server) hygiene.HoldStill(LieDownSeconds, EntityBehaviorLivestockHygiene.RestAnimation);
     }
 
     public override bool OnHeldInteractStep(float secondsUsed, ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel, ref EnumHandling handling)
@@ -56,7 +56,7 @@ public class CollectibleBehaviorGroom : CollectibleBehavior
 
         handling = EnumHandling.PreventSubsequent;
         if (byEntity.World.Side == EnumAppSide.Client) SpawnDust(byEntity.World, entitySel.Entity);
-        else hygiene.HoldStill(LieDownSeconds);
+        else hygiene.HoldStill(LieDownSeconds, EntityBehaviorLivestockHygiene.RestAnimation);
         return secondsUsed < groomSeconds;
     }
 

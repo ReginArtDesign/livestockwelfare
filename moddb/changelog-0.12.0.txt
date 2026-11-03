@@ -1,6 +1,6 @@
-Version 0.12.0
+Version 0.12.0 (beta)
 
-Note: this update has not been tested on multiplayer servers yet, and not fully in existing saves. Please back up your world before updating, and tell me if something goes wrong.
+Note: Livestock Welfare is still in beta. This update has not been tested on multiplayer servers yet, and not fully in existing saves. Please back up your world before updating, and tell me if something goes wrong.
 
 Baby animals
 - Lambs, kids, piglets and chicks are now part of the mod.

@@ -27,7 +27,7 @@ public class EntityBehaviorLivestockNursing : EntityBehavior
 
     const string MotherIdAttr = "lwMotherId";
     // Set when the mother died: orphans never adopt another female.
-    const string OrphanAttr = "lwOrphan";
+    public const string OrphanAttr = "lwOrphan";
     const string NourishedAttr = "lwNourished";
     const string StateAttr = "lwNursingState";
     const string LastUpdateAttr = "lwNursingLastHours";
@@ -51,7 +51,7 @@ public class EntityBehaviorLivestockNursing : EntityBehavior
     const double UnwellMilk = 0.75;
     // A baby this well fed refuses more food by hand.
     const float FullNourished = 0.95f;
-    const float ChewSeconds = 4;
+    const float ChewSeconds = 8;
 
     static readonly AssetLocation DrinkSound = new("game", "sounds/player/drink1");
     static readonly AssetLocation EatSound = new("game", "sounds/creature/animal-eat-small");

@@ -34,7 +34,8 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
 
     string species = "";
     string collapseAnimation = "sleep";
-    // Babies never get dirty (their mother keeps them clean), but can still fall sick.
+    // Babies don't get dirty while they have a mother to keep them clean, but can still fall sick.
+    // Orphans (see EntityBehaviorLivestockNursing) get dirty and need grooming like adults.
     bool baby;
     float accum;
 
@@ -160,6 +161,9 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
 
     public string Species => species;
     public bool IsBaby => baby;
+
+    // A baby with a mother (or a chick, which has no nursing) is kept clean; an orphan is not.
+    bool KeptClean => baby && !entity.WatchedAttributes.GetBool(EntityBehaviorLivestockNursing.OrphanAttr);
     public float Filth => entity.WatchedAttributes.GetFloat(FilthAttr);
 
     /// <summary>
@@ -176,7 +180,7 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
     }
 
     /// <summary>Whether grooming can help this animal (adults of species that don't clean themselves).</summary>
-    public bool CanBeGroomed => !baby && !SelfCleaning;
+    public bool CanBeGroomed => !KeptClean && !SelfCleaning;
     public bool IsSick => entity.WatchedAttributes.GetBool(SickAttr);
     public bool IsCollapsed => entity.WatchedAttributes.GetBool(CollapsedAttr);
 
@@ -241,12 +245,14 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
         // Nobody around (option): the time passes without the animal getting dirtier, sicker, thirstier.
         if (!LivestockUtil.ShouldSimulate(entity)) return;
 
-        if (!baby)
+        if (!KeptClean)
         {
             int extraAnimals = ExtraAnimalsNearby(settings);
             TryDepositMuck(settings, hours, extraAnimals);
             UpdateFilth(settings, hours, extraAnimals);
         }
+        // Her mother keeps her clean: any dirt (e.g. from before, or set by a command) is gone.
+        else if (Filth > 0) entity.WatchedAttributes.SetFloat(FilthAttr, 0);
         if (IsSick) UpdateSick(settings, hours);
         else TryFallSick(settings, hours);
     }
@@ -497,6 +503,13 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
     long holdStillUntilMs;
     string? holdStillAnimation;
 
+    /// <summary>
+    /// Resting with the legs folded under the body ("sit" in every vanilla livestock shape): used
+    /// while groomed or petted, so both sides and the back stay within reach. Lying on the side
+    /// ("sleep") is kept for collapsing.
+    /// </summary>
+    public const string RestAnimation = "sit";
+
     public bool IsHeldStill => holdStillUntilMs > entity.World.ElapsedMilliseconds;
 
     /// <summary>
@@ -560,8 +573,8 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
         var parts = new StringBuilder();
         if (IsSick) parts.Append(LivestockUtil.Translate(langCode, "livestockwelfare:sick")).Append(", ");
         if (IsCollapsed) parts.Append(LivestockUtil.Translate(langCode, "livestockwelfare:collapsed")).Append(", ");
-        // Babies are never dirty, so only their sickness is worth showing.
-        if (baby) return parts.Length == 0 ? "" : parts.ToString(0, parts.Length - 2);
+        // Babies with a mother are never dirty, so only their sickness is worth showing.
+        if (KeptClean) return parts.Length == 0 ? "" : parts.ToString(0, parts.Length - 2);
 
         float filth = Filth;
         parts.Append(LivestockUtil.Translate(langCode, "livestockwelfare:filth-percent", (int)Math.Round(filth * 100)));

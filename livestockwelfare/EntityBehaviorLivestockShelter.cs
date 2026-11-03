@@ -260,6 +260,7 @@ public class EntityBehaviorLivestockShelter : EntityBehavior
     }
 
     const string LastPettedAttr = "lwLastPettedHours";
+    const float PetRestSeconds = 5;
     static SimpleParticleProperties? hearts;
 
     // Petting: right click with an empty hand (without sneaking, which shows the status in chat)
@@ -277,6 +278,8 @@ public class EntityBehaviorLivestockShelter : EntityBehavior
 
         attrs.SetFloat(StressAttr, (float)Math.Max(0, Stress - settings.PetStressReduction));
         SpawnHearts();
+        // It settles down for a moment, enjoying it.
+        entity.GetBehavior<EntityBehaviorLivestockHygiene>()?.HoldStill(PetRestSeconds, EntityBehaviorLivestockHygiene.RestAnimation);
     }
 
     void SpawnHearts()

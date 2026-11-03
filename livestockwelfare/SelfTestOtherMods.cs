@@ -68,5 +68,29 @@ public class SelfTestOtherMods : ModSystem
                 code, string.Join(", ", missing), speciesOk ? "ok" : "WRONG", configOk ? "ok" : "MISSING",
                 missing.Length == 0 && speciesOk && configOk ? "OK" : "FAILED");
         }
+        DumpVanillaLivestock();
+    }
+
+    // The server behaviors and AI tasks of vanilla livestock after all mods' patches, to spot
+    // other mods whose index-based patches ("/server/behaviors/10/...") landed on the wrong one.
+    void DumpVanillaLivestock()
+    {
+        foreach (var code in new[] { "game:sheep-bighorn-adult-female", "game:goat-nubian-adult-female", "game:pig-eurasian-adult-female", "game:chicken-hen" })
+        {
+            var type = sapi.World.GetEntityType(new AssetLocation(code));
+            if (type?.Server?.BehaviorsAsJsonObj is not { } behaviors)
+            {
+                sapi.Logger.Notification("[lwselftest] vanilla {0}: not found", code);
+                continue;
+            }
+            sapi.Logger.Notification("[lwselftest] vanilla {0} behaviors: {1}", code,
+                string.Join(", ", behaviors.Select((b, i) => i + "=" + b["code"].AsString())));
+            foreach (var taskai in behaviors.Where(b => b["code"].AsString() == "taskai"))
+            {
+                sapi.Logger.Notification("[lwselftest] vanilla {0} aitasks: {1}", code,
+                    string.Join(", ", taskai["aitasks"].AsArray().Select((t, i) =>
+                        i + "=" + t["code"].AsString() + "@" + t["priority"].AsFloat())));
+            }
+        }
     }
 }

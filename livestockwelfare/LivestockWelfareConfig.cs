@@ -186,8 +186,8 @@ public class WeatherSettings
 
     /// <summary>In bad weather, animals in the open walk to the nearest spot under a roof.</summary>
     public bool SeekShelter { get; set; } = true;
-    /// <summary>How far (blocks) animals look for a roof.</summary>
-    public int SeekShelterRadius { get; set; } = 12;
+    /// <summary>How far (blocks) animals look for a roof. Large enough for big paddocks with the barn at one end.</summary>
+    public int SeekShelterRadius { get; set; } = 24;
     /// <summary>At night animals also go under the roof and sleep there until morning.</summary>
     public bool SleepUnderRoof { get; set; } = true;
 
@@ -221,7 +221,9 @@ public class WeatherSettings
         RoofColdFactor = Math.Clamp(RoofColdFactor, 0, 1);
         if (SicknessWeight < 0) SicknessWeight = 0;
         PetStressReduction = Math.Clamp(PetStressReduction, 0, 1);
-        SeekShelterRadius = Math.Clamp(SeekShelterRadius, 2, 24);
+        // 12 was the default before 0.12.1; too short for large paddocks, so old files get the new one.
+        if (SeekShelterRadius == 12) SeekShelterRadius = 24;
+        SeekShelterRadius = Math.Clamp(SeekShelterRadius, 2, 32);
         if (PetCooldownHours < 0) PetCooldownHours = 0;
         if (HarmPerDay < 0) HarmPerDay = 0;
         if (HeatListlessAboveStress < 0) HeatListlessAboveStress = 0;

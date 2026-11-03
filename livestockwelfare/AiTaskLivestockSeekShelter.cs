@@ -41,15 +41,22 @@ public class AiTaskLivestockSeekShelter : AiTaskLivestockGoTo
 
     bool SleepTime => shelter != null && shelter.Night && Settings?.SleepUnderRoof == true;
 
-    // Vanilla livestock has an "idle: sleep" task (priority 1.35, 22:00-05:00) that makes them lie
-    // down wherever they are. At night ours must win, so they first walk under the roof.
-    const float NightPriority = 1.37f;
+    // Vanilla livestock has an "idle: sleep" task that makes them lie down wherever they are, and
+    // only a higher priority can cancel it: sheep 1.35 (22:00-05:00), pigs 1.35 (04:00-15:00, so
+    // also in daytime rain), goats 1.38 (from 20:00), chickens 1.25 but 1.38 to cancel (from 20:00).
+    // Ours must win to walk them under the roof first, while fleeing (1.39 and up) still wins over ours.
+    const float GoPriority = 1.385f;
+    // Once under the roof in daytime bad weather, eating from the trough (1.25 and up) may interrupt.
+    const float StayPriorityForCancel = 1.24f;
 
     public override float Priority
     {
-        get => SleepTime ? NightPriority : base.Priority;
+        get => ShouldBeUnderRoof() ? GoPriority : base.Priority;
         set => base.Priority = value;
     }
+
+    // While walking nothing but fleeing stops it; at night it also keeps the animal asleep in place.
+    public override float PriorityForCancel => Arrived && !SleepTime ? StayPriorityForCancel : Priority;
 
     // Bad weather, or night: animals go to sleep under the roof.
     bool ShouldBeUnderRoof() =>
@@ -73,7 +80,8 @@ public class AiTaskLivestockSeekShelter : AiTaskLivestockGoTo
         var occupied = OccupiedSpots(r + 2);
 
         // Best = deep inside the shelter (much roof around it), not taken by another animal, and
-        // not too far. Depth counts more than distance, so animals walk past the edge to the inside.
+        // not too far. Depth counts more than distance, so animals walk past the edge to the inside,
+        // but only up to MaxUsefulDepth: a small shed close by beats a big barn behind the fence.
         BlockPos? best = null;
         double bestScore = double.MinValue;
         // Fallback for narrow shelters (e.g. a one block wide lean-to): roof above the spot only.
@@ -95,7 +103,7 @@ public class AiTaskLivestockSeekShelter : AiTaskLivestockGoTo
 
                     if (!taken && FullyRoofed(accessor, pos))
                     {
-                        double score = RoofDepth(accessor, pos) - Math.Sqrt(distance) * 0.5;
+                        double score = Math.Min(RoofDepth(accessor, pos), MaxUsefulDepth) - Math.Sqrt(distance) * 0.5;
                         if (score > bestScore)
                         {
                             best = pos.Copy();
@@ -113,6 +121,10 @@ public class AiTaskLivestockSeekShelter : AiTaskLivestockGoTo
         }
         return best ?? partly;
     }
+
+    // Roof all around in a 3x3 area (and a little more) is enough for the whole animal to stay dry;
+    // a deeper spot is not worth a long walk, which may lead to a building outside the pen.
+    const int MaxUsefulDepth = 12;
 
     // How deep under the roof a spot is: roofed columns in the 5x5 area around it (max 25).
     static int RoofDepth(IBlockAccessor accessor, BlockPos pos)

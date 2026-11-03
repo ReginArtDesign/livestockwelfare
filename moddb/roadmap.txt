@@ -13,7 +13,7 @@ Orphans and hand feeding
 - After three feedings by hand (or a couple of days spent with its mother) it learns to eat from a trough.
 
 Cleaner, calmer care
-- Babies never get dirty: their mother keeps them clean. Chicks don't get dirty either, only their pen does.
+- Babies with a mother never get dirty: she keeps them clean. Orphans get dirty and need grooming just like adults. Chicks don't get dirty either, only their pen does.
 - Chickens clean themselves in clean surroundings and don't need grooming.
 - Animals lie down while you groom them and get up once they are clean, so they don't wander off mid-brush.
 
@@ -43,7 +43,13 @@ Fixes
 PLANNED FOR LATER
 
 - Milking vs. nursing: milking a nursing mother leaves less milk for her baby.
+- Grooming brush: a tool made from a stick and flax fibers that cleans animals twice as well as dry grass, and faster. It wears out instead of being used up.
+- Waterer: a small, low clay water bowl (fired in a pit kiln) that chickens can reach easily. Fill it with a bucket, and thirsty animals walk to it to drink.
+- Brushing before shearing: a freshly brushed sheep gives more or cleaner wool (with wool mods).
+- Dogs: raised wolves and Wolf taming's dogs get the same care needs as livestock (thirst, a kennel for the night and bad weather, cleanliness and disease, old age). They also form a bond with you through petting, mope when neglected, guard your herd against wolves and foxes, bark at threats, and no longer hunt your own animals.
 - Support for other mods' animals: Teapot's Giant Boar, Great Bighorn and Giant Redriver are done; next come Traditional Livestock, Feverstone Wilds, The Critters Pack, Equus (horses), Genealogy, FotSA Bovinae and Cuniculture. Smaller critters will get a lighter set of needs, since some mechanics would just be annoying at that size.
+- Wild animals too (optional setting): thirst, old age and the other needs for wild animals as well, so they gather at watering holes and old predators grow weaker.
+- Old animals slow down: they walk more slowly and become calmer, so an old bear or boar is less aggressive.
 - Rotting carcasses: after a while flies gather over a dead animal (wild or kept), a sign that its meat is no longer fresh, and butchering it then gives rot instead of meat.
 - In-game settings menu (with the ConfigLib mod), so you can tune the animals' needs without editing files.
 - Testing in existing world saves and in multiplayer.

@@ -1,4 +1,4 @@
-# Livestock Welfare (beta 0.12.0)
+# Livestock Welfare (beta 0.12.1)
 
 A Vintage Story mod that deepens animal husbandry: your livestock age, get dirty and sick, need shelter from the weather and water to drink. Keep them clean, groomed, sheltered and watered, and they'll thrive. Neglect them and they suffer.
 
@@ -37,9 +37,11 @@ A Vintage Story mod that deepens animal husbandry: your livestock age, get dirty
 - **Strong sun** stresses animals only when it's really hot (26–32 °C depending on species). In the hot sun they **lose their appetite** (they skip the trough), and after a while they get **listless** and lie down now and then. Give them shade.
 - At night, **kept animals** with no roof over them have **no safe place to sleep**, and that stresses them too. Wild animals don't mind.
 - Stress makes animals **sick more easily** and stops breeding above 50%. Above 80% they stop healing and slowly lose health.
-- In bad weather, animals in the open **walk to the nearest roofed spot** (within 12 blocks) and stay there while it lasts.
+- In bad weather, animals in the open **walk to the nearest roofed spot** (within 24 blocks) and stay there while it lasts.
 - At **night** they also go under the roof and **lie down to sleep** until morning.
 - **Pet** an animal (right click with an empty hand) to calm it down: -20% stress, once every 2 in-game hours.
+
+**If animals don't go under the roof:** wild animals (caught or placed, not born in your pen) flee from you when you are close, and fleeing wins, so watch from a distance. The roof must be within reach (24 blocks by default), with a walkable way in (no closed gate, fence or high step), two free blocks of height and a roof over the neighbouring blocks too. Animals on a lead or tied to a post follow the rope instead.
 
 ### Thirst and water
 - Animals get **thirsty** over time, faster above 20 °C and even faster in the hot sun.

@@ -1,0 +1,27 @@
+Version 0.12.1 (beta)
+
+Note: Livestock Welfare is still in beta. Please back up your world before updating, and tell me if something goes wrong.
+
+Shelter
+- Animals now look for a roof up to 24 blocks away (was 12), so a barn at the far end of a large paddock is found too. If your config file still has the old default of 12, it is raised to 24 automatically; any other value you set is kept. The maximum is now 32.
+- Goats and chickens no longer fall asleep in the open in the evening before reaching their shelter, and pigs (which sleep in the morning) now also walk under the roof when it starts to rain.
+- Animals prefer a nearby shelter that is big enough to keep them dry over a bigger roofed area further away, which could be outside their pen (another building, or even a big tree, since leaves keep the rain off too).
+- An animal that cannot reach a roofed spot no longer keeps retrying the spots right next to it every few seconds; it tries elsewhere for a minute.
+
+Orphans
+- Orphaned lambs, kids and piglets now get dirty and need grooming just like adults. Babies with a mother are still kept clean by her.
+
+Grooming and petting
+- Animals now rest with their legs folded while you groom them, instead of lying on their side, so you can reach both sides and the back.
+- Petting an animal makes it settle down and rest for a moment.
+
+Compatibility
+- Fixed a clash with mods that patch livestock by position in the behavior list (Detailed Animals, Feverstone Wilds, the Fauna of the Stone Age packs, Wolf Taming, VS Village and others): Livestock Welfare no longer shifts that list, so their changes land where they should. (Feed or Fallow does something similar and can still cause some of these errors; that one is up to its author.)
+
+If your animals still don't go under the roof
+- Wild animals flee from you. Animals you caught or placed (not born in your pen) run away when you come close, and fleeing wins over seeking shelter. Watch from a distance, or wait for the animals born in your pen, which are calmer.
+- The roof must be within 24 blocks of where they stand (or what you set in the config).
+- There must be a walkable way in: a closed gate or door, a fence or a step that is too high keeps them out.
+- The roofed spot must have room for the whole body: two free blocks of height, and a roof over the spot and the blocks next to it. A roof that is only one block deep may not count.
+- Animals on a lead or tied to a post follow the rope, not the weather.
+- If you have changed the config, check that SeekShelter and SleepUnderRoof are true in ModConfig/livestockwelfare.json.
