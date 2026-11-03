@@ -16,6 +16,7 @@ Grooming and petting
 - Petting an animal makes it settle down and rest for a moment.
 
 Compatibility
+- New: Teapot's Giant Boar, Great Bighorn and Giant Redriver are now covered (wild and tame adults and their babies) when those mods are installed. They have only been tested by an automatic check so far, so tell me if something looks off.
 - Fixed a clash with mods that patch livestock by position in the behavior list (Detailed Animals, Feverstone Wilds, the Fauna of the Stone Age packs, Wolf Taming, VS Village and others): Livestock Welfare no longer shifts that list, so their changes land where they should. (Feed or Fallow does something similar and can still cause some of these errors; that one is up to its author.)
 
 If your animals still don't go under the roof
