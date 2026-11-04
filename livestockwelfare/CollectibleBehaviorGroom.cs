@@ -8,9 +8,10 @@ using Vintagestory.API.Server;
 namespace livestockwelfare;
 
 /// <summary>
-/// Lets an item (dry grass, patched in JSON) be used as a grooming wisp: sneak + hold right click
-/// on a livestock animal rubs off some of its dirt; it lies down meanwhile. Without sneaking the item works as usual
-/// (e.g. feeding), so this does not get in the way.
+/// Lets an item be used for grooming: hold right click on a livestock animal to rub off some of its
+/// dirt; it lies down meanwhile. Dry grass (patched in JSON) is a wisp that needs sneaking, so it still
+/// works as usual without (e.g. feeding), and is sometimes used up. The grooming brush is a tool for
+/// nothing else: no sneaking, it cleans more per stroke and wears out instead.
 /// </summary>
 public class CollectibleBehaviorGroom : CollectibleBehavior
 {
@@ -24,6 +25,11 @@ public class CollectibleBehaviorGroom : CollectibleBehavior
     const float LieDownSeconds = 8;
 
     float groomSeconds = 2;
+    // Multiplies the config's filth reduction per stroke.
+    float filthMultiplier = 1;
+    bool needsSneak = true;
+    // Tools lose durability per stroke; others are sometimes used up.
+    bool wearsOut;
     SimpleParticleProperties? dust;
 
     public CollectibleBehaviorGroom(CollectibleObject collObj) : base(collObj) { }
@@ -33,6 +39,9 @@ public class CollectibleBehaviorGroom : CollectibleBehavior
         base.Initialize(properties);
         // Read on both sides from the patch, so client and server agree when grooming is done.
         groomSeconds = properties["groomSeconds"].AsFloat(2);
+        filthMultiplier = properties["filthMultiplier"].AsFloat(1);
+        needsSneak = properties["needsSneak"].AsBool(true);
+        wearsOut = properties["wearsOut"].AsBool(false);
     }
 
     // Babies and chickens keep clean without help, so dry grass works as usual on them (e.g. feeding).
@@ -41,7 +50,7 @@ public class CollectibleBehaviorGroom : CollectibleBehavior
 
     public override void OnHeldInteractStart(ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel, bool firstEvent, ref EnumHandHandling handHandling, ref EnumHandling handling)
     {
-        if (!firstEvent || !byEntity.Controls.ShiftKey || Target(entitySel) is not { } hygiene) return;
+        if (!firstEvent || !Sneaking(byEntity) || Target(entitySel) is not { } hygiene) return;
 
         // Take over the click, so the animal is not fed or petted instead.
         handHandling = EnumHandHandling.PreventDefault;
@@ -52,7 +61,7 @@ public class CollectibleBehaviorGroom : CollectibleBehavior
 
     public override bool OnHeldInteractStep(float secondsUsed, ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel, ref EnumHandling handling)
     {
-        if (Target(entitySel) is not { } hygiene || !byEntity.Controls.ShiftKey) return true;
+        if (Target(entitySel) is not { } hygiene || !Sneaking(byEntity)) return true;
 
         handling = EnumHandling.PreventSubsequent;
         if (byEntity.World.Side == EnumAppSide.Client) SpawnDust(byEntity.World, entitySel.Entity);
@@ -71,13 +80,17 @@ public class CollectibleBehaviorGroom : CollectibleBehavior
         var settings = livestockwelfareModSystem.Config?.Hygiene;
         if (settings is not { Enabled: true }) return;
 
-        bool groomed = hygiene.Groom(settings.GroomFilthReduction);
+        bool groomed = hygiene.Groom(settings.GroomFilthReduction * filthMultiplier);
         if (hygiene.Filth <= 0) hygiene.StopHoldingStill();
         if (!groomed) return;
 
         var player = (byEntity as EntityPlayer)?.Player as IServerPlayer;
         bool creative = player?.WorldData.CurrentGameMode == EnumGameMode.Creative;
-        if (!creative && byEntity.World.Rand.NextDouble() < settings.GroomItemUseChance)
+        if (wearsOut)
+        {
+            if (!creative) collObj.DamageItem(byEntity.World, byEntity, slot);
+        }
+        else if (!creative && byEntity.World.Rand.NextDouble() < settings.GroomItemUseChance)
         {
             slot.TakeOut(1);
             slot.MarkDirty();
@@ -89,13 +102,16 @@ public class CollectibleBehaviorGroom : CollectibleBehavior
     // that is a short twitch, so swap in a scrubbing motion while grooming an animal.
     public override string GetHeldTpUseAnimation(ItemSlot activeHotbarSlot, Entity forEntity, ref EnumHandling bhHandling)
     {
-        if (forEntity is EntityPlayer player && player.Controls.ShiftKey && Target(player.Player?.CurrentEntitySelection) != null)
+        if (forEntity is EntityPlayer player && Sneaking(player) && Target(player.Player?.CurrentEntitySelection) != null)
         {
             bhHandling = EnumHandling.PreventDefault;
             return PlayerAnimation;
         }
         return base.GetHeldTpUseAnimation(activeHotbarSlot, forEntity, ref bhHandling);
     }
+
+    // The brush needs no sneaking: it is a tool for nothing else.
+    bool Sneaking(EntityAgent byEntity) => !needsSneak || byEntity.Controls.ShiftKey;
 
     // Bits of dirt and straw falling off the animal's back.
     void SpawnDust(IWorldAccessor world, Entity animal)
@@ -121,9 +137,9 @@ public class CollectibleBehaviorGroom : CollectibleBehavior
         {
             new WorldInteraction
             {
-                ActionLangCode = "livestockwelfare:heldhelp-groom",
+                ActionLangCode = needsSneak ? "livestockwelfare:heldhelp-groom" : "livestockwelfare:heldhelp-brush",
                 MouseButton = EnumMouseButton.Right,
-                HotKeyCode = "shift"
+                HotKeyCode = needsSneak ? "shift" : null
             }
         };
     }

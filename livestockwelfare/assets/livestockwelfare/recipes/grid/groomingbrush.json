@@ -1,0 +1,13 @@
+[
+	{
+		ingredientPattern: "F,S,K",
+		ingredients: {
+			"F": { type: "item", code: "game:flaxfibers", quantity: 2 },
+			"S": { type: "item", code: "game:stick" },
+			"K": { type: "item", code: "game:knife-*", isTool: true }
+		},
+		width: 1,
+		height: 3,
+		output: { type: "item", code: "groomingbrush" }
+	}
+]

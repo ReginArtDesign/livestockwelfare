@@ -73,9 +73,56 @@ public class SelfTest : ModSystem
             {
                 // LW_SELFTEST_POND=1: only the pond test, in real time (the main test skips whole
                 // days, and after a time skip animals drink without walking).
+                CheckWatererAndBrush(spawn);
                 if (Environment.GetEnvironmentVariable("LW_SELFTEST_POND") == "1") PondTest(spawn);
                 else SpawnAndWatch(spawn);
             }, "lwselftest") });
+    }
+
+    // The brush grooms and wears out; the raw waterer fires into the fired one, which is a liquid
+    // container a thirsty chicken finds and drinks from. Done high in the air and cleaned up after.
+    void CheckWatererAndBrush(BlockPos spawn)
+    {
+        var brush = sapi.World.GetItem(new AssetLocation(LivestockUtil.Domain, "groomingbrush"));
+        sapi.Logger.Notification("[lwselftest] brush: {0}, durability {1}",
+            brush?.CollectibleBehaviors.Any(b => b is CollectibleBehaviorGroom) == true ? "found" : "MISSING", brush?.GetMaxDurability(new ItemStack(brush)));
+
+        var raw = sapi.World.GetBlock(new AssetLocation(LivestockUtil.Domain, "waterer-raw"));
+        var fired = sapi.World.GetBlock(new AssetLocation(LivestockUtil.Domain, "waterer-fired"));
+        var smelted = raw?.CombustibleProps?.SmeltedStack?.ResolvedItemstack?.Collectible;
+        sapi.Logger.Notification("[lwselftest] waterer: raw {0}, fired {1}, raw fires into fired {2}",
+            raw != null, fired?.GetType().Name, smelted != null && smelted == fired);
+        if (fired == null) return;
+
+        var pos = spawn.AddCopy(0, 30, 0);
+        var accessor = sapi.World.BlockAccessor;
+        accessor.SetBlock(fired.Id, pos);
+        if (accessor.GetBlockEntity(pos) is not Vintagestory.GameContent.BlockEntityLiquidContainer container)
+        {
+            sapi.Logger.Warning("[lwselftest] waterer: no liquid container block entity — FAILED");
+            accessor.SetBlock(0, pos);
+            return;
+        }
+        container.Inventory[0].Itemstack = new ItemStack(sapi.World.GetItem(new AssetLocation("game:waterportion")), 300);
+        container.MarkDirty(true);
+
+        var chicken = sapi.World.ClassRegistry.CreateEntity(sapi.World.GetEntityType(new AssetLocation("game:chicken-hen")));
+        chicken.Pos.SetPos(pos.X + 1.5, pos.Y, pos.Z + 0.5);
+        chicken.Attributes.SetString("origin", "playerplaced");
+        spawning = true;
+        sapi.World.SpawnEntity(chicken);
+        spawning = false;
+        var thirst = chicken.GetBehavior<EntityBehaviorLivestockThirst>();
+        chicken.WatchedAttributes.SetFloat("lwThirst", 1);
+        var target = thirst?.FindDrinkTarget(4, _ => false);
+        bool foundIt = target?.Pos.Equals(pos) == true && target.Value.Container == container;
+        thirst?.DrinkFrom(target?.Container);
+        float litres = container.Inventory[0].StackSize / 100f;
+        sapi.Logger.Notification("[lwselftest] waterer: chicken finds it {0}, thirst after drinking {1:0.00}, litres left {2:0.00} — {3}",
+            foundIt, thirst?.Thirst, litres, foundIt && thirst?.Thirst < 0.01 && litres < 3 ? "OK" : "FAILED");
+
+        chicken.Die(EnumDespawnReason.Removed);
+        accessor.SetBlock(0, pos);
     }
 
     // Paints a few vanilla textures with every mud stage and saves them as PNG into the folder in
