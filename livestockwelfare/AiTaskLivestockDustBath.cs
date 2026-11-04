@@ -40,12 +40,26 @@ public class AiTaskLivestockDustBath : AiTaskLivestockGoTo
         hygiene != null && Settings is { } settings && hygiene.WantsDustBath(settings) && LivestockUtil.ShouldSimulate(entity);
 
     protected override BlockPos? FindTarget() =>
-        hygiene != null && Settings is { } settings ? hygiene.FindDustBath(settings, IsFailed) : null;
+        hygiene != null && Settings is { } settings ? hygiene.FindDustBath(settings, pos => IsFailed(pos) || Taken(pos)) : null;
+
+    // Another bird already on that sand: take the next one, so they spread out over the patch.
+    bool Taken(BlockPos sand) =>
+        entity.World.GetEntitiesAround(new Vec3d(sand.X + 0.5, sand.Y + 1, sand.Z + 0.5), 0.6f, 1f, e => e != entity && e.Alive).Length > 0;
 
     // On top of the sand, not next to it.
     protected override Vec3d TargetPoint(BlockPos block) => block.ToVec3d().Add(0.5, 1, 0.5);
 
     protected override float ArriveDistance => 0.35f;
+
+    // Its feet on the sand, near the middle: measured from the hitbox, a bird at the edge (or on a
+    // waterer next to it) already counted as there.
+    protected override bool IsAtTarget(double hitboxDistance)
+    {
+        if (TargetBlock == null || Target == null) return false;
+        var pos = entity.Pos;
+        double dx = pos.X - Target.X, dz = pos.Z - Target.Z;
+        return dx * dx + dz * dz < 0.3 * 0.3 && (int)System.Math.Floor(pos.Y - 0.05) == TargetBlock.Y && entity.OnGround;
+    }
 
     public override void StartExecute()
     {
