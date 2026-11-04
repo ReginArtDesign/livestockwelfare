@@ -46,6 +46,7 @@ PLANNED FOR LATER
 - Grooming brush: a tool made from a stick and flax fibers that cleans animals twice as well as dry grass, and faster. It wears out instead of being used up.
 - Waterer: a clay bell drinker (fired in a pit kiln) with a wide, low dish that chickens can reach easily. Fill it with a bucket, and thirsty animals walk to it to drink.
 - Brushing before shearing: a freshly brushed sheep gives more or cleaner wool (with wool mods).
+- Dust baths: chickens walk to dry sand and take a dust bath to get clean (not in the rain, unless under a roof). Without sand nearby they get scruffy.
 - Chicken feeder: a clay bell feeder to go with the waterer, working like the small trough (filled with grain).
 - Dogs: raised wolves and Wolf taming's dogs get the same care needs as livestock (thirst, a kennel for the night and bad weather, cleanliness and disease, old age). They also form a bond with you through petting, mope when neglected, guard your herd against wolves and foxes, bark at threats, and no longer hunt your own animals.
 - Support for other mods' animals: Teapot's Giant Boar, Great Bighorn and Giant Redriver are done; next come Traditional Livestock, Feverstone Wilds, The Critters Pack, Equus (horses), Genealogy, FotSA Bovinae and Cuniculture. Smaller critters will get a lighter set of needs, since some mechanics would just be annoying at that size.
