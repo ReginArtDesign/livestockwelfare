@@ -1,6 +1,6 @@
 {
 	// Trampled filth that builds up where livestock is kept. Placed by the hygiene behavior,
-	// counts as dirt, and can be shovelled up as rot. Uses only vanilla shapes and textures.
+	// counts as dirt, and can be shovelled up as rot. Model and texture by ReginArt (source: art/models/muck.bbmodel).
 	code: "muck",
 	variantgroups: [
 		{ code: "level", states: ["1", "2", "3", "4"] }
@@ -10,16 +10,17 @@
 	behaviors: [{ name: "livestockwelfare.needsground" }],
 	blockmaterial: "Soil",
 	drawtype: "JSON",
+	// A stepped heap on a bed, taller with each level. Turned at random in 90° steps for variety:
+	// randomizeRotations turned it at any angle, so its corners poked into the neighbouring muck and flickered.
 	shapebytype: {
-		"*-1": { base: "game:block/basic/layers/1voxel" },
-		"*-2": { base: "game:block/basic/layers/2voxel" },
-		"*-3": { base: "game:block/basic/layers/4voxel" },
-		"*-4": { base: "game:block/basic/layers/6voxel" }
+		"*-1": { base: "block/muck/muck-1", alternates: [{ base: "block/muck/muck-1", rotateY: 90 }, { base: "block/muck/muck-1", rotateY: 180 }, { base: "block/muck/muck-1", rotateY: 270 }] },
+		"*-2": { base: "block/muck/muck-2", alternates: [{ base: "block/muck/muck-2", rotateY: 90 }, { base: "block/muck/muck-2", rotateY: 180 }, { base: "block/muck/muck-2", rotateY: 270 }] },
+		"*-3": { base: "block/muck/muck-3", alternates: [{ base: "block/muck/muck-3", rotateY: 90 }, { base: "block/muck/muck-3", rotateY: 180 }, { base: "block/muck/muck-3", rotateY: 270 }] },
+		"*-4": { base: "block/muck/muck-4", alternates: [{ base: "block/muck/muck-4", rotateY: 90 }, { base: "block/muck/muck-4", rotateY: 180 }, { base: "block/muck/muck-4", rotateY: 270 }] }
 	},
 	textures: {
-		all: { base: "game:block/creature/rot/rot" }
+		all: { base: "block/muck" }
 	},
-	randomizeRotations: true,
 	resistance: 0.3,
 	lightabsorption: 0,
 	// Not opaque downwards either: otherwise the block below stops drawing its top face, while the
@@ -30,10 +31,10 @@
 	replaceable: 6000,
 	collisionbox: null,
 	selectionboxbytype: {
-		"*-1": { x1: 0, y1: 0, z1: 0, x2: 1, y2: 0.0625, z2: 1 },
-		"*-2": { x1: 0, y1: 0, z1: 0, x2: 1, y2: 0.125, z2: 1 },
-		"*-3": { x1: 0, y1: 0, z1: 0, x2: 1, y2: 0.25, z2: 1 },
-		"*-4": { x1: 0, y1: 0, z1: 0, x2: 1, y2: 0.375, z2: 1 }
+		"*-1": { x1: 0, y1: 0, z1: 0, x2: 1, y2: 0.1, z2: 1 },
+		"*-2": { x1: 0, y1: 0, z1: 0, x2: 1, y2: 0.1875, z2: 1 },
+		"*-3": { x1: 0, y1: 0, z1: 0, x2: 1, y2: 0.34, z2: 1 },
+		"*-4": { x1: 0, y1: 0, z1: 0, x2: 1, y2: 0.49, z2: 1 }
 	},
 	walkspeedmultiplierByType: {
 		"*-1": 0.95,
