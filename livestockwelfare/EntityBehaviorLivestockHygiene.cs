@@ -49,6 +49,7 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
         species = attributes["species"].AsString("");
         baby = attributes["baby"].AsBool(false);
         collapseAnimation = attributes["collapseAnimation"].AsString("sleep");
+        walkSpeed = attributes["walkSpeed"].AsFloat(0.006f);
         entity.AnimManager.OnStartAnimation += OnStartAnimation;
 
         if (entity.World.Side == EnumAppSide.Client)
@@ -141,6 +142,12 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
         base.AfterInitialized(onFirstSpawn);
         if (entity.World.Side != EnumAppSide.Server) return;
         UpdateSelfCleaning();
+        if (SelfCleaning && entity is EntityAgent agent && Settings is { DustBathing: true })
+        {
+            if (!entity.WatchedAttributes.HasAttribute(LastDustBathAttr)) entity.WatchedAttributes.SetDouble(LastDustBathAttr, entity.World.Calendar.TotalHours);
+            LivestockUtil.AddAiTask(agent, AiTaskLivestockDustBath.Code, DustBathPriority, walkSpeed, 0.5, 1,
+                (taskConfig, aiConfig) => new AiTaskLivestockDustBath(agent, taskConfig, aiConfig));
+        }
 
         // Same approach as vanilla EntityBehaviorMortallyWoundable: no AI tasks while lying down.
         var taskAi = entity.GetBehavior<EntityBehaviorTaskAI>();
@@ -245,6 +252,11 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
         // Nobody around (option): the time passes without the animal getting dirtier, sicker, thirstier.
         if (!LivestockUtil.ShouldSimulate(entity)) return;
 
+        // Time that passed at once (a time skip, a reloaded chunk): it would have taken its dust bath
+        // in between, if it could get to dry sand.
+        if (DustBathes(settings) && hours >= CatchUpBathHours && WantsDustBath(settings) && FindDustBath(settings, _ => false) != null) DustBathed();
+        if (DustBathes(settings)) UpdateNoDustBath(settings);
+
         if (!KeptClean)
         {
             int extraAnimals = ExtraAnimalsNearby(settings);
@@ -263,8 +275,10 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
         double filth = Filth;
         // Moves towards the current dirt level; after the adapt time about 63% of the way.
         // Getting dirty is quick, getting clean on its own is slow: that is what grooming is for.
-        // Self-cleaning species (chickens) only need clean surroundings.
-        double adaptHours = dirt > filth ? settings.FilthAdaptHours : SelfCleaning ? settings.SelfCleaningHours : settings.FilthCleanHours;
+        // Self-cleaning species (chickens) get clean by dust bathing, or without it just in clean surroundings.
+        // Too long without a bath, they get scruffy.
+        if (DustBathes(settings) && HoursSinceDustBath > settings.UnbathedDays * 24) dirt = Math.Max(dirt, settings.UnbathedFilth);
+        double adaptHours = dirt > filth ? settings.FilthAdaptHours : SelfCleaning && !settings.DustBathing ? settings.SelfCleaningHours : settings.FilthCleanHours;
         filth += (dirt - filth) * (1 - Math.Exp(-hours / adaptHours));
         entity.WatchedAttributes.SetFloat(FilthAttr, (float)Math.Clamp(filth, 0, 1));
     }
@@ -489,6 +503,68 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
 
     const double ShovePower = 0.25;
 
+    // Dust bathing (chickens): see HygieneSettings.DustBathing and AiTaskLivestockDustBath.
+    const string LastDustBathAttr = "lwLastDustBathHours";
+    // Synced, so the info text can say why it doesn't bathe.
+    const string NoDustBathAttr = "lwNoDustBath";
+    const double CatchUpBathHours = 3;
+    // Below eating, drinking and shelter (1.25-1.36), above idling and wandering.
+    const float DustBathPriority = 1.2f;
+    float walkSpeed;
+
+    bool DustBathes(HygieneSettings settings) => SelfCleaning && settings.DustBathing && !KeptClean;
+
+    double HoursSinceDustBath => entity.World.Calendar.TotalHours - entity.WatchedAttributes.GetDouble(LastDustBathAttr, entity.World.Calendar.TotalHours);
+
+    /// <summary>Whether it is time for a dust bath: a little dirty, or long enough since the last one. Only by day.</summary>
+    public bool WantsDustBath(HygieneSettings settings) =>
+        DustBathes(settings) && (Filth >= settings.DustBathAboveFilth || HoursSinceDustBath >= settings.DustBathEveryHours)
+        && entity.World.Calendar.GetDayLightStrength(entity.Pos.AsBlockPos) > 0.5f;
+
+    /// <summary>
+    /// The nearest dry sand within the radius with room above it to bathe, skipping those isFailed
+    /// rejects. Sand open to the sky while it rains is mud. Server side.
+    /// </summary>
+    public BlockPos? FindDustBath(HygieneSettings settings, System.Func<BlockPos, bool> isFailed)
+    {
+        int r = settings.DustBathRadius;
+        var pos = entity.Pos.AsBlockPos;
+        var accessor = entity.World.BlockAccessor;
+        bool raining = accessor.GetClimateAt(pos, EnumGetClimateMode.NowValues)?.Rainfall > 0.05f;
+        var tmpPos = pos.Copy();
+        BlockPos? best = null;
+        double bestDistance = double.MaxValue;
+
+        accessor.WalkBlocks(pos.AddCopy(-r, -2, -r), pos.AddCopy(r, 1, r), (block, x, y, z) =>
+        {
+            if (block.Code == null || !WildcardUtil.Match(settings.DustBathBlockCodes, block.Code.ToString())) return;
+            if (accessor.GetBlock(tmpPos.Set(x, y + 1, z)).Id != 0) return;
+            if (raining && accessor.GetRainMapHeightAt(x, z) <= y) return;
+
+            tmpPos.Set(x, y, z);
+            double distance = tmpPos.DistanceSqTo(entity.Pos.X, entity.Pos.Y, entity.Pos.Z);
+            if (distance >= bestDistance || isFailed(tmpPos)) return;
+            bestDistance = distance;
+            best = tmpPos.Copy();
+        });
+        return best;
+    }
+
+    /// <summary>After a dust bath: clean, and the clock for the next one starts again.</summary>
+    public void DustBathed()
+    {
+        entity.WatchedAttributes.SetFloat(FilthAttr, 0);
+        entity.WatchedAttributes.SetDouble(LastDustBathAttr, entity.World.Calendar.TotalHours);
+        entity.WatchedAttributes.SetBool(NoDustBathAttr, false);
+    }
+
+    // Only worth telling once it is overdue: then the player should put down some sand.
+    void UpdateNoDustBath(HygieneSettings settings)
+    {
+        bool none = HoursSinceDustBath > settings.UnbathedDays * 24 && FindDustBath(settings, _ => false) == null;
+        if (none != entity.WatchedAttributes.GetBool(NoDustBathAttr)) entity.WatchedAttributes.SetBool(NoDustBathAttr, none);
+    }
+
     /// <summary>Rubs off some of the dirt (server side). Returns false if the animal was already clean.</summary>
     public bool Groom(double amount)
     {
@@ -581,6 +657,7 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
 
         string? filthKey = filth >= 0.66f ? "livestockwelfare:filth-high" : filth >= 0.33f ? "livestockwelfare:filth-medium" : null;
         if (filthKey != null) parts.Append(" (").Append(LivestockUtil.Translate(langCode, filthKey)).Append(')');
+        if (entity.WatchedAttributes.GetBool(NoDustBathAttr)) parts.Append(", ").Append(LivestockUtil.Translate(langCode, "livestockwelfare:dustbath-none"));
 
         return parts.ToString();
     }

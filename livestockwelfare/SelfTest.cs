@@ -74,6 +74,7 @@ public class SelfTest : ModSystem
                 // LW_SELFTEST_POND=1: only the pond test, in real time (the main test skips whole
                 // days, and after a time skip animals drink without walking).
                 CheckWatererAndBrush(spawn);
+                CheckDustBath(spawn);
                 if (Environment.GetEnvironmentVariable("LW_SELFTEST_POND") == "1") PondTest(spawn);
                 else SpawnAndWatch(spawn);
             }, "lwselftest") });
@@ -123,6 +124,46 @@ public class SelfTest : ModSystem
 
         chicken.Die(EnumDespawnReason.Removed);
         accessor.SetBlock(0, pos);
+    }
+
+    // A dirty hen finds dry sand under a roof, and not the sand under the open sky; a bath gets her
+    // clean. Done high in the air and cleaned up after.
+    void CheckDustBath(BlockPos spawn)
+    {
+        var settings = livestockwelfareModSystem.Config?.Hygiene;
+        var sand = sapi.World.GetBlock(new AssetLocation("game:sand-granite"));
+        var planks = sapi.World.GetBlock(new AssetLocation("game:planks-aged-ud"));
+        if (settings == null || sand == null || planks == null)
+        {
+            sapi.Logger.Warning("[lwselftest] dust bath: setup missing — FAILED");
+            return;
+        }
+
+        var accessor = sapi.World.BlockAccessor;
+        var floor = spawn.AddCopy(4, 40, 0);
+        var roofed = floor.AddCopy(2, 0, 0);
+        var changed = new List<BlockPos> { floor, roofed, roofed.AddCopy(0, 3, 0) };
+        accessor.SetBlock(planks.Id, floor);
+        accessor.SetBlock(sand.Id, roofed);
+        accessor.SetBlock(planks.Id, roofed.AddCopy(0, 3, 0));
+
+        var hen = sapi.World.ClassRegistry.CreateEntity(sapi.World.GetEntityType(new AssetLocation("game:chicken-hen")));
+        hen.Pos.SetPos(floor.X + 0.5, floor.Y + 1, floor.Z + 0.5);
+        hen.Attributes.SetString("origin", "playerplaced");
+        spawning = true;
+        sapi.World.SpawnEntity(hen);
+        spawning = false;
+        var hygiene = hen.GetBehavior<EntityBehaviorLivestockHygiene>();
+        hen.WatchedAttributes.SetFloat("lwFilth", 0.4f);
+
+        var found = hygiene?.FindDustBath(settings, _ => false);
+        hygiene?.DustBathed();
+        bool clean = hygiene?.Filth == 0;
+        sapi.Logger.Notification("[lwselftest] dust bath: finds the sand {0}, clean after bathing {1} — {2}",
+            found?.Equals(roofed) == true, clean, found?.Equals(roofed) == true && clean ? "OK" : "FAILED");
+
+        hen.Die(EnumDespawnReason.Removed);
+        foreach (var pos in changed) accessor.SetBlock(0, pos);
     }
 
     // Paints a few vanilla textures with every mud stage and saves them as PNG into the folder in

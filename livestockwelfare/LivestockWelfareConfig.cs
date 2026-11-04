@@ -395,7 +395,23 @@ public class HygieneSettings
     /// get clean within SelfCleaningHours and cannot be groomed. Dirty surroundings still soil them.
     /// </summary>
     public string[] SelfCleaningSpecies { get; set; } = { "chicken" };
+    /// <summary>Without DustBathing: how quickly they get clean on their own, in in-game hours.</summary>
     public double SelfCleaningHours { get; set; } = 12;
+
+    /// <summary>
+    /// Self-cleaning species walk to dry sand nearby and take a dust bath there, which gets them
+    /// clean. Sand out in the rain is mud and won't do. Without a bath for UnbathedDays they get
+    /// scruffy (filth rises to UnbathedFilth). Off: they get clean on their own (SelfCleaningHours).
+    /// </summary>
+    public bool DustBathing { get; set; } = true;
+    public string[] DustBathBlockCodes { get; set; } = { "game:sand-*" };
+    public int DustBathRadius { get; set; } = 10;
+    /// <summary>They go for a bath once this dirty, or anyway after DustBathEveryHours.</summary>
+    public double DustBathAboveFilth { get; set; } = 0.1;
+    public double DustBathEveryHours { get; set; } = 20;
+    public double UnbathedDays { get; set; } = 2;
+    public double UnbathedFilth { get; set; } = 0.5;
+    public float DustBathSeconds { get; set; } = 12;
 
     /// <summary>Hitting livestock with a shovel does no damage, so muck can be cleaned up around them.</summary>
     public bool ShovelsHarmless { get; set; } = true;
@@ -438,6 +454,13 @@ public class HygieneSettings
         if (FilthCleanHours < 1) FilthCleanHours = 1;
         if (SelfCleaningHours < 1) SelfCleaningHours = 1;
         SelfCleaningSpecies ??= Array.Empty<string>();
+        DustBathBlockCodes ??= Array.Empty<string>();
+        DustBathRadius = Math.Clamp(DustBathRadius, 1, 24);
+        DustBathAboveFilth = Math.Clamp(DustBathAboveFilth, 0, 1);
+        if (DustBathEveryHours < 1) DustBathEveryHours = 1;
+        if (UnbathedDays < 0.1) UnbathedDays = 0.1;
+        UnbathedFilth = Math.Clamp(UnbathedFilth, 0, 1);
+        DustBathSeconds = Math.Clamp(DustBathSeconds, 1, 60);
         GroomFilthReduction = Math.Clamp(GroomFilthReduction, 0, 1);
         GroomItemUseChance = Math.Clamp(GroomItemUseChance, 0, 1);
         SicknessChancePerDay = Math.Clamp(SicknessChancePerDay, 0, 1);

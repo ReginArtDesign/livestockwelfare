@@ -18,6 +18,7 @@
 	"blockdesc-waterer-fired": "Agyag harangitató: széles, alacsony tál, amit a csirkék is elérnek. Vödörrel töltsd meg; a szomjas állatok odamennek és isznak belőle.",
 	"filth-medium": "piszkos környezet",
 	"filth-high": "nagyon piszkos környezet",
+	"dustbath-none": "nincs a közelben száraz homok a homokfürdéshez",
 	"filth-percent": "Szennyezettség: {0}%",
 	"died-of-disease": "Betegségben pusztult el",
 	"died-of-exposure": "Az időjárás végzett vele",

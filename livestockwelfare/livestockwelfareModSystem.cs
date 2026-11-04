@@ -26,6 +26,7 @@ public class livestockwelfareModSystem : ModSystem
         // Added to livestock in code (see the thirst and shelter behaviors), not through JSON.
         AiTaskRegistry.Register<AiTaskLivestockSeekWater>(AiTaskLivestockSeekWater.Code);
         AiTaskRegistry.Register<AiTaskLivestockSeekShelter>(AiTaskLivestockSeekShelter.Code);
+        AiTaskRegistry.Register<AiTaskLivestockDustBath>(AiTaskLivestockDustBath.Code);
     }
 
     // Hand feeding works with any food or liquid container (milk is checked on use), so it is added in

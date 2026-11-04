@@ -18,6 +18,7 @@
 	"blockdesc-waterer-fired": "A clay bell drinker: a wide, low dish that even chickens can reach. Fill it with a bucket; thirsty animals walk to it and drink.",
 	"filth-medium": "dirty surroundings",
 	"filth-high": "very dirty surroundings",
+	"dustbath-none": "no dry sand nearby for a dust bath",
 	"filth-percent": "Filth: {0}%",
 	"died-of-disease": "Died of disease",
 	"died-of-exposure": "Died of exposure",

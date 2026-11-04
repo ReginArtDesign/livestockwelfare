@@ -29,7 +29,7 @@
 	{ "op": "add", "path": "/client/behaviors/-", "value": { "code": "livestockwelfare.age" }, "file": "game:entities/animal/bird/chicken-adult.json" },
 	{ "op": "add", "path": "/server/behaviors/-", "value": { "code": "livestockwelfare.age", "species": "chicken" }, "file": "game:entities/animal/bird/chicken-adult.json" },
 	{ "op": "add", "path": "/client/behaviors/-", "value": { "code": "livestockwelfare.hygiene" }, "file": "game:entities/animal/bird/chicken-adult.json" },
-	{ "op": "add", "path": "/server/behaviors/-", "value": { "code": "livestockwelfare.hygiene", "species": "chicken" }, "file": "game:entities/animal/bird/chicken-adult.json" },
+	{ "op": "add", "path": "/server/behaviors/-", "value": { "code": "livestockwelfare.hygiene", "species": "chicken", "walkSpeed": 0.0065 }, "file": "game:entities/animal/bird/chicken-adult.json" },
 	{ "op": "add", "path": "/client/behaviors/-", "value": { "code": "livestockwelfare.shelter" }, "file": "game:entities/animal/bird/chicken-adult.json" },
 	{ "op": "add", "path": "/server/behaviors/-", "value": { "code": "livestockwelfare.shelter", "species": "chicken", "walkSpeed": 0.0065 }, "file": "game:entities/animal/bird/chicken-adult.json" },
 	{ "op": "add", "path": "/client/behaviors/-", "value": { "code": "livestockwelfare.thirst" }, "file": "game:entities/animal/bird/chicken-adult.json" },
