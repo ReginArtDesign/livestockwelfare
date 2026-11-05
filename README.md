@@ -1,4 +1,4 @@
-# Livestock Welfare (beta 0.12.1)
+# Livestock Welfare (beta 0.13.0)
 
 A Vintage Story mod that deepens animal husbandry: your livestock age, get dirty and sick, need shelter from the weather and water to drink. Keep them clean, groomed, sheltered and watered, and they'll thrive. Neglect them and they suffer.
 
@@ -21,14 +21,16 @@ A Vintage Story mod that deepens animal husbandry: your livestock age, get dirty
 - Filthy animals can get **sick**: they don't breed or heal, lose health every day and can **infect others** of their species.
 - Sick animals are **listless** and lie down often. Very sick ones **lie down** and don't get up until they recover or die.
 - In clean surroundings sick animals can **recover**, and then they're immune for a few days.
+- Sick animals lose health every day in proportion to their size, so a hen holds out as long as a sheep. The info text says why an animal fell sick: dirt, bad weather or another animal.
 - Animals that die of disease leave a carcass with reduced drops.
 
 ### Grooming and visible dirt
 - **Groom** an animal with **dry grass**: sneak and hold right click for about 2 seconds. Each grooming removes 25% of the dirt. Bits of mud fall off, and every second grooming uses up one dry grass.
+- Or make a **grooming brush** (stick and flax fibers, with a knife): no sneaking needed, it cleans twice as well and faster, and wears out instead of being used up. It hangs on the tool rack.
 - Dirty animals **look dirty**: mud spots appear on the coat in 3 stages (generated for any texture size).
 - **Flies** buzz around very dirty animals (flies mean dirt, not sickness).
 - Animals **lie down** while you groom them and get up once they're clean.
-- Chickens clean themselves in clean surroundings and can't be groomed. Lambs, kids, piglets and chicks never get dirty.
+- Chickens can't be groomed: they take **dust baths** instead. They walk to sand within 10 blocks, sit down in a cloud of sand and get up clean. Sand under the open sky is mud while it rains; under a roof it always works. Without dry sand nearby they get scruffy. Lambs, kids, piglets and chicks never get dirty.
 - Hitting livestock with a **shovel** doesn't hurt them. It shoves them aside, so you can clean the muck they're standing on.
 
 ### Weather and shelter
@@ -37,7 +39,7 @@ A Vintage Story mod that deepens animal husbandry: your livestock age, get dirty
 - **Strong sun** stresses animals only when it's really hot (26–32 °C depending on species). In the hot sun they **lose their appetite** (they skip the trough), and after a while they get **listless** and lie down now and then. Give them shade.
 - At night, **kept animals** with no roof over them have **no safe place to sleep**, and that stresses them too. Wild animals don't mind.
 - Stress makes animals **sick more easily** and stops breeding above 50%. Above 80% they stop healing and slowly lose health.
-- In bad weather, animals in the open **walk to the nearest roofed spot** (within 24 blocks) and stay there while it lasts.
+- In bad weather, animals in the open **walk to the nearest roofed spot** (within 24 blocks) and stay there while it lasts. When they get hungry or thirsty enough they go out to eat or drink, then come back.
 - At **night** they also go under the roof and **lie down to sleep** until morning.
 - **Pet** an animal (right click with an empty hand) to calm it down: -20% stress, once every 2 in-game hours.
 
@@ -46,7 +48,8 @@ A Vintage Story mod that deepens animal husbandry: your livestock age, get dirty
 ### Thirst and water
 - Animals get **thirsty** over time, faster above 20 °C and even faster in the hot sun.
 - Thirsty animals **walk to water and drink there**, just like they walk to a trough to eat: head down, splashes and a drinking sound. They look for water within 16 blocks.
-- Drinking from **fresh water** (ponds, rivers) is free.
+- Drinking from **fresh water** (ponds, rivers, puddles) is free, and animals prefer it: they walk a few blocks further for it before using a barrel or waterer.
+- The clay **waterer** (shaped on the clay forming grid, fired in a pit kiln) holds 10 litres. Fill it with a bucket; chickens reach it easily and sip from the bowl.
 - From **barrels** and placed **buckets** of water the water is really **used up**: about 8 litres a day for 10 sheep. Refill them!
 - If an animal can't reach the water (e.g. a barrel just outside the fence) it still drinks from up to 6 blocks away once it gets very thirsty.
 - Hot spring water and salt water are not drinkable.
@@ -59,6 +62,11 @@ A Vintage Story mod that deepens animal husbandry: your livestock age, get dirty
 - Babies feel the cold and the heat sooner than adults, and keep their age and health when they grow up.
 - If the mother dies the baby becomes an **orphan** and doesn't know how to eat from a trough yet. **Feed it by hand**: sneak and hold right click with milk (bucket or jug) or food it eats. It takes the food from your hand and chews it.
 - After three feedings by hand (or a couple of days with its mother) it learns to eat from a trough.
+
+### Chickens
+- Hold grain and your hens **follow you** instead of running away (they still flee from predators). Sneak and hold right click to **feed one from your hand**: it counts as a meal from the trough, then she is full for an hour.
+- The **chicken coop kit** (planks and two hen boxes) builds a small raised coop where you right-click the ground: four posts, a pitched roof, a ramp up to the pop hole, two hen boxes inside, and steps up to a gate at the back so you can walk in for the eggs. It needs a clear spot of 5 by 9 blocks, 6 high.
+- Hens can't hop up onto waterers and troughs.
 
 ### Kept and wild animals
 - **Kept animals** are the ones you placed or that were born in your care. Only they leave muck, need a safe place to sleep, and can die of thirst, bad weather or disease.
@@ -75,7 +83,7 @@ Many players asked for a way to play without losing animals:
 - **Pause while nobody is around** (`PauseWhenNoPlayerNearby`): no aging, dirt, sickness, stress or thirst for animals with no player within 64 blocks. Useful on servers where owners aren't always online.
 
 ## Configuration
-Everything is in `ModConfig/livestockwelfare.json` (created on first start): lifespans, dirt and disease rates, muck, grooming, species cold and heat limits, thirst and water amounts, babies and hand feeding, and the safety options. Mod managers that edit config files (like eViSTool) can change it too. Each system can be switched off on its own.
+Everything is in `ModConfig/livestockwelfare.json` (created on first start): lifespans, dirt and disease rates, muck, grooming, dust baths, species cold and heat limits, shelter, thirst and water amounts, babies and hand feeding, treats for hens, and the safety options. Mod managers that edit config files (like eViSTool) can change it too. Each system can be switched off on its own.
 
 ## Compatibility
 - Works next to Natural Fertilizer, Feed or Fallow, Better Husbandry and Hydrate or Diedrate. Petting with an empty hand also triggers Better Husbandry's petting.

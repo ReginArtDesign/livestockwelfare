@@ -7,7 +7,7 @@
         "ReginArtDesign"
     ],
     "description": "Livestock that age, get dirty and sick, need shelter from the weather and water to drink, and raise their young. Clean, groom, pet and care for your animals.",
-    "version": "0.12.1",
+    "version": "0.13.0",
     "side": "Universal",
     "dependencies": {
         "game": "1.22.0"

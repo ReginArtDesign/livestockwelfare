@@ -1,0 +1,40 @@
+Version 0.13.0 (beta)
+
+Note: Livestock Welfare is still in beta. Please back up your world before updating, and tell me if something goes wrong. New settings are added to your config file automatically; the values you changed are kept.
+
+Grooming brush
+- A new tool made from a stick and flax fibers (with a knife). Hold right click on a dirty animal to brush it: no need to sneak, it cleans twice as well as dry grass and is faster. It wears out instead of being used up, and hangs on the tool rack.
+
+Waterer
+- A clay bell drinker: shape it on the clay forming grid and fire it in a pit kiln. Fill it with a bucket (it holds 10 litres, enough for about 10 hens for over a week), and thirsty animals walk to it and drink, chickens included.
+- Chickens stand right at the bowl, dip their beak and lift it, with little drops in the water.
+- Animals still prefer fresh water (a pond, river, puddle or clean well water) within a few blocks more, and keep the barrels and waterers for when there is none.
+
+Dust baths
+- Chickens no longer just get clean on their own: they walk to sand within 10 blocks and take a dust bath, sitting down in a cloud of sand for a few seconds, and get up clean.
+- Sand under the open sky is mud while it rains and is skipped; under a roof it always works.
+- Without dry sand nearby they get scruffy, and their info says so.
+- With DustBathing off in the config they get clean on their own as before.
+
+Chicken coop kit
+- Craft it from planks and two hen boxes, then right-click the ground: a small raised coop is built there, on four posts with a pitched roof, a ramp up to the pop hole, two hen boxes inside and steps up to a gate at the back, so you can walk in to collect the eggs. Room for 6 to 8 hens, with shelter underneath too.
+- It needs a clear spot of 5 by 9 blocks, 6 high, and is built stretching away from you.
+
+Hens love grain
+- Hold grain and your hens come running after you instead of running away (they still flee from predators, and when hurt).
+- Sneak and hold right click with grain to feed a hen from your hand. It counts as a meal from the trough, then she is full for an hour.
+- Which animals do this, how far they follow and how often they take a treat can be changed in the config (Treats).
+
+Shelter and food
+- Animals sitting out bad weather (rain, snow, cold or hot sun) under a roof no longer step out to the trough and back over and over. They stay put until they are hungry or thirsty enough, then go to eat or drink, and come back under the roof after (ShelterYieldsHoursWithoutFood and ShelterYieldsAboveThirst in the config).
+
+Sickness
+- The info text now says why an animal is sick: from the dirt, from the bad weather, or caught from another animal.
+- Health loss from sickness, thirst and the weather is now scaled to the animal's size. Before, a hen (with much less health than a sheep) could die on the first day of being sick.
+
+Muck
+- New model: a stepped heap with crumbs around it, taller with each layer. It no longer flickers where two heaps meet.
+
+Fixes
+- Hens can no longer hop up onto waterers and troughs.
+- A hen at the edge of the sand no longer takes her dust bath on top of a waterer next to it.
