@@ -222,9 +222,9 @@ public class EntityBehaviorLivestockThirst : EntityBehavior
         var pos = entity.Pos.AsBlockPos;
         var accessor = entity.World.BlockAccessor;
         var tmpPos = pos.Copy();
-        BlockPos? bestPos = null;
+        BlockPos? naturalPos = null, containerPos = null;
         BlockEntityLiquidContainer? bestContainer = null;
-        double bestDistance = double.MaxValue;
+        double naturalDistance = double.MaxValue, containerDistance = double.MaxValue;
 
         accessor.WalkBlocks(pos.AddCopy(-radius, -3, -radius), pos.AddCopy(radius, 2, radius), (block, x, y, z) =>
         {
@@ -244,14 +244,21 @@ public class EntityBehaviorLivestockThirst : EntityBehavior
             else return;
 
             double distance = tmpPos.DistanceSqTo(entity.Pos.X, entity.Pos.Y, entity.Pos.Z);
-            if (distance >= bestDistance || isFailed(tmpPos)) return;
-            bestDistance = distance;
-            bestPos = tmpPos.Copy();
-            bestContainer = container;
+            if (distance >= (container == null ? naturalDistance : containerDistance) || isFailed(tmpPos)) return;
+            if (container == null) { naturalDistance = distance; naturalPos = tmpPos.Copy(); }
+            else { containerDistance = distance; containerPos = tmpPos.Copy(); bestContainer = container; }
         });
 
-        return bestPos == null ? null : (bestPos, bestContainer);
+        // A pond, a puddle or well water never runs dry, so walk a few blocks further for it and keep
+        // the barrels and waterers for when there is none.
+        if (naturalPos != null && (containerPos == null || Math.Sqrt(naturalDistance) <= Math.Sqrt(containerDistance) + PreferNaturalWaterBlocks))
+        {
+            return (naturalPos, null);
+        }
+        return containerPos == null ? null : (containerPos, bestContainer);
     }
+
+    const double PreferNaturalWaterBlocks = 6;
 
     // Hot spring water and sea water: animals refuse them, so tell the player why they don't drink.
     static readonly string[] UndrinkableLiquids = { "boilingwater", "saltwater" };

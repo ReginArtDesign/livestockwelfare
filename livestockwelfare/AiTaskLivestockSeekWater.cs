@@ -55,8 +55,9 @@ public class AiTaskLivestockSeekWater : AiTaskLivestockGoTo
     // animal on a bank above the water (often a small one, like a chicken) never got close enough.
     protected override Vec3d TargetPoint(BlockPos block) => block.ToVec3d().Add(0.5, container != null ? 0 : 0.9, 0.5);
 
-    // A barrel is a whole block: count from its edge, not from its middle.
-    protected override float ArriveDistance => container != null ? 1.1f : 1.3f;
+    // A barrel is a whole block: count from its edge, not from its middle. At a waterer the bird
+    // stands right at the bowl, so its beak reaches the water.
+    protected override float ArriveDistance => waterer ? 0.6f : container != null ? 1.1f : 1.3f;
 
     public override void StartExecute()
     {
@@ -69,6 +70,7 @@ public class AiTaskLivestockSeekWater : AiTaskLivestockGoTo
     {
         if (thirst == null || Target == null) return false;
 
+        FaceTarget();
         if (waterer) Sip(timeAtTarget);
         else
         {
@@ -89,6 +91,15 @@ public class AiTaskLivestockSeekWater : AiTaskLivestockGoTo
     protected override void OnFinish(bool arrivedAtTarget)
     {
         entity.AnimManager.StopAnimation("eat");
+    }
+
+    // Head towards the water, not wherever it happened to stop.
+    void FaceTarget()
+    {
+        double dx = Target!.X - entity.Pos.X, dz = Target.Z - entity.Pos.Z;
+        if (dx * dx + dz * dz < 0.0001) return;
+        entity.Pos.Yaw = (float)System.Math.Atan2(dx, dz);
+        entity.BodyYaw = entity.Pos.Yaw;
     }
 
     void Sip(float timeAtTarget)

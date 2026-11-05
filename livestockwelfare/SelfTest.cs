@@ -122,6 +122,18 @@ public class SelfTest : ModSystem
         sapi.Logger.Notification("[lwselftest] waterer: chicken finds it {0}, thirst after drinking {1:0.00}, litres left {2:0.00} — {3}",
             foundIt, thirst?.Thirst, litres, foundIt && thirst?.Thirst < 0.01 && litres < 3 ? "OK" : "FAILED");
 
+        // A puddle a few blocks further than the waterer: the bird walks to the puddle, which never runs dry.
+        var puddle = pos.AddCopy(3, 0, 0);
+        var floor = puddle.DownCopy();
+        accessor.SetBlock(sapi.World.GetBlock(new AssetLocation("game:rock-granite")).Id, floor);
+        accessor.SetBlock(sapi.World.GetBlock(new AssetLocation("game:water-still-7")).Id, puddle);
+        var choice = thirst?.FindDrinkTarget(6, _ => false);
+        bool prefersPuddle = choice?.Pos.Equals(puddle) == true && choice.Value.Container == null;
+        sapi.Logger.Notification("[lwselftest] waterer: chicken prefers the puddle 2 blocks further {0} — {1}",
+            prefersPuddle, prefersPuddle ? "OK" : "FAILED");
+        accessor.SetBlock(0, puddle);
+        accessor.SetBlock(0, floor);
+
         chicken.Die(EnumDespawnReason.Removed);
         accessor.SetBlock(0, pos);
     }
