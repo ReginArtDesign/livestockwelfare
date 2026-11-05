@@ -8,7 +8,8 @@ namespace livestockwelfare;
 /// <summary>
 /// Added in code to food and liquid containers: sneak + hold right click on a hungry lamb, kid or
 /// piglet that cannot suckle feeds it by hand (see EntityBehaviorLivestockNursing.HandFeed). The baby
-/// stands still and eats while the player holds the food out. Anywhere else the item works as usual
+/// stands still and eats while the player holds the food out. Animals that take treats (chickens, see
+/// TreatSettings) take a bit of their food the same way. Anywhere else the item works as usual
 /// (eating, drinking, milking).
 /// </summary>
 public class CollectibleBehaviorHandFeed : CollectibleBehavior
@@ -22,12 +23,33 @@ public class CollectibleBehaviorHandFeed : CollectibleBehavior
 
     public CollectibleBehaviorHandFeed(CollectibleObject collObj) : base(collObj) { }
 
-    static EntityBehaviorLivestockNursing? Target(ItemSlot slot, EntityAgent byEntity, EntitySelection? entitySel) =>
-        byEntity.Controls.ShiftKey
-        && entitySel?.Entity.GetBehavior<EntityBehaviorLivestockNursing>() is { WantsHandFeeding: true } nursing
-        && nursing.CanHandFeedWith(slot.Itemstack) ? nursing : null;
+    // The animal that would eat this from the hand now, or null.
+    static Entity? Target(ItemSlot slot, EntityAgent byEntity, EntitySelection? entitySel)
+    {
+        if (!byEntity.Controls.ShiftKey || entitySel?.Entity is not { } entity) return null;
+        if (entity.GetBehavior<EntityBehaviorLivestockNursing>() is { } nursing)
+        {
+            return nursing.WantsHandFeeding && nursing.CanHandFeedWith(slot.Itemstack) ? entity : null;
+        }
+        return LivestockTreats.TakesTreats(entity) && LivestockTreats.Eats(entity, slot.Itemstack) && LivestockTreats.Refusal(entity) == null ? entity : null;
+    }
 
-    // The baby stands still and eats while being fed (server side).
+    // Fed by hand at all: an orphaned baby, or an animal that takes treats.
+    static bool HandFed(EntitySelection? entitySel) =>
+        entitySel?.Entity is { } entity && (entity.HasBehavior<EntityBehaviorLivestockNursing>() || LivestockTreats.TakesTreats(entity));
+
+    // Food it would eat, but not now: the reason (a lang key).
+    static string? Refusal(ItemSlot slot, EntitySelection? entitySel)
+    {
+        if (entitySel?.Entity is not { } entity) return null;
+        if (entity.GetBehavior<EntityBehaviorLivestockNursing>() is { } baby)
+        {
+            return baby.CanHandFeedWith(slot.Itemstack) ? baby.HandFeedRefusal : null;
+        }
+        return LivestockTreats.TakesTreats(entity) && LivestockTreats.Eats(entity, slot.Itemstack) ? LivestockTreats.Refusal(entity) : null;
+    }
+
+    // The animal stands still and eats while being fed (server side).
     static void KeepEating(EntityAgent byEntity, EntitySelection entitySel)
     {
         if (byEntity.World.Side == EnumAppSide.Server)
@@ -42,8 +64,7 @@ public class CollectibleBehaviorHandFeed : CollectibleBehavior
         if (Target(slot, byEntity, entitySel) == null)
         {
             // Food it would eat, but not now: say why, instead of the player eating it.
-            if (byEntity.Controls.ShiftKey && entitySel?.Entity.GetBehavior<EntityBehaviorLivestockNursing>() is { } baby
-                && baby.CanHandFeedWith(slot.Itemstack) && baby.HandFeedRefusal is { } reason)
+            if (byEntity.Controls.ShiftKey && Refusal(slot, entitySel) is { } reason)
             {
                 handHandling = EnumHandHandling.PreventDefaultAction;
                 handling = EnumHandling.PreventSubsequent;
@@ -61,7 +82,7 @@ public class CollectibleBehaviorHandFeed : CollectibleBehavior
 
     public override bool OnHeldInteractStep(float secondsUsed, ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel, ref EnumHandling handling)
     {
-        if (!byEntity.Controls.ShiftKey || entitySel?.Entity?.HasBehavior<EntityBehaviorLivestockNursing>() != true)
+        if (!byEntity.Controls.ShiftKey || !HandFed(entitySel))
         {
             return true;
         }
@@ -74,12 +95,14 @@ public class CollectibleBehaviorHandFeed : CollectibleBehavior
 
     public override void OnHeldInteractStop(float secondsUsed, ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel, ref EnumHandling handling)
     {
-        if (!byEntity.Controls.ShiftKey || entitySel?.Entity?.HasBehavior<EntityBehaviorLivestockNursing>() != true) return;
+        if (!byEntity.Controls.ShiftKey || !HandFed(entitySel)) return;
 
         handling = EnumHandling.PreventSubsequent;
         if (byEntity.World.Side != EnumAppSide.Server) return;
         if (secondsUsed < FeedSeconds - 0.1f) return;
-        Target(slot, byEntity, entitySel)?.HandFeed(slot, byEntity);
+        if (Target(slot, byEntity, entitySel) is not { } entity) return;
+        if (entity.GetBehavior<EntityBehaviorLivestockNursing>() is { } nursing) nursing.HandFeed(slot, byEntity);
+        else LivestockTreats.HandFeed(entity, slot, byEntity);
     }
 
     // Food would otherwise show the player eating it.

@@ -65,12 +65,18 @@ public static class LivestockUtil
         entity.WatchedAttributes.GetInt("generation") >= (livestockwelfareModSystem.Config?.Hygiene.MuckMinGeneration ?? 1)
         || entity.Attributes.GetString("origin") == "playerplaced";
 
+    /// <summary>The health the "HarmPerDay" and "SickDamagePerDay" settings are given for: an adult sheep's.</summary>
+    public const float HarmReferenceHealth = 17;
+
     /// <summary>
     /// Takes health from a suffering animal. If that empties its health it dies of the given cause,
-    /// unless that cause may not kill; then it is left at 1 health.
+    /// unless that cause may not kill; then it is left at 1 health. The amount is for an animal with
+    /// <see cref="HarmReferenceHealth"/> health (a sheep) and is scaled to this one's, so a hen with
+    /// 2.5 holds out as many days as a sheep instead of dying the first day.
     /// </summary>
     public static void Harm(Entity entity, EntityBehaviorHealth health, double amount, string cause, string logReason)
     {
+        if (health.MaxHealth > 0) amount *= health.MaxHealth / HarmReferenceHealth;
         float floor = CanKill(cause) ? 0 : Math.Min(1, health.Health);
         health.Health = Math.Max(floor, health.Health - (float)amount);
         if (health.Health > 0) return;
@@ -94,19 +100,19 @@ public static class LivestockUtil
     }
 
     /// <summary>
-    /// Adds one of our AI tasks to an animal's vanilla task AI (server side), with the walk animation,
-    /// speed and priority given. Call from a behavior's AfterInitialized.
+    /// Adds one of our AI tasks to an animal's vanilla task AI (server side), with the animation
+    /// (walk by default), speed and priority given. Call from a behavior's AfterInitialized.
     /// </summary>
     public static void AddAiTask(EntityAgent agent, string code, float priority, float moveSpeed, double minCooldownHours, double maxCooldownHours,
-        System.Func<JsonObject, JsonObject, IAiTask> create)
+        System.Func<JsonObject, JsonObject, IAiTask> create, string animation = "walk")
     {
         var taskAi = agent.GetBehavior<EntityBehaviorTaskAI>();
         if (taskAi?.TaskManager == null) return;
 
         var inv = CultureInfo.InvariantCulture;
         var taskConfig = JsonObject.FromJson(string.Format(inv,
-            "{{ \"code\": \"{0}\", \"animation\": \"walk\", \"movespeed\": {1}, \"priority\": {2}, \"mincooldownHours\": {3}, \"maxcooldownHours\": {4} }}",
-            code, moveSpeed, priority, minCooldownHours, maxCooldownHours));
+            "{{ \"code\": \"{0}\", \"animation\": \"{5}\", \"movespeed\": {1}, \"priority\": {2}, \"mincooldownHours\": {3}, \"maxcooldownHours\": {4} }}",
+            code, moveSpeed, priority, minCooldownHours, maxCooldownHours, animation));
         var task = create(taskConfig, JsonObject.FromJson("{}"));
         taskAi.TaskManager.AddTask(task);
         task.AfterInitialize();

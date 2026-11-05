@@ -48,6 +48,8 @@ public class LivestockWelfareConfig
 
     public SafetySettings Safety { get; set; } = new();
 
+    public TreatSettings Treats { get; set; } = new();
+
     public void Sanitize()
     {
         if (OldAgeFraction is < 0.1 or > 1) OldAgeFraction = 0.75;
@@ -62,6 +64,8 @@ public class LivestockWelfareConfig
         Babies ??= new();
         Babies.Sanitize();
         Safety.Sanitize();
+        Treats ??= new();
+        Treats.Sanitize();
     }
 }
 
@@ -190,6 +194,13 @@ public class WeatherSettings
     public int SeekShelterRadius { get; set; } = 24;
     /// <summary>At night animals also go under the roof and sleep there until morning.</summary>
     public bool SleepUnderRoof { get; set; } = true;
+    /// <summary>
+    /// Sheltering from bad weather, animals wait to go out to the trough until this many in-game
+    /// hours after their last meal; then food comes first, and they come back under the roof after.
+    /// </summary>
+    public double ShelterYieldsHoursWithoutFood { get; set; } = 4;
+    /// <summary>The same for water: sheltering animals go out to drink above this thirst.</summary>
+    public double ShelterYieldsAboveThirst { get; set; } = 0.35;
 
     /// <summary>Stress removed by petting (right click with an empty hand).</summary>
     public double PetStressReduction { get; set; } = 0.2;
@@ -436,7 +447,10 @@ public class HygieneSettings
     /// <summary>After recovering, the animal cannot get sick again for this many days.</summary>
     public double ImmunityDays { get; set; } = 6;
 
-    /// <summary>Health lost per in-game day while sick. Sick animals also stop regenerating.</summary>
+    /// <summary>
+    /// Health lost per in-game day while sick, for an animal with a sheep's 17 health; others lose
+    /// as much of their own (a hen with 2.5 about 0.4). Sick animals also stop regenerating.
+    /// </summary>
     public double SickDamagePerDay { get; set; } = 3;
 
     /// <summary>

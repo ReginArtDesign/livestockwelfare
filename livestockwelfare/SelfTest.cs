@@ -75,6 +75,8 @@ public class SelfTest : ModSystem
                 // days, and after a time skip animals drink without walking).
                 CheckWatererAndBrush(spawn);
                 CheckDustBath(spawn);
+                CheckCoop(spawn);
+                CheckTreats(spawn);
                 if (Environment.GetEnvironmentVariable("LW_SELFTEST_POND") == "1") PondTest(spawn);
                 else SpawnAndWatch(spawn);
             }, "lwselftest") });
@@ -94,6 +96,12 @@ public class SelfTest : ModSystem
         sapi.Logger.Notification("[lwselftest] waterer: raw {0}, fired {1}, raw fires into fired {2}",
             raw != null, fired?.GetType().Name, smelted != null && smelted == fired);
         if (fired == null) return;
+
+        // Too high to step onto (hens step 1.125), for the waterer and the troughs.
+        var tall = new[] { "livestockwelfare:waterer-fired", "game:trough-genericwood-small-ns", "game:trough-genericwood-large-head-north" }
+            .Select(code => (code, height: sapi.World.GetBlock(new AssetLocation(code))?.CollisionBoxes?.Max(b => b.Y2))).ToList();
+        sapi.Logger.Notification("[lwselftest] no climbing: {0} — {1}", string.Join(", ", tall.Select(t => $"{t.code} {t.height}")),
+            tall.All(t => t.height >= 1.5f) ? "OK" : "FAILED");
 
         var pos = spawn.AddCopy(0, 30, 0);
         var accessor = sapi.World.BlockAccessor;
@@ -136,6 +144,87 @@ public class SelfTest : ModSystem
 
         chicken.Die(EnumDespawnReason.Removed);
         accessor.SetBlock(0, pos);
+    }
+
+    // Treats: a hen follows grain and takes one from the hand (a meal, then full for a while); a
+    // sheep doesn't. Done high in the air and cleaned up after.
+    void CheckTreats(BlockPos spawn)
+    {
+        var grain = sapi.World.GetItem(new AssetLocation("game:grain-spelt"));
+        var pos = spawn.AddCopy(-20, 40, 0);
+        Entity Spawn(string code)
+        {
+            var e = sapi.World.ClassRegistry.CreateEntity(sapi.World.GetEntityType(new AssetLocation(code)));
+            e.Pos.SetPos(pos.X + 0.5, pos.Y, pos.Z + 0.5);
+            e.Attributes.SetString("origin", "playerplaced");
+            spawning = true;
+            sapi.World.SpawnEntity(e);
+            spawning = false;
+            return e;
+        }
+        var hen = Spawn("game:chicken-hen");
+        var sheep = Spawn("game:sheep-bighorn-adult-female");
+        bool follows = hen.GetBehavior<Vintagestory.GameContent.EntityBehaviorTaskAI>()?.TaskManager.AllTasks.Any(t => t is AiTaskLivestockFollowFood) == true;
+        var slot = new DummySlot(new ItemStack(grain, 3));
+        double saturation = hen.WatchedAttributes.GetTreeAttribute("hunger")?.GetFloat("saturation") ?? 0;
+        LivestockTreats.HandFeed(hen, slot, hen as EntityAgent ?? throw new InvalidOperationException());
+        double after = hen.WatchedAttributes.GetTreeAttribute("hunger")?.GetFloat("saturation") ?? 0;
+        string? refusal = LivestockTreats.Refusal(hen);
+        LivestockTreats.HandFeed(hen, slot, (EntityAgent)hen);
+        bool ok = grain != null && follows && LivestockTreats.TakesTreats(hen) && LivestockTreats.Eats(hen, slot.Itemstack)
+            && !LivestockTreats.TakesTreats(sheep) && after > saturation && refusal != null && slot.StackSize == 2;
+        sapi.Logger.Notification("[lwselftest] treats: hen follows {0}, takes treats {1}, sheep {2}, saturation {3} -> {4}, then {5}, grain left {6} — {7}",
+            follows, LivestockTreats.TakesTreats(hen), LivestockTreats.TakesTreats(sheep), saturation, after, refusal, slot.StackSize, ok ? "OK" : "FAILED");
+        hen.Die(EnumDespawnReason.Removed);
+        sheep.Die(EnumDespawnReason.Removed);
+    }
+
+    // The coop kit builds the raised coop (floor, walls, pitched roof, ramp and back steps, hen boxes,
+    // gate with an open doorway above) on a stone floor, picking a flower that is in the way, and
+    // refuses a spot that is already taken. The open pop hole keeps it from being a closed room
+    // (logged, not required). Done high in the air and cleaned up after.
+    void CheckCoop(BlockPos spawn)
+    {
+        var accessor = sapi.World.BlockAccessor;
+        var rampFoot = spawn.AddCopy(20, 40, 0);
+        var stone = sapi.World.GetBlock(new AssetLocation("game:rock-granite"));
+        for (int x = -3; x <= 3; x++)
+        for (int z = -1; z <= 10; z++)
+        {
+            accessor.SetBlock(stone.Id, rampFoot.AddCopy(x, -1, z));
+        }
+
+        // A flower where a corner post goes: picked, not in the way.
+        accessor.SetBlock(sapi.World.GetBlock(new AssetLocation("game:flower-catmint-free")).Id, rampFoot.AddCopy(2, 0, 2));
+        string? error = ItemChickenCoop.TryBuild(sapi.World, rampFoot, new Vec3i(0, 0, 1), "oak");
+        var counts = new Dictionary<string, int>();
+        for (int x = -2; x <= 2; x++)
+        for (int y = 0; y <= 5; y++)
+        for (int z = 0; z <= 8; z++)
+        {
+            string? code = accessor.GetBlock(rampFoot.AddCopy(x, y, z)).Code?.Path;
+            if (code == null || code == "air") continue;
+            string kind = code.Split('-')[0];
+            counts[kind] = counts.GetValueOrDefault(kind) + 1;
+        }
+        var inside = rampFoot.AddCopy(0, 2, 4);
+        bool roofed = accessor.GetRainMapHeightAt(inside) > inside.Y;
+        var room = sapi.ModLoader.GetModSystem<Vintagestory.GameContent.RoomRegistry>()?.GetRoomForPosition(inside);
+        bool enclosed = room != null && (room.ExitCount == 0 || room.SkylightCount < room.NonSkylightCount);
+        string? again = ItemChickenCoop.TryBuild(sapi.World, rampFoot, new Vec3i(0, 0, 1), "oak");
+        bool ok = error == null && accessor.GetBlock(rampFoot.AddCopy(0, 3, 6)).Id == 0 && counts.GetValueOrDefault("planks") == 48 && counts.GetValueOrDefault("plankstairs") == 24
+            && counts.GetValueOrDefault("plankslab") == 5 && counts.GetValueOrDefault("woodenfence") == 4
+            && counts.GetValueOrDefault("woodenfencegate") == 1 && counts.GetValueOrDefault("henbox") == 2
+            && roofed && again == "coop-noroom";
+        sapi.Logger.Notification("[lwselftest] coop: built {0}, blocks {1}, roofed {2}, enclosed {3} (exits {4}), second one refused {5} — {6}",
+            error ?? "yes", string.Join(", ", counts.Select(c => $"{c.Key} {c.Value}")), roofed, enclosed, room?.ExitCount, again, ok ? "OK" : "FAILED");
+
+        for (int x = -3; x <= 3; x++)
+        for (int y = -1; y <= 5; y++)
+        for (int z = -1; z <= 10; z++)
+        {
+            accessor.SetBlock(0, rampFoot.AddCopy(x, y, z));
+        }
     }
 
     // A dirty hen finds dry sand under a roof, and not the sand under the open sky; a bath gets her

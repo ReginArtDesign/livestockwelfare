@@ -75,6 +75,7 @@ public class EntityBehaviorLivestockShelter : EntityBehavior
     bool baby;
 
     float walkSpeed;
+    AiTaskLivestockSeekShelter? shelterTask;
     // Above wandering and idling, below vanilla eating: sheltered animals still go to the trough.
     const float SeekShelterPriority = 1.29f;
 
@@ -85,12 +86,14 @@ public class EntityBehaviorLivestockShelter : EntityBehavior
         // Off its food in the heat: no trough until it is cooler or in the shade.
         if (entity.GetBehavior<EntityBehaviorTaskAI>() is { } taskAi)
         {
-            taskAi.TaskManager.OnShouldExecuteTask += task => task is not AiTaskSeekFoodAndEat || !NoAppetite;
+            // Sitting out bad weather, food and water wait until the animal really needs them.
+            taskAi.TaskManager.OnShouldExecuteTask += task => (task is not AiTaskSeekFoodAndEat || !NoAppetite)
+                && !(AiTaskLivestockSeekShelter.IsFoodOrWater(task) && shelterTask?.HoldsBackFoodAndWater == true);
         }
         if (livestockwelfareModSystem.Config?.Weather is not { Enabled: true, SeekShelter: true } || Settings == null) return;
 
         LivestockUtil.AddAiTask(agent, AiTaskLivestockSeekShelter.Code, SeekShelterPriority, walkSpeed, 0.05, 0.1,
-            (taskConfig, aiConfig) => new AiTaskLivestockSeekShelter(agent, taskConfig, aiConfig));
+            (taskConfig, aiConfig) => shelterTask = new AiTaskLivestockSeekShelter(agent, taskConfig, aiConfig));
     }
 
     public float Stress => entity.WatchedAttributes.GetFloat(StressAttr);

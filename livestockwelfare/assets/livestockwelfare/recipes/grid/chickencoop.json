@@ -1,0 +1,12 @@
+{
+	// About the planks the coop is built from (48 planks, 24 stairs, 5 slabs, the posts and
+	// the gate come to some 64 planks), and the two hen boxes inside.
+	ingredientPattern: "PPP,PHP,PPP",
+	ingredients: {
+		"P": { type: "block", code: "game:planks-*-ud", name: "wood", quantity: 8, skipVariants: ["agedacacia", "agedebony", "rottenebony"] },
+		"H": { type: "block", code: "game:henbox", quantity: 2 }
+	},
+	width: 3,
+	height: 3,
+	output: { type: "item", code: "chickencoop-{wood}" }
+}

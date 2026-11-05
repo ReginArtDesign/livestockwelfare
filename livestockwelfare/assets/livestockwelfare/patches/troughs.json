@@ -1,0 +1,14 @@
+[
+	// Hens step up anything up to 1.125 blocks high, so they kept climbing onto the troughs. A
+	// collision box 1.5 high, like a fence's, keeps them off; what you see and click stays the same.
+	{ "op": "replace", "path": "/collisionbox/y2", "value": 1.5, "file": "game:blocktypes/wood/trough-large.json" },
+	{
+		"op": "add", "path": "/selectionbox", "file": "game:blocktypes/wood/trough-small.json",
+		"value": { "x1": 0.25, "y1": 0, "z1": 0.0625, "x2": 0.75, "y2": 0.25, "z2": 0.9375, "rotateYByType": { "*-ns": 90, "*-we": 0 } }
+	},
+	{
+		"op": "add", "path": "/collisionbox", "file": "game:blocktypes/wood/trough-small.json",
+		"value": { "x1": 0.25, "y1": 0, "z1": 0.0625, "x2": 0.75, "y2": 1.5, "z2": 0.9375, "rotateYByType": { "*-ns": 90, "*-we": 0 } }
+	},
+	{ "op": "remove", "path": "/collisionselectionbox", "file": "game:blocktypes/wood/trough-small.json" }
+]

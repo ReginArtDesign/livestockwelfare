@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -23,6 +24,8 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
 
     const string FilthAttr = "lwFilth";
     const string SickAttr = "lwSick";
+    // Why it fell sick ("filth", "weather" or "contagion"), shown with the sickness.
+    const string SickCauseAttr = "lwSickCause";
     const string ImmuneUntilAttr = "lwImmuneUntilDays";
     const string LastUpdateAttr = "lwHygieneLastHours";
     // Badly sick animal lying on the ground until it recovers or dies.
@@ -152,6 +155,7 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
         // Same approach as vanilla EntityBehaviorMortallyWoundable: no AI tasks while lying down.
         var taskAi = entity.GetBehavior<EntityBehaviorTaskAI>();
         if (taskAi != null) taskAi.TaskManager.OnShouldExecuteTask += _ => !IsCollapsed && !IsHeldStill;
+        if (taskAi != null && entity is EntityAgent luredAgent && LivestockTreats.Setup(entity)) AddFollowFood(luredAgent, taskAi);
         if (IsCollapsed) LieDown();
     }
 
@@ -405,7 +409,7 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
             chancePerDay *= settings.OldAgeSicknessMultiplier;
         }
 
-        if (Roll(chancePerDay, hours)) FallSick();
+        if (Roll(chancePerDay, hours)) FallSick(weather > filth ? "weather" : "filth");
     }
 
     void UpdateSick(HygieneSettings settings, double hours)
@@ -450,7 +454,7 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
     public void Infect()
     {
         if (Settings == null || IsSick || IsImmune) return;
-        FallSick();
+        FallSick("contagion");
     }
 
     // A sick animal is listless: it often lies down for a while.
@@ -467,9 +471,12 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
         }
     }
 
-    void FallSick()
+    void FallSick(string cause)
     {
+        entity.World.Logger.Debug("[livestockwelfare] {0} #{1} fell sick from {2} (filth {3:0.00}, weather stress {4:0.00})",
+            entity.Code.Path, entity.EntityId, cause, Filth, WeatherStress);
         entity.WatchedAttributes.SetBool(SickAttr, true);
+        entity.WatchedAttributes.SetString(SickCauseAttr, cause);
         LivestockUtil.SetRegenBlocked(entity, "sick", true);
         LivestockUtil.BlockBreeding(entity);
     }
@@ -477,6 +484,7 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
     void Recover(double immunityDays)
     {
         entity.WatchedAttributes.SetBool(SickAttr, false);
+        entity.WatchedAttributes.RemoveAttribute(SickCauseAttr);
         entity.WatchedAttributes.SetDouble(ImmuneUntilAttr, entity.World.Calendar.TotalDays + immunityDays);
         LivestockUtil.SetRegenBlocked(entity, "sick", false);
         if (IsCollapsed) StandUp();
@@ -510,6 +518,19 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
     const double CatchUpBathHours = 3;
     // Below eating, drinking and shelter (1.25-1.36), above idling and wandering.
     const float DustBathPriority = 1.2f;
+    // Above sheltering, laying and eating, below being led on a rope (1.45) and getting out of
+    // water (1.4). The vanilla run from players (1.5) is held back meanwhile.
+    const float FollowFoodPriority = 1.39f;
+
+    // Treats (see TreatSettings): it walks after a player holding grain, at a run if it has one.
+    void AddFollowFood(EntityAgent agent, EntityBehaviorTaskAI taskAi)
+    {
+        bool canRun = entity.Properties.Client?.Animations?.Any(a => a.Code == "run") == true;
+        AiTaskLivestockFollowFood? follow = null;
+        LivestockUtil.AddAiTask(agent, AiTaskLivestockFollowFood.Code, FollowFoodPriority, canRun ? 0.015f : walkSpeed * 2, 0, 0,
+            (taskConfig, aiConfig) => follow = new AiTaskLivestockFollowFood(agent, taskConfig, aiConfig), canRun ? "run" : "walk");
+        taskAi.TaskManager.OnShouldExecuteTask += task => task is not (AiTaskFleeEntity or AiTaskFleeEntityR) || follow?.KeepsFromFleeing != true;
+    }
     float walkSpeed;
 
     bool DustBathes(HygieneSettings settings) => SelfCleaning && settings.DustBathing && !KeptClean;
@@ -647,7 +668,15 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
     public string StatusText(string? langCode = null)
     {
         var parts = new StringBuilder();
-        if (IsSick) parts.Append(LivestockUtil.Translate(langCode, "livestockwelfare:sick")).Append(", ");
+        if (IsSick)
+        {
+            parts.Append(LivestockUtil.Translate(langCode, "livestockwelfare:sick"));
+            if (entity.WatchedAttributes.GetString(SickCauseAttr) is { Length: > 0 } cause)
+            {
+                parts.Append(" (").Append(LivestockUtil.Translate(langCode, "livestockwelfare:sick-" + cause)).Append(')');
+            }
+            parts.Append(", ");
+        }
         if (IsCollapsed) parts.Append(LivestockUtil.Translate(langCode, "livestockwelfare:collapsed")).Append(", ");
         // Babies with a mother are never dirty, so only their sickness is worth showing.
         if (KeptClean) return parts.Length == 0 ? "" : parts.ToString(0, parts.Length - 2);

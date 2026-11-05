@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
+using Vintagestory.GameContent;
 
 namespace livestockwelfare;
 
@@ -15,10 +17,13 @@ public class AiTaskLivestockSeekShelter : AiTaskLivestockGoTo
     public const string Code = "livestockwelfare-seekshelter";
 
     // Safety limit; normally it stays until morning or the weather clears. Eating and drinking
-    // have a higher priority, so the animal can still go to the trough in between.
+    // have a higher priority, so the animal can still go to the trough in between once it is
+    // hungry or thirsty enough (see HoldsBackFoodAndWater).
     const float MaxStaySeconds = 600;
 
     EntityBehaviorLivestockShelter? shelter;
+    EntityBehaviorLivestockThirst? thirst;
+    AiTaskManager? taskManager;
     bool sleeping;
 
     public AiTaskLivestockSeekShelter(EntityAgent entity, JsonObject taskConfig, JsonObject aiConfig)
@@ -28,6 +33,8 @@ public class AiTaskLivestockSeekShelter : AiTaskLivestockGoTo
     {
         base.AfterInitialize();
         shelter = entity.GetBehavior<EntityBehaviorLivestockShelter>();
+        thirst = entity.GetBehavior<EntityBehaviorLivestockThirst>();
+        taskManager = entity.GetBehavior<EntityBehaviorTaskAI>()?.TaskManager;
     }
 
     static WeatherSettings? Settings =>
@@ -35,9 +42,38 @@ public class AiTaskLivestockSeekShelter : AiTaskLivestockGoTo
 
     // At night it also runs for animals already under a roof: the nearest roofed spot is then right
     // where they stand, and they lie down to sleep there.
+    // A hungry or thirsty animal on its way to food or water is let go, and comes back after.
     protected override bool Wanted() =>
         shelter != null && Settings != null && ShouldBeUnderRoof() && (!shelter.Roofed || SleepTime)
-        && LivestockUtil.ShouldSimulate(entity);
+        && !(NeedsFoodOrWater && GoingForFoodOrWater()) && LivestockUtil.ShouldSimulate(entity);
+
+    /// <summary>The vanilla trough task and ours for water, which bad weather can hold back.</summary>
+    public static bool IsFoodOrWater(IAiTask task) => task is AiTaskSeekFoodAndEat or AiTaskLivestockSeekWater;
+
+    /// <summary>
+    /// Sitting out bad weather under the roof, the animal waits with food and water until it is
+    /// hungry or thirsty enough (WeatherSettings.ShelterYields...). Otherwise it would step out to
+    /// the trough and be called straight back by this task, over and over.
+    /// </summary>
+    public bool HoldsBackFoodAndWater =>
+        shelter != null && Arrived && !SleepTime && shelter.BadWeather && !NeedsFoodOrWater
+        && taskManager?.ActiveTasksBySlot.Contains(this) == true;
+
+    // Hungry or thirsty enough to go out in bad weather; never at night, when it sleeps.
+    bool NeedsFoodOrWater
+    {
+        get
+        {
+            if (Settings is not { } settings || SleepTime) return false;
+            if (thirst != null && thirst.Thirst >= settings.ShelterYieldsAboveThirst) return true;
+            // Vanilla notes each meal from a trough; an animal that never ate counts as hungry.
+            double lastMeal = entity.WatchedAttributes.GetDouble("lastMealEatenTotalHours");
+            return entity.World.Calendar.TotalHours - lastMeal >= settings.ShelterYieldsHoursWithoutFood;
+        }
+    }
+
+    bool GoingForFoodOrWater() =>
+        taskManager?.ActiveTasksBySlot.Any(task => task != null && task != this && IsFoodOrWater(task)) == true;
 
     bool SleepTime => shelter != null && shelter.Night && Settings?.SleepUnderRoof == true;
 
