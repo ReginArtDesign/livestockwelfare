@@ -28,7 +28,7 @@
 	attributesByType: {
 		"*-fired": {
 			liquidContainerProps: {
-				capacityLitres: 3,
+				capacityLitres: 10,
 				transferSizeLitres: 0.5,
 				emptyShapeLoc: "livestockwelfare:shapes/block/waterer/drinker",
 				opaqueContentShapeLoc: "livestockwelfare:shapes/block/waterer/contents",
