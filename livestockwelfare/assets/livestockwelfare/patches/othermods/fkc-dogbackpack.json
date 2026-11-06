@@ -1,0 +1,3 @@
+[
+	{ "op": "add", "path": "/storageFlags", "value": 3, "file": "wolftaming:itemtypes/dogbackpack.json", "dependsOn": [{ "modid": "wolftaming" }, { "modid": "feralkinshipcompanions" }] }
+]
