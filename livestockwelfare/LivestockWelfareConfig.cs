@@ -32,6 +32,7 @@ public class LivestockWelfareConfig
         ["goat"] = new SpeciesAging { LifespanYearsMin = 4, LifespanYearsMax = 6 },
         ["pig"] = new SpeciesAging { LifespanYearsMin = 3, LifespanYearsMax = 4 },
         ["chicken"] = new SpeciesAging { LifespanYearsMin = 2, LifespanYearsMax = 3 },
+        ["dog"] = new SpeciesAging { LifespanYearsMin = 5, LifespanYearsMax = 7 },
         // Other mods' animals (patches/othermods).
         ["giantboar"] = new SpeciesAging { LifespanYearsMin = 4, LifespanYearsMax = 6 },
         ["greathorn"] = new SpeciesAging { LifespanYearsMin = 4, LifespanYearsMax = 6 },
@@ -47,6 +48,8 @@ public class LivestockWelfareConfig
     public BabySettings Babies { get; set; } = new();
 
     public SafetySettings Safety { get; set; } = new();
+
+    public DogSettings Dogs { get; set; } = new();
 
     public TreatSettings Treats { get; set; } = new();
 
@@ -64,6 +67,8 @@ public class LivestockWelfareConfig
         Babies ??= new();
         Babies.Sanitize();
         Safety.Sanitize();
+        Dogs ??= new();
+        Dogs.Sanitize();
         Treats ??= new();
         Treats.Sanitize();
     }
@@ -216,6 +221,7 @@ public class WeatherSettings
         ["goat"] = new WeatherTolerance { ColdBelowC = -6, HotAboveC = 32 },
         ["pig"] = new WeatherTolerance { ColdBelowC = 2, HotAboveC = 26 },
         ["chicken"] = new WeatherTolerance { ColdBelowC = 0, HotAboveC = 30 },
+        ["dog"] = new WeatherTolerance { ColdBelowC = -12, HotAboveC = 28 },
         // Giant boars have a thick bristly coat, great bighorns live in the mountains, and giant
         // red river hogs come from the warm south.
         ["giantboar"] = new WeatherTolerance { ColdBelowC = -8, HotAboveC = 27 },
@@ -292,6 +298,7 @@ public class ThirstSettings
         ["goat"] = 1,
         ["pig"] = 1.5,
         ["chicken"] = 0.1,
+        ["dog"] = 0.5,
         ["giantboar"] = 2.5,
         ["greathorn"] = 2,
         ["giantredriver"] = 2,

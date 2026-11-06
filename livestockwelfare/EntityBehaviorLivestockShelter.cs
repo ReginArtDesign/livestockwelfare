@@ -98,6 +98,9 @@ public class EntityBehaviorLivestockShelter : EntityBehavior
 
     public float Stress => entity.WatchedAttributes.GetFloat(StressAttr);
 
+    /// <summary>Stresses the animal at once (e.g. a dog back from a trip); it fades like weather stress, and petting helps.</summary>
+    public void AddStress(float amount) => entity.WatchedAttributes.SetFloat(StressAttr, Math.Clamp(Stress + amount, 0, 1));
+
     Conditions Current => (Conditions)entity.WatchedAttributes.GetInt(ConditionsAttr);
 
     /// <summary>Standing in strong sun above the species' heat limit (as of the last check).</summary>
@@ -217,7 +220,9 @@ public class EntityBehaviorLivestockShelter : EntityBehavior
         // Dark, or vanilla sleeping hours (22:00-05:00, when livestock lies down to sleep anyway).
         float hour = world.Calendar.HourOfDay;
         if (world.Calendar.GetDayLightStrength(pos) < NightDaylight || hour >= 22 || hour < 5) conditions |= Conditions.Night;
-        if ((conditions & Conditions.Night) != 0 && !roofed && settings.SleepOutsideStress > 0 && LivestockUtil.IsKept(entity))
+        // A dog that stays out with its people at night is fine; alone it wants its kennel.
+        if ((conditions & Conditions.Night) != 0 && !roofed && settings.SleepOutsideStress > 0 && LivestockUtil.IsKept(entity)
+            && entity.GetBehavior<EntityBehaviorLivestockDog>()?.HasCompany != true)
         {
             conditions |= Conditions.SleepingOutside;
             target += settings.SleepOutsideStress;

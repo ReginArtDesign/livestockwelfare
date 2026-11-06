@@ -57,13 +57,18 @@ public static class LivestockUtil
     }
 
     /// <summary>
-    /// Kept animals were bred by the player (generation at least Hygiene.MuckMinGeneration) or placed
-    /// by them. Only these make muck, suffer from thirst, weather and disease, or need a safe place to
-    /// sleep, so wild animals don't die off all over the world.
+    /// Kept animals were bred by the player (generation at least Hygiene.MuckMinGeneration), placed
+    /// by them, or tamed by them with the Pet AI mod (Wolf taming's dogs). Only these make muck,
+    /// suffer from thirst, weather and disease, or need a safe place to sleep, so wild animals don't
+    /// die off all over the world.
     /// </summary>
     public static bool IsKept(Entity entity) =>
         entity.WatchedAttributes.GetInt("generation") >= (livestockwelfareModSystem.Config?.Hygiene.MuckMinGeneration ?? 1)
-        || entity.Attributes.GetString("origin") == "playerplaced";
+        || entity.Attributes.GetString("origin") == "playerplaced"
+        || !string.IsNullOrEmpty(entity.WatchedAttributes.GetTreeAttribute(PetAiStatusAttr)?.GetString("owner"));
+
+    // Pet AI keeps the owner's player uid in this tree.
+    const string PetAiStatusAttr = "domesticationstatus";
 
     /// <summary>The health the "HarmPerDay" and "SickDamagePerDay" settings are given for: an adult sheep's.</summary>
     public const float HarmReferenceHealth = 17;

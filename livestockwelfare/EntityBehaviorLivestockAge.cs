@@ -231,6 +231,10 @@ public class EntityBehaviorLivestockAge : EntityBehavior
             message += " — " + thirst.StatusText(lang);
             if (thirst.WaterSourceText(lang) is { Length: > 0 } water) message += " — " + water;
         }
+        if (entity.GetBehavior<EntityBehaviorLivestockDog>() is { IsKept: true } dog)
+        {
+            message += " — " + dog.StatusText(lang);
+        }
         player.SendMessage(GlobalConstants.GeneralChatGroup, message, EnumChatType.Notification);
     }
 }

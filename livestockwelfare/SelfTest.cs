@@ -39,6 +39,41 @@ public class SelfTest : ModSystem
         };
     }
 
+    // Dogs: the patches reached the wolves (and Wolf taming's dogs when it is installed), the config
+    // knows the "dog" species, and raised, placed and Pet AI-owned dogs count as kept, wild ones not.
+    void CheckDogs()
+    {
+        foreach (string code in new[] { "game:wolf-eurasian-adult-male", "game:wolf-eurasian-baby-female", "wolftaming:dog-shepherd-female", "feralkinship:tamewolf-eurasian-male" })
+        {
+            var type = sapi.World.GetEntityType(new AssetLocation(code));
+            if (type == null)
+            {
+                sapi.Logger.Notification("[lwselftest] dog check {0}: not installed", code);
+                continue;
+            }
+            bool patched = type.Server?.BehaviorsAsJsonObj?.Any(b => b["code"].AsString() == EntityBehaviorLivestockDog.Code) == true;
+            sapi.Logger.Notification("[lwselftest] dog check {0}: dog behavior {1}", code, patched ? "found" : "MISSING");
+        }
+
+        var config = livestockwelfareModSystem.Config;
+        sapi.Logger.Notification("[lwselftest] dog check config: aging {0}, weather {1}, thirst {2}, dogs section {3}",
+            config?.Species.ContainsKey("dog"), config?.Weather.Species.ContainsKey("dog"), config?.Thirst.LitresPerFullDrink.ContainsKey("dog"), config?.Dogs != null);
+
+        var wolfType = sapi.World.GetEntityType(new AssetLocation("game:wolf-eurasian-adult-male"));
+        if (wolfType == null) return;
+        bool Kept(Action<Entity> setup)
+        {
+            var wolf = sapi.World.ClassRegistry.CreateEntity(wolfType);
+            setup(wolf);
+            return LivestockUtil.IsKept(wolf);
+        }
+        bool wild = Kept(_ => { });
+        bool bred = Kept(e => e.WatchedAttributes.SetInt("generation", 2));
+        bool owned = Kept(e => e.WatchedAttributes.GetOrAddTreeAttribute("domesticationstatus").SetString("owner", "testplayeruid"));
+        sapi.Logger.Notification("[lwselftest] dog check kept: wild {0} (expect False), bred {1}, Pet AI owner {2} (expect True) — {3}",
+            wild, bred, owned, !wild && bred && owned ? "OK" : "FAILED");
+    }
+
     void Run()
     {
         foreach (var cause in new[] { LivestockUtil.OldAgeDeathCause, LivestockUtil.DiseaseDeathCause })
@@ -60,6 +95,7 @@ public class SelfTest : ModSystem
         var drygrass = sapi.World.GetItem(new AssetLocation("game:drygrass"));
         sapi.Logger.Notification("[lwselftest] dry grass grooming behavior: {0}",
             drygrass?.CollectibleBehaviors.Any(b => b is CollectibleBehaviorGroom) == true ? "found" : "MISSING");
+        CheckDogs();
 
         var spawn = sapi.World.DefaultSpawnPosition.AsBlockPos;
         // The test animals stand up to 16 blocks from the spawn, possibly in the next chunk.

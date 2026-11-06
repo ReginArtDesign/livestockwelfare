@@ -63,5 +63,9 @@
 	"handfed-left": "{p0:# more feeding|# more feeding|# more feedings} and it learns to eat from a trough.",
 	"handfed-learned": "It has learned to eat from a trough now.",
 	"handfeed-suckling": "It is suckling from its mother and is not hungry.",
-	"handfeed-full": "It is full."
+	"handfeed-full": "It is full.",
+	"dog-bond": "Bond: {0}%",
+	"dog-lonely": "lonely",
+	"dog-tired": "tired after the trip",
+	"dog-loyal": "loyal"
 }

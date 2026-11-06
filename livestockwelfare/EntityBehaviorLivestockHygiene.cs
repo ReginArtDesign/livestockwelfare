@@ -155,6 +155,12 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
         // Same approach as vanilla EntityBehaviorMortallyWoundable: no AI tasks while lying down.
         var taskAi = entity.GetBehavior<EntityBehaviorTaskAI>();
         if (taskAi != null) taskAi.TaskManager.OnShouldExecuteTask += _ => !IsCollapsed && !IsHeldStill;
+        // The player's animals leave the player's dog alone (Wolf taming makes sheep attack dogs).
+        if (taskAi != null)
+        {
+            taskAi.TaskManager.OnShouldExecuteTask += task => !AttacksKeptDog(task);
+            taskAi.TaskManager.OnExecuteTask += (task, _) => !AttacksKeptDog(task);
+        }
         if (taskAi != null && entity is EntityAgent luredAgent && LivestockTreats.Setup(entity)) AddFollowFood(luredAgent, taskAi);
         if (IsCollapsed) LieDown();
     }
@@ -176,6 +182,9 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
     // A baby with a mother (or a chick, which has no nursing) is kept clean; an orphan is not.
     bool KeptClean => baby && !entity.WatchedAttributes.GetBool(EntityBehaviorLivestockNursing.OrphanAttr);
     public float Filth => entity.WatchedAttributes.GetFloat(FilthAttr);
+
+    /// <summary>Makes the coat dirtier at once (e.g. a dog back from a trip), up to fully filthy.</summary>
+    public void Soil(float amount) => entity.WatchedAttributes.SetFloat(FilthAttr, Math.Clamp(Filth + amount, 0, 1));
 
     /// <summary>
     /// Chickens and other self-cleaning species get clean on their own; like babies they need no grooming.
@@ -341,13 +350,20 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
         return last.Length > 0 && char.IsDigit(last[0]) ? last[0] - '0' : 1;
     }
 
-    /// <summary>Other livestock nearby beyond the number that is fine (0 if not crowded). Babies don't count.</summary>
+    const string DogSpecies = "dog";
+
+    /// <summary>
+    /// Other livestock nearby beyond the number that is fine (0 if not crowded). Babies don't count,
+    /// and a dog guarding the herd doesn't crowd it (dogs only count for other dogs).
+    /// </summary>
     int ExtraAnimalsNearby(HygieneSettings settings)
     {
         if (settings.CrowdingRadius <= 0) return 0;
 
+        bool isDog = species == DogSpecies;
         int others = entity.World.GetEntitiesAround(entity.Pos.XYZ, settings.CrowdingRadius, 2,
-            e => e != entity && e.Alive && e.GetBehavior<EntityBehaviorLivestockHygiene>() is { IsBaby: false }).Length;
+            e => e != entity && e.Alive && e.GetBehavior<EntityBehaviorLivestockHygiene>() is { IsBaby: false } other
+                && (other.Species == DogSpecies) == isDog).Length;
         return Math.Max(0, others - settings.CrowdingFreeAnimals);
     }
 
@@ -361,6 +377,7 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
         if (settings.MuckChancePerDay <= 0) return;
 
         if (!LivestockUtil.IsKept(entity)) return;
+        if (species == DogSpecies && livestockwelfareModSystem.Config?.Dogs.MakesMuck != true) return;
 
         double chancePerDay = settings.MuckChancePerDay * (1 + extraAnimals * settings.MuckCrowdingBonus);
         if (!Roll(chancePerDay, hours)) return;
@@ -448,6 +465,16 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
         }
     }
 
+    bool AttacksKeptDog(IAiTask task) =>
+        task is AiTaskMeleeAttack or AiTaskSeekEntity && task is AiTaskBaseTargetable { TargetEntity: { } target }
+        && !entity.HasBehavior<EntityBehaviorLivestockDog>() && target.HasBehavior<EntityBehaviorLivestockDog>()
+        && LivestockUtil.IsKept(entity) && LivestockUtil.IsKept(target);
+
+    // This animal is a kept dog, and the attacker is one of the player's (non-dog) animals.
+    bool IsKeptAnimalHittingKeptDog(Entity attacker) =>
+        entity.HasBehavior<EntityBehaviorLivestockDog>() && !attacker.HasBehavior<EntityBehaviorLivestockDog>()
+        && attacker.HasBehavior<EntityBehaviorLivestockAge>() && LivestockUtil.IsKept(entity) && LivestockUtil.IsKept(attacker);
+
     bool Roll(double chancePerDay, double hours) => LivestockUtil.Roll(entity, chancePerDay, hours);
 
     /// <summary>Makes the animal sick unless it already is, is immune, or sickness is switched off.</summary>
@@ -495,6 +522,14 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
     // animal gets shoved aside, so the muck it stands on can be reached.
     public override void OnEntityReceiveDamage(DamageSource damageSource, ref float damage)
     {
+        // A kept dog never hurts the player's animals, whichever AI (vanilla, Pet AI) made it bite,
+        // and the player's animals never hurt the player's dog.
+        if (damageSource.Type != EnumDamageType.Heal && damageSource.GetCauseEntity() is { } cause
+            && (cause.GetBehavior<EntityBehaviorLivestockDog>() is { } dog && dog.Spares(entity) || IsKeptAnimalHittingKeptDog(cause)))
+        {
+            damage = 0;
+            return;
+        }
         if (Settings is not { ShovelsHarmless: true } || damageSource.Type == EnumDamageType.Heal) return;
         if (damageSource.GetCauseEntity() is not EntityPlayer player) return;
         if (player.RightHandItemSlot?.Itemstack?.Collectible?.Tool != EnumTool.Shovel) return;

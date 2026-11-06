@@ -20,6 +20,7 @@ public class livestockwelfareModSystem : ModSystem
         api.RegisterEntityBehaviorClass(EntityBehaviorLivestockThirst.Code, typeof(EntityBehaviorLivestockThirst));
         api.RegisterEntityBehaviorClass(EntityBehaviorLivestockNursing.Code, typeof(EntityBehaviorLivestockNursing));
         api.RegisterEntityBehaviorClass(EntityBehaviorLivestockMouth.Code, typeof(EntityBehaviorLivestockMouth));
+        api.RegisterEntityBehaviorClass(EntityBehaviorLivestockDog.Code, typeof(EntityBehaviorLivestockDog));
         api.RegisterCollectibleBehaviorClass(CollectibleBehaviorGroom.Code, typeof(CollectibleBehaviorGroom));
         api.RegisterCollectibleBehaviorClass(CollectibleBehaviorHandFeed.Code, typeof(CollectibleBehaviorHandFeed));
         api.RegisterBlockBehaviorClass(BlockBehaviorMuckNeedsGround.Code, typeof(BlockBehaviorMuckNeedsGround));
@@ -29,6 +30,8 @@ public class livestockwelfareModSystem : ModSystem
         AiTaskRegistry.Register<AiTaskLivestockSeekShelter>(AiTaskLivestockSeekShelter.Code);
         AiTaskRegistry.Register<AiTaskLivestockDustBath>(AiTaskLivestockDustBath.Code);
         AiTaskRegistry.Register<AiTaskLivestockFollowFood>(AiTaskLivestockFollowFood.Code);
+        AiTaskRegistry.Register<AiTaskLivestockDogGuard>(AiTaskLivestockDogGuard.Code);
+        AiTaskRegistry.Register<AiTaskLivestockDogRest>(AiTaskLivestockDogRest.Code);
     }
 
     // Hand feeding works with any food or liquid container (milk is checked on use), so it is added in
@@ -80,6 +83,7 @@ public class livestockwelfareModSystem : ModSystem
 
         Config = config;
         api.Event.OnEntitySpawn += CarryOverFromBaby;
+        DogHunting.Start(api);
     }
 
     // Kept when a baby grows up: its age, sickness and how stressed it is by the weather.
@@ -108,6 +112,7 @@ public class livestockwelfareModSystem : ModSystem
     public override void Dispose()
     {
         Config = null;
+        DogHunting.Clear();
         // The client texture atlas is rebuilt for every world, so cached positions become invalid.
         DirtTextures.Clear();
     }

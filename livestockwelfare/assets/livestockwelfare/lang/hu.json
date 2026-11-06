@@ -63,5 +63,9 @@
 	"handfed-left": "Még {0} etetés, és megtanul a vályúból enni.",
 	"handfed-learned": "Most már tud a vályúból enni.",
 	"handfeed-suckling": "Az anyját szopja, nem éhes.",
-	"handfeed-full": "Jóllakott."
+	"handfeed-full": "Jóllakott.",
+	"dog-bond": "Kötődés: {0}%",
+	"dog-lonely": "magányos",
+	"dog-tired": "fáradt az úttól",
+	"dog-loyal": "hűséges"
 }
