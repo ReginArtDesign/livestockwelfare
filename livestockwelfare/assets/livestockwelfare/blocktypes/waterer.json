@@ -54,7 +54,7 @@
 	creativeinventoryStacksByType: {
 		"*-fired": [
 			{
-				tabs: ["general", "decorative"],
+				tabs: ["general", "decorative", "livestockwelfare"],
 				stacks: [
 					{ type: "block", code: "waterer-fired" },
 					{ type: "block", code: "waterer-fired", attributes: { ucontents: [{ type: "item", code: "game:waterportion", makefull: true }] } }
@@ -62,7 +62,7 @@
 			}
 		],
 		"*-raw": [
-			{ tabs: ["general", "decorative"], stacks: [{ type: "block", code: "waterer-raw" }] }
+			{ tabs: ["general", "decorative", "livestockwelfare"], stacks: [{ type: "block", code: "waterer-raw" }] }
 		]
 	},
 	doNotRenderAtLod2: true,

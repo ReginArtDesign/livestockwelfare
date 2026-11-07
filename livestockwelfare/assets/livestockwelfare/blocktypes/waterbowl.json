@@ -57,7 +57,7 @@
 	creativeinventoryStacksByType: {
 		"*-fired": [
 			{
-				tabs: ["general", "decorative"],
+				tabs: ["general", "decorative", "livestockwelfare"],
 				stacks: [
 					{ type: "block", code: "waterbowl-fired" },
 					{ type: "block", code: "waterbowl-fired", attributes: { ucontents: [{ type: "item", code: "game:waterportion", makefull: true }] } }
@@ -65,7 +65,7 @@
 			}
 		],
 		"*-raw": [
-			{ tabs: ["general", "decorative"], stacks: [{ type: "block", code: "waterbowl-raw" }] }
+			{ tabs: ["general", "decorative", "livestockwelfare"], stacks: [{ type: "block", code: "waterbowl-raw" }] }
 		]
 	},
 	doNotRenderAtLod2: true,

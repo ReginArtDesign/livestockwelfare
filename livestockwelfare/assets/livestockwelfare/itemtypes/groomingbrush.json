@@ -9,7 +9,7 @@
 	shape: { base: "item/groomingbrush" },
 	durability: 200,
 	maxstacksize: 1,
-	creativeinventory: { "general": ["*"], "items": ["*"], "tools": ["*"] },
+	creativeinventory: { "general": ["*"], "items": ["*"], "tools": ["*"], "livestockwelfare": ["*"] },
 	attributes: {
 		rackable: true,
 		toolrackTransform: {

@@ -5,7 +5,7 @@
 	variantgroups: [
 		{ code: "level", states: ["1", "2", "3", "4"] }
 	],
-	creativeinventory: { "general": ["muck-1"] },
+	creativeinventory: { "general": ["muck-1"], "livestockwelfare": ["muck-1"] },
 	// Breaks (dropping its rot) when the ground under it is dug out.
 	behaviors: [{ name: "livestockwelfare.needsground" }],
 	blockmaterial: "Soil",

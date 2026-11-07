@@ -2,7 +2,7 @@
 	// What a kept dog leaves outdoors (never under a roof: it is house-trained). Placed by the hygiene
 	// behavior, counts as a dropping, and can be shovelled up as rot. Placeholder model (shapes/block/dogpoop).
 	code: "dogpoop",
-	creativeinventory: { "general": ["*"] },
+	creativeinventory: { "general": ["*"], "livestockwelfare": ["*"] },
 	// Breaks (dropping its rot) when the ground under it is dug out.
 	behaviors: [{ name: "livestockwelfare.needsground" }],
 	blockmaterial: "Soil",

@@ -70,7 +70,7 @@
 			smeltedStack: { type: "block", code: "livestockwelfare:foodbowl-fired-ns" }
 		}
 	},
-	creativeinventory: { "general": ["foodbowl-raw-ns", "foodbowl-fired-ns"], "decorative": ["foodbowl-fired-ns"] },
+	creativeinventory: { "general": ["foodbowl-raw-ns", "foodbowl-fired-ns"], "decorative": ["foodbowl-fired-ns"], "livestockwelfare": ["foodbowl-raw-ns", "foodbowl-fired-ns"] },
 	shapeByType: {
 		"*-we": { base: "block/dogbowl/bowl", rotateY: 90 },
 		"*": { base: "block/dogbowl/bowl" }

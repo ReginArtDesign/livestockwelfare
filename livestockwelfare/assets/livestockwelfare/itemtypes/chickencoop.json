@@ -11,7 +11,7 @@
 		"*-veryaged": { planks: { base: "game:block/wood/planks/aged/veryaged1" }, doorway: { base: "game:block/wood/charred" } },
 		"*": { planks: { base: "game:block/wood/planks/{wood}1" }, doorway: { base: "game:block/wood/charred" } }
 	},
-	creativeinventory: { "general": ["*"], "items": ["*"] },
+	creativeinventory: { "general": ["*"], "items": ["*"], "livestockwelfare": ["*"] },
 	materialDensity: 600,
 	combustibleProps: { burnTemperature: 600, burnDuration: 60 },
 	guiTransform: {
