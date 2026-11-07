@@ -1,0 +1,155 @@
+Craditz Community Mod License
+Version 1.0
+
+Project: Craditz-VS-Mods
+Project steward: Craditz (https://github.com/Craditz)
+Commercial permission contact: campercape132@gmail.com
+Copyright (c) 2026 the respective copyright holders.
+
+This is a custom source-available license. Covered project material and
+third-party exceptions are identified in THIRD_PARTY_NOTICES.md. The grant
+covers only rights held by or authorized to the relevant Licensor.
+
+1. Scope and definitions
+
+"Covered Material" means the code, compiled software, documentation and assets
+expressly made available under this license, including their protected portions
+when copied or adapted. Separately identified third-party material and material
+expressly excluded from this license are not Covered Material.
+
+"Licensor" means a copyright holder, or someone authorized by that holder, who
+offers Covered Material under this license. Each Licensor grants rights only
+to the extent that Licensor holds or may license those rights.
+
+"You" means the person or entity exercising rights under this license.
+
+"Paid Product" means a product, copy, bundle, asset, subscription or service
+for which payment or other consideration is required to obtain it, access it,
+or use its included features. Voluntary donations and the activities expressly
+allowed by section 4 are excluded from this definition to the stated extent.
+
+2. Permission
+
+Subject to this license, each Licensor grants You a worldwide, nonexclusive,
+royalty-free copyright license to use, reproduce, modify, adapt, display,
+perform and distribute that Licensor's Covered Material, in source or compiled
+form. This includes maintaining forks and making and sharing improvements.
+The grant lasts for the duration of the licensed rights unless terminated
+under section 9.
+
+3. Commercial permission required
+
+Unless section 4 expressly permits the activity, this license does not grant
+permission to:
+
+(a) sell, rent, lease, commercially sublicense, or require payment for copies
+of or access to any Covered Material, whether modified or unmodified;
+
+(b) distribute, license or provide a Paid Product that contains, bundles,
+incorporates or adapts any protected part of Covered Material; or
+
+(c) require payment for access to Covered Material's functionality through a
+hosted service, server, subscription, paid feature or similar arrangement.
+
+Adding features, rewriting other parts, changing names, selling a larger
+bundle, or describing a required payment as a donation does not remove these
+restrictions. A freely available version does not itself authorize a separate
+paid version or paid early access.
+
+Obtain separate written permission from the relevant rights-holder or someone
+authorized to grant it before undertaking one of these activities. The project
+steward's contact is listed above. The steward can grant permission only for
+rights the steward owns or has been authorized to license. A permission applies
+only to its stated material, recipient and scope.
+
+4. Expressly permitted activities
+
+The following are permitted even when they generate revenue:
+
+(a) Accepting voluntary donations or tips to support development, maintenance
+or distribution, provided payment is not required to obtain Covered Material,
+updates or functionality that is offered in connection with the donation.
+
+(b) Running a server using Covered Material with voluntary donation support,
+provided access to that server and its Covered Material functionality is free.
+Acknowledging supporters is allowed. This exception does not authorize selling
+server access, mod features or mod-based in-game benefits.
+
+(c) Creating, publishing and monetizing gameplay videos, streams, reviews,
+tutorials and similar audiovisual coverage of Covered Material, including
+advertising, sponsorships, viewer subscriptions and tips. This exception covers
+the audiovisual work, not selling or licensing the mod or extracted assets.
+
+Businesses and paid employees may exercise the rights in section 2 on the same
+terms as other users. Use in employment or to assist a commercial activity is
+not prohibited merely because money is earned. A resulting Paid Product still
+requires permission if it contains, bundles, incorporates or adapts a protected
+part of Covered Material, or charges for access as described in section 3.
+
+Requiring users to own a separately sold base game to run a freely distributed
+mod does not, by itself, make the mod a Paid Product. This license grants no
+rights in the base game or other third-party material.
+
+5. Distribution and notices
+
+When distributing Covered Material, include this license, preserve existing
+copyright and attribution notices, and clearly identify material changes You
+made. You may satisfy the change notice with a changelog or a brief statement.
+Do not imply that the original authors endorse Your version.
+
+Recipients receive the same license to the original Covered Material directly
+from its Licensors. You may not replace its terms or claim authority to grant
+commercial permission for someone else's protected material. You retain rights
+in Your own original additions and may state their terms separately, provided
+You do not purport to change the rights in the original Covered Material.
+
+There is no requirement to publish Your modifications, disclose source code,
+submit a contribution, or transfer ownership to the project steward.
+
+6. Third-party and unprotected material
+
+Separate third-party licenses and notices continue to govern the material they
+identify. This license does not override them or cure missing permission.
+Compatibility or interoperability alone does not place another project under
+this license or grant rights to copy its material.
+
+No copyright is claimed merely because an idea, method, fact or unprotectable
+element appears in the project. AI-generated material is covered only to the
+extent a Licensor holds rights in it. This license creates no copyright where
+applicable law provides none. Nothing here restricts fair use, fair dealing or
+other rights that do not require a Licensor's permission.
+
+7. Other rights and separate permissions
+
+No patent, trademark, endorsement or publicity rights are granted. Licensors may offer
+their material under additional licenses or grant written exceptions. Such
+exceptions do not change this public license for other users. Receiving a copy
+does not give You ownership of anyone else's rights.
+
+8. No warranty or liability
+
+To the extent permitted by applicable law, Covered Material is supplied as is,
+without warranties, including warranties of merchantability, fitness for a
+particular purpose, title or noninfringement. To that extent, no Licensor is
+liable for losses or damages arising from Covered Material or this license,
+whether claimed under contract, tort or another legal theory. This section
+does not exclude liability or rights that applicable law does not allow to be
+excluded. No Licensor promises maintenance, support or future availability.
+
+9. Violations and termination
+
+Your rights under this license terminate automatically if You violate its
+conditions. For Your first violation, those rights are reinstated if You stop
+the violation and fully remedy it within 30 days after becoming aware of it.
+A Licensor may also reinstate rights in writing. Reinstatement does not erase
+liability for a past violation. Compliant recipients' licenses are not ended
+solely because Your rights terminate.
+
+10. Acceptance and interpretation
+
+You accept these conditions when You exercise rights that require this license.
+Merely receiving or reading material does not impose unrelated obligations.
+Sections 3 and 5 are conditions of the grants in section 2. If a provision is
+unenforceable under applicable law, the remaining provisions continue to apply
+to the extent permitted by law. No later version automatically replaces this
+version for copies already licensed under it.

@@ -108,6 +108,8 @@ public sealed class PackageTask : FrostingTask<BuildContext>
         {
             context.CopyFile($"../{BuildContext.ProjectName}/modicon.png", $"../Releases/{context.Name}/modicon.png");
         }
+        // Third-party notices (e.g. the Feral Kinship Companions license for its Hungarian translation).
+        context.CopyFiles($"../{BuildContext.ProjectName}/THIRD_PARTY*", $"../Releases/{context.Name}");
         context.Zip($"../Releases/{context.Name}", $"../Releases/{context.Name}_{context.Version}.zip");
     }
 }

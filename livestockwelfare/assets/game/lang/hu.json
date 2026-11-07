@@ -1,0 +1,8 @@
+{
+	"placefailure-largeflap-clear-footprint": "Előbb ürítsd ki az ajtó teljes helyét (a folyadékokat és tárolókat is).",
+	"placefailure-largeflap-support": "Mindkét alsó sarok alatt szilárd alátámasztás kell.",
+	"placefailure-largeflap-unloaded": "A teljes ajtónak és mindkét alátámasztásnak betöltött területen, a világon belül kell lennie.",
+	"placefailure-largeflap-missing-variant": "Az ajtó egy szükséges része nem érhető el.",
+	"placefailure-largeflap-root-only": "A teljes ajtó tárgyat rakd le.",
+	"placefailure-largeflap-placement-failed": "A teljes ajtót nem sikerült lerakni; nem fogyott el tárgy."
+}
