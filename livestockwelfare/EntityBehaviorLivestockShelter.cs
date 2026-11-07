@@ -4,8 +4,10 @@ using System.Text;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
+using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
+using Vintagestory.API.Server;
 using Vintagestory.GameContent;
 
 namespace livestockwelfare;
@@ -276,6 +278,7 @@ public class EntityBehaviorLivestockShelter : EntityBehavior
     // Other mods' petting (e.g. Better Husbandry) still runs, as we don't stop the interaction.
     public override void OnInteract(EntityAgent byEntity, ItemSlot itemslot, Vec3d hitPosition, EnumInteractMode mode, ref EnumHandling handled)
     {
+        if (mode == EnumInteractMode.Interact && itemslot.Empty) ShowFirstTip(byEntity);
         if (mode != EnumInteractMode.Interact || byEntity.Controls.ShiftKey || !itemslot.Empty) return;
         if (entity.World.Side != EnumAppSide.Server || !entity.Alive || Settings is not { } settings) return;
 
@@ -288,6 +291,18 @@ public class EntityBehaviorLivestockShelter : EntityBehavior
         SpawnHearts();
         // It settles down for a moment, enjoying it.
         entity.GetBehavior<EntityBehaviorLivestockHygiene>()?.HoldStill(PetRestSeconds, EntityBehaviorLivestockHygiene.RestAnimation);
+    }
+
+    const string TipShownAttr = "lwTipShown";
+
+    // The first time a player touches a kept or wild animal with an empty hand, a chat line points
+    // to the status report and the handbook page. Remembered on the player, so once per world.
+    void ShowFirstTip(EntityAgent byEntity)
+    {
+        if (entity.World.Side != EnumAppSide.Server || byEntity is not EntityPlayer { Player: IServerPlayer player } playerEntity) return;
+        if (playerEntity.WatchedAttributes.GetBool(TipShownAttr)) return;
+        playerEntity.WatchedAttributes.SetBool(TipShownAttr, true);
+        player.SendMessage(GlobalConstants.GeneralChatGroup, LivestockUtil.Translate(player.LanguageCode, "livestockwelfare:tip-first-animal"), EnumChatType.Notification);
     }
 
     void SpawnHearts()
