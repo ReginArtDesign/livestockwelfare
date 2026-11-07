@@ -1,0 +1,26 @@
+Version 0.14.0 (beta)
+
+Note: Livestock Welfare is still in beta. Please back up your world before updating, and tell me if something goes wrong. New settings are added to your config file automatically; the values you changed are kept.
+
+Dogs
+- Raised wolves, Wolf taming's dogs and Feral Kinship's tame wolves now get the same care needs as livestock: thirst, shelter and a kennel at night (not needed with you nearby), cleanliness and disease, and old age.
+- They form a bond with you through petting, and it fades if you neglect them. Lonely dogs mope, whine at night, don't breed and don't guard. A petted dog yaps, sits, wags its tail and pants.
+- They guard your herd against wolves and other predators, and chase wild hares, deer, goats and boars away from your crops (they notice them from 24 blocks, even from a nap). They growl and bark at threats.
+- They hunt with you: they leave wild game alone unless you have just wounded it. They never hurt your animals or players.
+- House training: now and then dogs need to go. Outdoors they leave dog poop (it counts as dirt, so clear it up). Indoors they sit at the door and whine until you open it, go out, then come back in.
+- Clay food and water bowls (clay forming, then fired): dogs eat meat and drink from them, and livestock leaves them alone.
+- At night dogs sleep in a free pet cushion (Pet AI) until morning.
+- Wolf pups follow you when you hold meat or a bone and stop running away, so you can feed them by hand and tame them with Wolf taming.
+- Back from a Feral Kinship Companions expedition they come home dirty, stressed (petting helps) and tired, and lie down in their bed.
+- Dogs get through 1 and 2 block wide doors more easily.
+- Everything can be changed or switched off in the config (Dogs).
+
+Feral Kinship Companions
+- Sheep, goats, pigs and chickens tamed with Feral Kinship now get age, dirt, weather and thirst like other livestock. Taming keeps their age, dirt, sickness and needs.
+- The companion window now opens with the K key while you look at the animal (you can change the key in the controls), so an empty-hand right click pets the animal instead of hiding it behind the window. If you prefer the window on right click, set CompanionWindowOnRightClick to true in ModConfig/livestockwelfare-client.json.
+- Wolf taming's dog backpack fits Feral Kinship's companion backpack slot.
+- Hungarian translation for Feral Kinship Companions.
+
+Handbook
+- A new "Livestock Welfare" guide page in the handbook explains water, shelter, cleanliness, babies, old age and chickens, with links to the waterer, muck, brush and coop.
+- The first time you right-click an animal with an empty hand, a chat tip points you to it (once per player).

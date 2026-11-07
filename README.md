@@ -1,8 +1,8 @@
-# Livestock Welfare (beta 0.13.0)
+# Livestock Welfare (beta 0.14.0)
 
 A Vintage Story mod that deepens animal husbandry: your livestock age, get dirty and sick, need shelter from the weather and water to drink. Keep them clean, groomed, sheltered and watered, and they'll thrive. Neglect them and they suffer.
 
-**Game version:** 1.22.x · **Side:** client and server (install on both) · **Animals:** sheep, goats, pigs and chickens, adults and young
+**Game version:** 1.22.x · **Side:** client and server (install on both) · **Animals:** sheep, goats, pigs and chickens, adults and young, and dogs
 
 > This is a beta. Balance values are first guesses and everything can be changed in the config file. Feedback is very welcome!
 
@@ -68,6 +68,15 @@ A Vintage Story mod that deepens animal husbandry: your livestock age, get dirty
 - The **chicken coop kit** (planks and two hen boxes) builds a small raised coop where you right-click the ground: four posts, a pitched roof, a ramp up to the pop hole, two hen boxes inside, and steps up to a gate at the back so you can walk in for the eggs. It needs a clear spot of 5 by 9 blocks, 6 high.
 - Hens can't hop up onto waterers and troughs.
 
+### Dogs
+- Raised wolves, Wolf taming's dogs and Feral Kinship's tame wolves get the livestock needs: thirst, shelter and a kennel at night (not needed with you nearby), cleanliness and disease, and old age.
+- A **bond** grows with petting and fades when you neglect them. Lonely dogs mope, whine at night, don't breed and don't guard. A petted dog yaps, sits, wags and pants.
+- Dogs **guard your herd** against predators, **chase wild animals off your crops**, bark at threats and **hunt with you**: they only go for game you have wounded, and never hurt your animals or players.
+- **House training**: outdoors they leave dog poop (it counts as dirt); indoors they sit at the door and whine until you let them out, then come back in.
+- Clay **food and water bowls** (clay forming, then fired); at night they sleep in a free Pet AI pet cushion.
+- Wolf pups follow you when you hold meat or a bone, so you can feed them by hand and tame them with Wolf taming.
+- Everything is in the `Dogs` section of the config.
+
 ### Kept and wild animals
 - **Kept animals** are the ones you placed or that were born in your care. Only they leave muck, need a safe place to sleep, and can die of thirst, bad weather or disease.
 - Wild animals still get thirsty, stressed and sick, but they don't die of it, so the wild doesn't die off around you.
@@ -75,6 +84,7 @@ A Vintage Story mod that deepens animal husbandry: your livestock age, get dirty
 ### Information
 - The animal's info shows its age, filth, shelter and stress, thirst, and for babies how well fed they are.
 - **Sneak + right click** with an empty hand prints a full status report in chat, including where the animal drinks from.
+- A **handbook guide page** ("Livestock Welfare") explains the basics, and new players get a one-time chat tip pointing to it.
 - English and Hungarian translations.
 
 ## Safety options for servers and casual play
@@ -88,10 +98,12 @@ Everything is in `ModConfig/livestockwelfare.json` (created on first start): lif
 ## Compatibility
 - Works next to Natural Fertilizer, Feed or Fallow, Better Husbandry and Hydrate or Diedrate. Petting with an empty hand also triggers Better Husbandry's petting.
 - Animals whose textures are changed by **genelib** (e.g. Detailed Animals) may not show the mud spots. Flies and everything else still work.
-- Other mods' animals are not covered yet.
+- **Feral Kinship Companions**: tamed sheep, goats, pigs, chickens and wolves get the same needs, and taming keeps their age, dirt and needs. The companion window opens with **K** (changeable in the controls) so an empty-hand right click pets; set `CompanionWindowOnRightClick` to true in `ModConfig/livestockwelfare-client.json` to keep it on right click. Hungarian translation for Feral Kinship Companions included.
+- **Wolf taming** and **Pet AI** dogs are covered (see Dogs); Wolf taming's dog backpack fits Feral Kinship's companion backpack slot.
+- Teapot's Giant Boar, Great Bighorn and Giant Redriver are covered.
 
 ## Known limitations (beta)
-- Only vanilla sheep, goats, pigs and chickens are covered.
+- Only vanilla sheep, goats, pigs, chickens and dogs (and the mods listed above) are covered.
 - Balance needs testing in long-running worlds.
 - Not tested yet on multiplayer servers, and not fully in existing world saves (added to a world that was already running). Back up your world first.
 
