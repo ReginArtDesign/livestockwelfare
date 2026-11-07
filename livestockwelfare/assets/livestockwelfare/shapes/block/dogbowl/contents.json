@@ -1,0 +1,35 @@
+{
+	"editor": {
+		"allAngles": false,
+		"entityTextureMode": false
+	},
+	"textureWidth": 16,
+	"textureHeight": 16,
+	"textures": {},
+	"elements": [
+		{
+			"name": "contents",
+			"from": [
+				5,
+				2.4,
+				5
+			],
+			"to": [
+				11,
+				2.5,
+				11
+			],
+			"faces": {
+				"up": {
+					"texture": "#water_bucket",
+					"uv": [
+						5,
+						5,
+						11,
+						11
+					]
+				}
+			}
+		}
+	]
+}

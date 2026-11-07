@@ -1,0 +1,103 @@
+{
+	// A dog's water bowl: a small fired-clay bowl that holds water like a bucket, so kept dogs walk
+	// to it and drink (see the thirst behavior). Shaped from clay and fired like the waterer.
+	// Placeholder model (shapes/block/dogbowl).
+	code: "waterbowl",
+	classByType: {
+		"*-fired": "BlockBucket"
+	},
+	entityClassByType: {
+		"*-fired": "Bucket"
+	},
+	variantgroups: [
+		{ code: "state", states: ["raw", "fired"] }
+	],
+	behaviorsByType: {
+		"*-raw": [
+			{ name: "GroundStorable", properties: { layout: "SingleCenter", collisionBox: { x1: 0.25, y1: 0, z1: 0.25, x2: 0.75, y2: 0.1875, z2: 0.75 } } },
+			{ name: "Unplaceable" },
+			{ name: "RightClickPickup" }
+		],
+		"*-fired": [
+			{ name: "UnstableFalling" },
+			{ name: "RightClickPickup" }
+		]
+	},
+	shape: { base: "block/dogbowl/bowl" },
+	texturesByType: {
+		"*-raw": { bowl: { base: "game:block/clay/blueclay" } },
+		"*-fired": { bowl: { base: "game:block/clay/ceramic" } }
+	},
+	attributesByType: {
+		"*-fired": {
+			liquidContainerProps: {
+				capacityLitres: 3,
+				transferSizeLitres: 0.5,
+				emptyShapeLoc: "livestockwelfare:shapes/block/dogbowl/bowl",
+				opaqueContentShapeLoc: "livestockwelfare:shapes/block/dogbowl/contents",
+				liquidContentShapeLoc: "livestockwelfare:shapes/block/dogbowl/liquidcontents",
+				liquidMaxYTranslate: 0.0625
+			},
+			groundStorageTransform: { origin: { x: 0.5, y: 0, z: 0.5 } }
+		},
+		"*-raw": {
+			groundStorageTransform: { origin: { x: 0.5, y: 0, z: 0.5 } }
+		}
+	},
+	combustiblePropsByType: {
+		"*-raw": {
+			meltingPoint: 600,
+			meltingDuration: 30,
+			smeltedRatio: 1,
+			smeltingType: "fire",
+			requiresContainer: false,
+			smeltedStack: { type: "block", code: "livestockwelfare:waterbowl-fired" }
+		}
+	},
+	creativeinventoryStacksByType: {
+		"*-fired": [
+			{
+				tabs: ["general", "decorative"],
+				stacks: [
+					{ type: "block", code: "waterbowl-fired" },
+					{ type: "block", code: "waterbowl-fired", attributes: { ucontents: [{ type: "item", code: "game:waterportion", makefull: true }] } }
+				]
+			}
+		],
+		"*-raw": [
+			{ tabs: ["general", "decorative"], stacks: [{ type: "block", code: "waterbowl-raw" }] }
+		]
+	},
+	doNotRenderAtLod2: true,
+	blockmaterial: "Ceramic",
+	replaceable: 500,
+	resistance: 0.75,
+	maxStackSize: 4,
+	liquidSelectable: 1,
+	lightAbsorption: 0,
+	sounds: {
+		walk: "game:walk/stone",
+		place: "game:block/ceramicplace",
+		hit: "game:block/ceramichit",
+		break: "game:block/ceramicbreak"
+	},
+	sidesolid: { all: false },
+	sideopaque: { all: false },
+	collisionbox: { x1: 0.25, y1: 0, z1: 0.25, x2: 0.75, y2: 0.1875, z2: 0.75 },
+	selectionbox: { x1: 0.25, y1: 0, z1: 0.25, x2: 0.75, y2: 0.1875, z2: 0.75 },
+	materialDensity: 600,
+	heldRightReadyAnimationByType: { "*-fired": "helditemreadybucket" },
+	guiTransform: {
+		translation: { x: 0, y: 3, z: 0 },
+		origin: { x: 0.5, y: 0.1, z: 0.5 },
+		scale: 3
+	},
+	groundTransform: {
+		origin: { x: 0.5, y: 0, z: 0.5 },
+		scale: 3
+	},
+	tpHandTransform: {
+		translation: { x: -0.85, y: -0.95, z: -0.8 },
+		scale: 0.6
+	}
+}

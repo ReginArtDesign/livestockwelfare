@@ -76,7 +76,9 @@ public class AiTaskLivestockDogGuard : AiTaskBase
         }
         if (target == null && settings.GuardGarden)
         {
-            target = entity.World.GetNearestEntity(entity.Pos.XYZ, radius, 4, e =>
+            // It keeps an ear on the garden from further off, even napping in the house.
+            float gardenRadius = Math.Max(radius, settings.GardenWatchRadius);
+            target = entity.World.GetNearestEntity(entity.Pos.XYZ, gardenRadius, 4, e =>
             {
                 if (!EntityBehaviorLivestockDog.IsGardenPest(e, settings)) return false;
                 crop = NearestCrop(e.Pos.AsBlockPos, settings.GardenCropRadius);
@@ -148,7 +150,7 @@ public class AiTaskLivestockDogGuard : AiTaskBase
 
         long now = entity.World.ElapsedMilliseconds;
         if (now - startedMs > GiveUpAfterMs) return false;
-        float maxRange = settings.GuardRadius * ChaseRangeFactor;
+        float maxRange = (chaseOff ? Math.Max(settings.GuardRadius, settings.GardenWatchRadius) : settings.GuardRadius) * ChaseRangeFactor;
         if (entity.Pos.SquareDistanceTo(target.Pos) > maxRange * maxRange) return false;
         // Chased far enough from the crops: done.
         if (chaseOff && crop != null && target.Pos.SquareDistanceTo(crop.ToVec3d()) > (double)settings.GardenChaseOffDistance * settings.GardenChaseOffDistance) return false;

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 
 namespace livestockwelfare;
 
@@ -29,8 +30,44 @@ public class DogSettings
     /// <summary>From this bond on the dog is loyal.</summary>
     public double LoyalAboveBond { get; set; } = 0.75;
 
-    /// <summary>Dogs leave muck like the other kept animals. Off by default: they go outside.</summary>
-    public bool MakesMuck { get; set; } = false;
+    /// <summary>
+    /// Width (blocks) of a dog's collision box. Vanilla wolves are 1.2 wide and get stuck in doorways;
+    /// 0 keeps the size the animal comes with. The selection box (aiming at it) is not changed.
+    /// </summary>
+    public double Width { get; set; } = 0.6;
+
+    /// <summary>
+    /// Wolf pups (wild ones too) follow a player holding meat or a bone, and don't run away from them,
+    /// the way chickens follow grain (TreatSettings.FollowRadius). With Wolf taming, feeding them by
+    /// hand (right click) tames them.
+    /// </summary>
+    public bool LurePups { get; set; } = true;
+    /// <summary>What lures pups (wildcards): what Wolf taming lets you tame them with.</summary>
+    public string[] PupLureCodes { get; set; } =
+    {
+        "game:bone",
+        "game:redmeat-raw",
+        "game:bushmeat-raw",
+        "game:poultry-raw",
+    };
+
+    /// <summary>
+    /// Daily chance that a kept dog needs to go (not at night while dogs sleep, see SleepInBedAtNight) dog poop next to it, which counts as a dropping (dirt) and
+    /// can be shovelled up. Only outdoors: dogs are house-trained. 0 turns it off.
+    /// </summary>
+    public double PoopChancePerDay { get; set; } = 0.5;
+    /// <summary>
+    /// Indoors (under a roof) a dog that needs to go sits at the nearest door within this many blocks
+    /// and whines until it is opened, then goes outside. 0: it just waits until it is outside.
+    /// </summary>
+    public int DoorSearchRadius { get; set; } = 16;
+    /// <summary>
+    /// Once done outside, a dog that went out a door comes back in through it; if it was shut, the dog
+    /// sits outside it and whines for up to this many in-game hours, then stays out. 0: it stays out.
+    /// </summary>
+    public double ComeBackHours { get; set; } = 2;
+    /// <summary>Held in this long (in-game hours) and it can't wait any more: it goes where it is. 0 never.</summary>
+    public double AccidentAfterHours { get; set; } = 8;
 
     /// <summary>Kept dogs never hunt kept animals (the raised wolf no longer takes your chickens).</summary>
     public bool SpareKeptAnimals { get; set; } = true;
@@ -65,18 +102,29 @@ public class DogSettings
     /// vanilla. It only chases them off, it doesn't bite. Uses GuardRadius around the dog.
     /// </summary>
     public bool GuardGarden { get; set; } = true;
+    /// <summary>
+    /// Distance (blocks) from which the dog notices crop eaters at the garden, asleep too: it wakes
+    /// up and runs out (Wolf taming's dogs nap by day). Below GuardRadius, GuardRadius is used.
+    /// </summary>
+    public int GardenWatchRadius { get; set; } = 24;
     /// <summary>An animal counts as at the garden when a crop is within this many blocks of it.</summary>
     public int GardenCropRadius { get; set; } = 4;
     /// <summary>The chase ends once the animal is this many blocks from the nearest crop it was after.</summary>
     public int GardenChaseOffDistance { get; set; } = 16;
-    /// <summary>Wild animals that eat crops (wildcards).</summary>
+    /// <summary>Wild animals that eat crops (wildcards). The player's own animals are never chased.</summary>
     public string[] GardenPestCodes { get; set; } =
     {
         "game:hare-*",
         "game:deer-*",
         "game:gazelle-*",
         "game:moose-*",
+        "game:goat-*",
+        "game:sheep-*",
+        "game:pig-*",
     };
+
+    // The list before wild goats, sheep and boars were added; a config still holding it gets the new one.
+    static readonly string[] OldGardenPestCodes = { "game:hare-*", "game:deer-*", "game:gazelle-*", "game:moose-*" };
 
     /// <summary>
     /// Back from a trip (a Feral Kinship Companions expedition): the dog comes home dirty, stressed
@@ -97,6 +145,25 @@ public class DogSettings
         "petai:petnest-*",
         "feralkinshipcompanions:foxbed-*",
     };
+
+    /// <summary>
+    /// At night a kept dog sleeps in a free dog bed (BedCodes) within BedRadius, if there is one. Wolf
+    /// taming's dogs only seek their bed by day and from 1 to 3 at night on their own.
+    /// </summary>
+    public bool SleepInBedAtNight { get; set; } = true;
+    /// <summary>In-game hour the night's sleep starts.</summary>
+    public double BedtimeHour { get; set; } = 21;
+    /// <summary>In-game hour it ends.</summary>
+    public double WakeUpHour { get; set; } = 6;
+
+    /// <summary>Whether it is the dogs' night (BedtimeHour to WakeUpHour, which may run over midnight).</summary>
+    public bool IsNight(Vintagestory.API.Common.IGameCalendar calendar)
+    {
+        double hour = calendar.HourOfDay / calendar.HoursPerDay * 24;
+        return BedtimeHour > WakeUpHour
+            ? hour >= BedtimeHour || hour < WakeUpHour
+            : hour >= BedtimeHour && hour < WakeUpHour;
+    }
 
     /// <summary>A kept dog growls and barks when a threat comes close.</summary>
     public bool Bark { get; set; } = true;
@@ -132,12 +199,22 @@ public class DogSettings
         ChaseCodes ??= Array.Empty<string>();
         BarkCodes ??= Array.Empty<string>();
         GardenCropRadius = Math.Clamp(GardenCropRadius, 1, 8);
+        GardenWatchRadius = Math.Clamp(GardenWatchRadius, 0, 48);
         GardenChaseOffDistance = Math.Clamp(GardenChaseOffDistance, 4, 48);
         GardenPestCodes ??= Array.Empty<string>();
+        if (GardenPestCodes.SequenceEqual(OldGardenPestCodes)) GardenPestCodes = new DogSettings().GardenPestCodes;
+        PoopChancePerDay = Math.Clamp(PoopChancePerDay, 0, 1);
+        DoorSearchRadius = Math.Clamp(DoorSearchRadius, 0, 32);
+        if (AccidentAfterHours < 0) AccidentAfterHours = 0;
+        if (ComeBackHours < 0) ComeBackHours = 0;
         TripFilth = Math.Clamp(TripFilth, 0, 1);
         TripStress = Math.Clamp(TripStress, 0, 1);
         if (TripRestHours < 0) TripRestHours = 0;
         BedRadius = Math.Clamp(BedRadius, 0, 48);
         BedCodes ??= Array.Empty<string>();
+        BedtimeHour = Math.Clamp(BedtimeHour, 0, 24);
+        WakeUpHour = Math.Clamp(WakeUpHour, 0, 24);
+        PupLureCodes ??= Array.Empty<string>();
+        Width = Math.Clamp(Width, 0, 2);
     }
 }

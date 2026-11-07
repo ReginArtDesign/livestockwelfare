@@ -1,4 +1,11 @@
 {
+	"block-dogpoop": "Kutyagumi",
+	"block-waterbowl-raw": "Kutya vizestál (nyers)",
+	"block-waterbowl-fired": "Kutya vizestál",
+	"block-foodbowl-raw-*": "Kutya ételtál (nyers)",
+	"block-foodbowl-fired-*": "Kutya ételtál",
+	"blockdesc-waterbowl-fired": "Tölts bele vizet: a tartott kutyák odamennek és isznak belőle.",
+	"blockdesc-foodbowl-fired-*": "Tegyél bele nyers vagy sült húst: a tartott kutyák odamennek és esznek belőle. A jószág nem nyúl hozzá.",
 	"block-muck-*": "Mocsok",
 	"age-info": "Kor: {0}",
 	"age-value": "{0} év, {1} nap",

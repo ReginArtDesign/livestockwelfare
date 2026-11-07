@@ -1,0 +1,356 @@
+{
+	"editor": {
+		"allAngles": false,
+		"entityTextureMode": false
+	},
+	"textureWidth": 16,
+	"textureHeight": 16,
+	"textures": {},
+	"elements": [
+		{
+			"name": "Floor",
+			"from": [
+				4,
+				0,
+				4
+			],
+			"to": [
+				12,
+				1,
+				12
+			],
+			"faces": {
+				"north": {
+					"texture": "#bowl",
+					"uv": [
+						4,
+						15,
+						12,
+						16
+					]
+				},
+				"east": {
+					"texture": "#bowl",
+					"uv": [
+						4,
+						15,
+						12,
+						16
+					]
+				},
+				"south": {
+					"texture": "#bowl",
+					"uv": [
+						4,
+						15,
+						12,
+						16
+					]
+				},
+				"west": {
+					"texture": "#bowl",
+					"uv": [
+						4,
+						15,
+						12,
+						16
+					]
+				},
+				"up": {
+					"texture": "#bowl",
+					"uv": [
+						4,
+						4,
+						12,
+						12
+					]
+				},
+				"down": {
+					"texture": "#bowl",
+					"uv": [
+						4,
+						4,
+						12,
+						12
+					]
+				}
+			}
+		},
+		{
+			"name": "WallN",
+			"from": [
+				4,
+				1,
+				4
+			],
+			"to": [
+				12,
+				3,
+				5
+			],
+			"faces": {
+				"north": {
+					"texture": "#bowl",
+					"uv": [
+						4,
+						13,
+						12,
+						15
+					]
+				},
+				"east": {
+					"texture": "#bowl",
+					"uv": [
+						4,
+						13,
+						5,
+						15
+					]
+				},
+				"south": {
+					"texture": "#bowl",
+					"uv": [
+						4,
+						13,
+						12,
+						15
+					]
+				},
+				"west": {
+					"texture": "#bowl",
+					"uv": [
+						4,
+						13,
+						5,
+						15
+					]
+				},
+				"up": {
+					"texture": "#bowl",
+					"uv": [
+						4,
+						4,
+						12,
+						5
+					]
+				},
+				"down": {
+					"texture": "#bowl",
+					"uv": [
+						4,
+						4,
+						12,
+						5
+					]
+				}
+			}
+		},
+		{
+			"name": "WallS",
+			"from": [
+				4,
+				1,
+				11
+			],
+			"to": [
+				12,
+				3,
+				12
+			],
+			"faces": {
+				"north": {
+					"texture": "#bowl",
+					"uv": [
+						4,
+						13,
+						12,
+						15
+					]
+				},
+				"east": {
+					"texture": "#bowl",
+					"uv": [
+						11,
+						13,
+						12,
+						15
+					]
+				},
+				"south": {
+					"texture": "#bowl",
+					"uv": [
+						4,
+						13,
+						12,
+						15
+					]
+				},
+				"west": {
+					"texture": "#bowl",
+					"uv": [
+						11,
+						13,
+						12,
+						15
+					]
+				},
+				"up": {
+					"texture": "#bowl",
+					"uv": [
+						4,
+						11,
+						12,
+						12
+					]
+				},
+				"down": {
+					"texture": "#bowl",
+					"uv": [
+						4,
+						11,
+						12,
+						12
+					]
+				}
+			}
+		},
+		{
+			"name": "WallW",
+			"from": [
+				4,
+				1,
+				5
+			],
+			"to": [
+				5,
+				3,
+				11
+			],
+			"faces": {
+				"north": {
+					"texture": "#bowl",
+					"uv": [
+						4,
+						13,
+						5,
+						15
+					]
+				},
+				"east": {
+					"texture": "#bowl",
+					"uv": [
+						5,
+						13,
+						11,
+						15
+					]
+				},
+				"south": {
+					"texture": "#bowl",
+					"uv": [
+						4,
+						13,
+						5,
+						15
+					]
+				},
+				"west": {
+					"texture": "#bowl",
+					"uv": [
+						5,
+						13,
+						11,
+						15
+					]
+				},
+				"up": {
+					"texture": "#bowl",
+					"uv": [
+						4,
+						5,
+						5,
+						11
+					]
+				},
+				"down": {
+					"texture": "#bowl",
+					"uv": [
+						4,
+						5,
+						5,
+						11
+					]
+				}
+			}
+		},
+		{
+			"name": "WallE",
+			"from": [
+				11,
+				1,
+				5
+			],
+			"to": [
+				12,
+				3,
+				11
+			],
+			"faces": {
+				"north": {
+					"texture": "#bowl",
+					"uv": [
+						11,
+						13,
+						12,
+						15
+					]
+				},
+				"east": {
+					"texture": "#bowl",
+					"uv": [
+						5,
+						13,
+						11,
+						15
+					]
+				},
+				"south": {
+					"texture": "#bowl",
+					"uv": [
+						11,
+						13,
+						12,
+						15
+					]
+				},
+				"west": {
+					"texture": "#bowl",
+					"uv": [
+						5,
+						13,
+						11,
+						15
+					]
+				},
+				"up": {
+					"texture": "#bowl",
+					"uv": [
+						11,
+						5,
+						12,
+						11
+					]
+				},
+				"down": {
+					"texture": "#bowl",
+					"uv": [
+						11,
+						5,
+						12,
+						11
+					]
+				}
+			}
+		}
+	]
+}

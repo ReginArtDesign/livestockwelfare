@@ -315,6 +315,10 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
             {
                 muckLevels += DroppingsInBlock(block);
             }
+            else if (block.Code.Domain == LivestockUtil.Domain && block.Code.Path == DogPoopCode)
+            {
+                droppings++;
+            }
             else if (block is BlockGroundStorage)
             {
                 // Rot piled on the ground, e.g. spoiled feed.
@@ -368,6 +372,39 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
     }
 
     const string MuckCode = "muck";
+    const string DogPoopCode = "dogpoop";
+
+    // Dogs don't trample muck into the ground; now and then they need to go (see
+    // EntityBehaviorLivestockDog.NeedsToGo and AiTaskLivestockDogPotty): outdoors they squat and
+    // leave dog poop, indoors they ask to be let out first.
+    void TryDepositDogPoop(double hours)
+    {
+        double chancePerDay = livestockwelfareModSystem.Config?.Dogs.PoopChancePerDay ?? 0;
+        if (chancePerDay <= 0 || !Roll(chancePerDay, hours)) return;
+        if (entity.GetBehavior<EntityBehaviorLivestockDog>() is { } dog) dog.FeelUrge();
+        else PlaceDogPoop();
+    }
+
+    /// <summary>Leaves dog poop on open ground next to the animal; false if there is no free spot.</summary>
+    public bool PlaceDogPoop()
+    {
+        var accessor = entity.World.BlockAccessor;
+        var rand = entity.World.Rand;
+        var feet = entity.Pos.AsBlockPos;
+
+        var poop = entity.World.GetBlock(new AssetLocation(LivestockUtil.Domain, DogPoopCode));
+        if (poop == null) return false;
+        for (int attempt = 0; attempt < 6; attempt++)
+        {
+            var pos = attempt == 0 ? feet.Copy() : feet.AddCopy(rand.Next(3) - 1, 0, rand.Next(3) - 1);
+            var block = accessor.GetBlock(pos);
+            bool open = block.Id == 0 || (block.BlockMaterial == EnumBlockMaterial.Plant && block.Replaceable >= 5000 && block.EntityClass == null);
+            if (!open || !accessor.GetBlock(pos.DownCopy()).SideSolid[BlockFacing.UP.Index]) continue;
+            accessor.SetBlock(poop.Id, pos);
+            return true;
+        }
+        return false;
+    }
     const int MaxMuckLevel = 4;
 
     // Kept animals slowly soil the ground they stand on, faster when crowded. Wild animals don't,
@@ -377,7 +414,11 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
         if (settings.MuckChancePerDay <= 0) return;
 
         if (!LivestockUtil.IsKept(entity)) return;
-        if (species == DogSpecies && livestockwelfareModSystem.Config?.Dogs.MakesMuck != true) return;
+        if (species == DogSpecies)
+        {
+            TryDepositDogPoop(hours);
+            return;
+        }
 
         double chancePerDay = settings.MuckChancePerDay * (1 + extraAnimals * settings.MuckCrowdingBonus);
         if (!Roll(chancePerDay, hours)) return;

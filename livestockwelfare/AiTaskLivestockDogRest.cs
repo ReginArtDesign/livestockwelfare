@@ -7,15 +7,15 @@ namespace livestockwelfare;
 
 /// <summary>
 /// A dog tired from a trip walks to the nearest dog bed (DogSettings.BedCodes) and lies down there
-/// until it is rested. Without a bed nearby it lies down where it is.
+/// until it is rested. Without a bed nearby it lies down where it is. At night a kept dog sleeps in
+/// a free bed nearby too (DogSettings.SleepInBedAtNight), if there is one.
 /// </summary>
 public class AiTaskLivestockDogRest : AiTaskLivestockGoTo
 {
     public const string Code = "livestockwelfare-dogrest";
 
-    // Lying down is done in stretches (see HoldStill), so the dog still notices when it is rested.
-    const float LieSeconds = 90;
-    const string LieAnimation = "lie";
+    // Vanilla wolves and Wolf taming's dogs both have it.
+    const string SleepAnimation = "sleep";
 
     EntityBehaviorLivestockDog? dog;
 
@@ -29,16 +29,23 @@ public class AiTaskLivestockDogRest : AiTaskLivestockGoTo
     }
 
     static DogSettings? Settings =>
-        livestockwelfareModSystem.Config?.Dogs is { Enabled: true, TripAftermath: true } settings ? settings : null;
+        livestockwelfareModSystem.Config?.Dogs is { Enabled: true } settings ? settings : null;
+
+    bool Tired => dog?.IsTired == true && Settings is { TripAftermath: true };
+
+    bool Bedtime => Settings is { SleepInBedAtNight: true } settings && dog is { IsKept: true } && settings.IsNight(entity.World.Calendar);
+
+    bool Sleepy => Tired || Bedtime;
 
     protected override bool Wanted() =>
-        dog?.IsTired == true && entity.GetBehavior<EntityBehaviorLivestockHygiene>() is { IsHeldStill: false };
+        Sleepy && entity.GetBehavior<EntityBehaviorLivestockHygiene>() is { IsHeldStill: false };
 
-    // The nearest bed, or else the spot the dog stands on.
+    // The nearest free bed; tired from a trip, else the spot the dog stands on.
     protected override BlockPos? FindTarget()
     {
         var here = entity.Pos.AsBlockPos;
-        if (Settings is not { } settings || settings.BedRadius <= 0) return here;
+        var orHere = Tired ? here : null;
+        if (Settings is not { } settings || settings.BedRadius <= 0) return orHere;
 
         int r = settings.BedRadius;
         BlockPos? best = null;
@@ -47,7 +54,7 @@ public class AiTaskLivestockDogRest : AiTaskLivestockGoTo
         {
             if (block.Code == null || !IsBed(block, settings)) return;
             var pos = new BlockPos(x, y, z, here.dimension);
-            if (IsFailed(pos)) return;
+            if (IsFailed(pos) || Taken(pos)) return;
             double distance = here.DistanceSqTo(x, y, z);
             if (distance < bestDistance)
             {
@@ -55,8 +62,13 @@ public class AiTaskLivestockDogRest : AiTaskLivestockGoTo
                 best = pos;
             }
         });
-        return best ?? here;
+        return best ?? orHere;
     }
+
+    // Another dog already lies on it (a two-block cushion counts as one bed).
+    bool Taken(BlockPos pos) =>
+        entity.World.GetEntitiesAround(pos.ToVec3d().Add(0.5, 0, 0.5), 1.5f, 1,
+            e => e != entity && e.Alive && e.HasBehavior<EntityBehaviorLivestockDog>()).Length > 0;
 
     static bool IsBed(Block block, DogSettings settings)
     {
@@ -71,9 +83,23 @@ public class AiTaskLivestockDogRest : AiTaskLivestockGoTo
     protected override bool IsAtTarget(double hitboxDistance) => hitboxDistance <= 0.3;
     protected override float ArriveDistance => 0.6f;
 
+    bool sleeping;
+
+    // It stays (the task keeps running) until rested or morning, so wandering and Wolf taming's own
+    // naps can't take it off the bed. Anything more important still can: going out, guarding, commands.
     protected override bool ActAtTarget(float dt, float timeAtTarget)
     {
-        entity.GetBehavior<EntityBehaviorLivestockHygiene>()?.HoldStill(LieSeconds, LieAnimation);
-        return false;
+        if (!sleeping)
+        {
+            sleeping = true;
+            StartAnimationIfExists(SleepAnimation);
+        }
+        return Sleepy;
+    }
+
+    protected override void OnFinish(bool arrivedAtTarget)
+    {
+        if (sleeping) entity.AnimManager.StopAnimation(SleepAnimation);
+        sleeping = false;
     }
 }

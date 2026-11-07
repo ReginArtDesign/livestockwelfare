@@ -11,7 +11,7 @@ namespace livestockwelfare;
 /// <summary>
 /// Treats (see TreatSettings): the animal walks after a player holding food it eats, and stops a
 /// little way off, waiting to be fed. Meanwhile it doesn't run from that player, but still runs
-/// from predators and when hurt.
+/// from predators and when hurt. Kept predators (the player's own dogs) don't scare it off.
 /// </summary>
 public class AiTaskLivestockFollowFood : AiTaskBase
 {
@@ -36,6 +36,12 @@ public class AiTaskLivestockFollowFood : AiTaskBase
         moveSpeed = taskConfig["movespeed"].AsFloat(0.015f);
     }
 
+    /// <summary>
+    /// What lures it, instead of the treats (TreatSettings): wolf pups follow meat and bones, which
+    /// Wolf taming then lets the player feed them to tame them.
+    /// </summary>
+    public System.Func<ItemStack, bool>? Lures { get; set; }
+
     /// <summary>The player nearby holding food for this animal (null if none, or a predator is near).</summary>
     public EntityPlayer? Lure
     {
@@ -57,7 +63,7 @@ public class AiTaskLivestockFollowFood : AiTaskBase
 
     EntityPlayer? FindLure()
     {
-        if (LivestockTreats.Settings is not { } settings || !LivestockTreats.TakesTreats(entity)) return null;
+        if (LivestockTreats.Settings is not { } settings || (Lures == null && !LivestockTreats.TakesTreats(entity))) return null;
 
         double range = settings.FollowRadius;
         EntityPlayer? nearest = null;
@@ -73,12 +79,16 @@ public class AiTaskLivestockFollowFood : AiTaskBase
         if (nearest == null) return null;
 
         bool predatorNear = entity.World.GetEntitiesAround(entity.Pos.XYZ, 12, 4,
-            e => e.Alive && Predators.Any(code => WildcardUtil.Match(code, e.Code))).Length > 0;
+            e => e != entity && e.Alive && Predators.Any(code => WildcardUtil.Match(code, e.Code)) && !LivestockUtil.IsKept(e) && !IsYoung(e)).Length > 0;
         return predatorNear ? null : nearest;
     }
 
-    bool Holds(EntityPlayer player) =>
-        LivestockTreats.Eats(entity, player.RightHandItemSlot?.Itemstack) || LivestockTreats.Eats(entity, player.LeftHandItemSlot?.Itemstack);
+    // A wolf pup's brothers and sisters are no danger to it.
+    static bool IsYoung(Entity e) => e.Code.Path.Contains("-baby") || e.Code.Path.Contains("-pup");
+
+    bool Holds(EntityPlayer player) => Tempts(player.RightHandItemSlot?.Itemstack) || Tempts(player.LeftHandItemSlot?.Itemstack);
+
+    bool Tempts(ItemStack? stack) => Lures != null ? stack != null && Lures(stack) : LivestockTreats.Eats(entity, stack);
 
     double StopDistance => LivestockTreats.Settings?.FollowDistance ?? 1.5;
 

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Text;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
@@ -72,14 +73,17 @@ public class EntityBehaviorLivestockDog : EntityBehavior
     static DogSettings? Settings =>
         livestockwelfareModSystem.Config?.Dogs is { Enabled: true } settings ? settings : null;
 
-    // Above the vanilla wolf's hunting (1.5), following the leash holder (1.47) and what its dozing
-    // and idling may be cancelled by (1.55), below fleeing (1.6) and Wolf taming's commands (2 and
-    // up), so "sit" and "stay" still win.
-    const float GuardPriority = 1.58f;
+    // Above Pet AI's "follow" (2.1), so a dog walking with its owner still runs off to guard and
+    // comes back after; below playing fetch (2.5) and attacks on command (3). Sit, lie down and
+    // stay could be cancelled from 1.9 on, so CanGuard is false while one of those is active.
+    const float GuardPriority = 2.2f;
+    // Pet AI keeps the current command here; while one of these the dog keeps still.
+    static readonly string[] StillCommands = { "sit", "lay", "stay" };
 
     public override void AfterInitialized(bool onFirstSpawn)
     {
         base.AfterInitialized(onFirstSpawn);
+        Slim();
         if (entity.World.Side != EnumAppSide.Server || entity is not EntityAgent agent) return;
 
         if (entity.GetBehavior<EntityBehaviorTaskAI>() is { } taskAi)
@@ -90,10 +94,17 @@ public class EntityBehaviorLivestockDog : EntityBehavior
             // switch targets on the way, which StopSparedHunts catches.
             taskManager.OnShouldExecuteTask += task => !HuntsSpared(task);
             taskManager.OnExecuteTask += (task, _) => !HuntsSpared(task);
+            AddBowlEating(agent, taskManager);
+            if (baby) AddPupLure(agent, taskManager);
         }
 
         if (baby || Settings is not { } settings) return;
-        if (settings.TripAftermath)
+        if (settings.PoopChancePerDay > 0)
+        {
+            LivestockUtil.AddAiTask(agent, AiTaskLivestockDogPotty.Code, PottyPriority, restWalkSpeed, 0, 0,
+                (taskConfig, aiConfig) => new AiTaskLivestockDogPotty(agent, taskConfig, aiConfig));
+        }
+        if (settings.TripAftermath || settings.SleepInBedAtNight)
         {
             LivestockUtil.AddAiTask(agent, AiTaskLivestockDogRest.Code, RestPriority, restWalkSpeed, 0, 0,
                 (taskConfig, aiConfig) => new AiTaskLivestockDogRest(agent, taskConfig, aiConfig));
@@ -103,11 +114,102 @@ public class EntityBehaviorLivestockDog : EntityBehavior
             (taskConfig, aiConfig) => new AiTaskLivestockDogGuard(agent, taskConfig, aiConfig), "run");
     }
 
+    // Above staying close to its mother (1.4) and below getting out of water (1.45). The vanilla
+    // run from players (1.5) is held back meanwhile.
+    const float PupLurePriority = 1.42f;
+
+    // Pups follow a player holding meat or a bone (DogSettings.LurePups), so they can be fed by hand.
+    void AddPupLure(EntityAgent agent, AiTaskManager manager)
+    {
+        if (Settings is not { LurePups: true } settings || settings.PupLureCodes.Length == 0) return;
+        var codes = settings.PupLureCodes.Select(code => new AssetLocation(code)).ToArray();
+        AiTaskLivestockFollowFood? follow = null;
+        LivestockUtil.AddAiTask(agent, AiTaskLivestockFollowFood.Code, PupLurePriority, walkSpeed * 0.6f, 0, 0,
+            (taskConfig, aiConfig) => follow = new AiTaskLivestockFollowFood(agent, taskConfig, aiConfig)
+            {
+                Lures = stack => codes.Any(code => WildcardUtil.Match(code, stack.Collectible.Code)),
+            }, "run");
+        manager.OnShouldExecuteTask += task => task is not (AiTaskFleeEntity or AiTaskFleeEntityR) || follow?.KeepsFromFleeing != true;
+    }
+
+    // Vanilla resets the collision box (on load, death, revival); this runs right after.
+    public override void UpdateColSelBoxes() => Slim();
+
+    // Wolves and most Wolf taming dogs have a 1.2 block square collision box (as long as the body,
+    // and as wide), and the pathfinder tries each block at a random point inside it, so they rarely
+    // find a way through a door, even a two-block one. DogSettings.Width narrows it; the selection
+    // box stays as it is.
+    void Slim()
+    {
+        if (squeezing || Settings is not { Width: > 0 } settings || entity.CollisionBox.XSize <= settings.Width) return;
+        entity.SetCollisionBox((float)settings.Width, entity.CollisionBox.YSize);
+    }
+
+    // A dog going out of the house is made narrower still, until it is through and has room again.
+    // Thinner than a player (0.6), so it slips past the open door leaf without catching on it.
+    const float DoorWidth = 0.5f;
+    float fullWidth;
+    bool squeezing;
+    bool squeezeHeld;
+
+    /// <summary>Makes the dog narrow enough to pass a door; StopSqueezing lets it grow back once it fits.</summary>
+    public void SqueezeThroughDoor()
+    {
+        squeezeHeld = true;
+        if (squeezing || entity.CollisionBox.XSize <= DoorWidth) return;
+        fullWidth = entity.CollisionBox.XSize;
+        squeezing = true;
+        entity.SetCollisionBox(DoorWidth, entity.CollisionBox.YSize);
+    }
+
+    public void StopSqueezing()
+    {
+        squeezeHeld = false;
+        if (squeezing) TryStopSqueezing();
+    }
+
+    // Still in the doorway, it stays narrow (checked again on the next tick), or it would be stuck in the wall.
+    void TryStopSqueezing()
+    {
+        var box = entity.CollisionBox;
+        var full = new Cuboidf(-fullWidth / 2, box.Y1, -fullWidth / 2, fullWidth / 2, box.Y2, fullWidth / 2);
+        if (entity.World.CollisionTester.IsColliding(entity.World.BlockAccessor, full, entity.Pos.XYZ, false)) return;
+        entity.SetCollisionBox(fullWidth, box.YSize);
+        squeezing = false;
+    }
+
     // A tired dog goes to bed before drinking, eating or wandering, but guards (above) and obeys commands.
     const float RestPriority = 1.4f;
+    // Above following (2.1): a dog walking with its owner still asks to go out. Below guarding.
+    const float PottyPriority = 2.15f;
 
     /// <summary>Resting after a trip (see DogSettings.TripAftermath).</summary>
     public bool IsTired => entity.WatchedAttributes.GetDouble(TiredUntilAttr) > entity.World.Calendar.TotalHours;
+
+    // Needs to go since this in-game hour (see AiTaskLivestockDogPotty); absent when it doesn't.
+    const string UrgeSinceAttr = "lwPottyUrgeSinceHours";
+
+    public bool NeedsToGo => entity.WatchedAttributes.HasAttribute(UrgeSinceAttr);
+    public double UrgeHours => NeedsToGo ? entity.World.Calendar.TotalHours - entity.WatchedAttributes.GetDouble(UrgeSinceAttr) : 0;
+
+    /// <summary>The dog needs to go (called by the hygiene behavior when it is time).</summary>
+    public void FeelUrge()
+    {
+        // Asleep, it holds on till morning rather than waking the house.
+        if (Settings is { SleepInBedAtNight: true } settings && settings.IsNight(entity.World.Calendar)) return;
+        if (!NeedsToGo) entity.WatchedAttributes.SetDouble(UrgeSinceAttr, entity.World.Calendar.TotalHours);
+    }
+
+    /// <summary>Done: leaves the poop (where it stands) and is relieved. False if there was no free spot.</summary>
+    public bool Relieve()
+    {
+        if (entity.GetBehavior<EntityBehaviorLivestockHygiene>()?.PlaceDogPoop() == false) return false;
+        entity.WatchedAttributes.RemoveAttribute(UrgeSinceAttr);
+        return true;
+    }
+
+    /// <summary>Sitting, lying down or staying on Pet AI's command: it keeps still for nothing else.</summary>
+    public bool KeepsStillOnCommand => Array.IndexOf(StillCommands, entity.WatchedAttributes.GetString("activeCommand")) >= 0;
 
     // Watches the Feral Kinship Companions "away" flag: when it goes off, the dog is home again.
     void CheckTrip(DogSettings settings)
@@ -127,6 +229,21 @@ public class EntityBehaviorLivestockDog : EntityBehavior
     }
 
     AiTaskManager? taskManager;
+
+    // Wolf taming's and Feral Kinship's dogs only eat what is put in their mouth. Given a diet
+    // (patches/dogs.json), this teaches them to walk to a food bowl (or any trough that suits them)
+    // and eat, like vanilla wolves do. Only from bowls: no picking up loose meat.
+    static void AddBowlEating(EntityAgent agent, AiTaskManager manager)
+    {
+        if (manager.AllTasks.Any(t => t is AiTaskSeekFoodAndEat) || agent.Properties.Attributes?["creatureDiet"].Exists != true) return;
+
+        var config = JsonObject.FromJson("{ \"code\": \"seekfoodandeat\", \"animation\": \"walk\", \"movespeed\": 0.008, \"priority\": 1.3, "
+            + "\"eatTime\": 1.5, \"eatAnimation\": \"eat\", \"eatSound\": \"creature/animal-eat1\", \"eatLooseItems\": false, "
+            + "\"mincooldownHours\": 1, \"maxcooldownHours\": 4 }");
+        var task = new AiTaskSeekFoodAndEat(agent, config, JsonObject.FromJson("{}"));
+        manager.AddTask(task);
+        task.AfterInitialize();
+    }
 
     bool HuntsSpared(IAiTask task) =>
         task is AiTaskSeekEntity or AiTaskMeleeAttack && task is AiTaskBaseTargetable { TargetEntity: { } target } && Spares(target);
@@ -163,6 +280,7 @@ public class EntityBehaviorLivestockDog : EntityBehavior
         get
         {
             if (baby || Settings is not { } settings || !settings.AnyGuarding || !IsKept || IsLonely) return false;
+            if (KeepsStillOnCommand) return false;
             if (entity.GetBehavior<EntityBehaviorLivestockHygiene>() is { IsSick: true } or { IsCollapsed: true }) return false;
             return entity.GetBehavior<EntityBehaviorHealth>() is not { } health || health.Health > health.MaxHealth * 0.4f;
         }
@@ -225,6 +343,7 @@ public class EntityBehaviorLivestockDog : EntityBehavior
             return;
         }
 
+        if (squeezing && !squeezeHeld) TryStopSqueezing();
         StopSparedHunts();
         CheckTrip(settings);
         if (!baby && settings.Bark) TryBark(settings);

@@ -1,4 +1,11 @@
 {
+	"block-dogpoop": "Dog poop",
+	"block-waterbowl-raw": "Dog water bowl (raw)",
+	"block-waterbowl-fired": "Dog water bowl",
+	"block-foodbowl-raw-*": "Dog food bowl (raw)",
+	"block-foodbowl-fired-*": "Dog food bowl",
+	"blockdesc-waterbowl-fired": "Fill it with water: kept dogs walk to it and drink.",
+	"blockdesc-foodbowl-fired-*": "Put raw or cooked meat in it: kept dogs walk to it and eat. Livestock leaves it alone.",
 	"block-muck-*": "Muck",
 	"age-info": "Age: {0}",
 	"age-value": "{p0:0 years|# year|# years}, {p1:0 days|# day|# days}",

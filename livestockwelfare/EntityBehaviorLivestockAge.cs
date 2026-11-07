@@ -172,6 +172,11 @@ public class EntityBehaviorLivestockAge : EntityBehavior
         if (notCounted > 0) attrs.SetDouble(BirthAttr, attrs.GetDouble(BirthAttr) + notCounted);
     }
 
+    // Pet AI's "receivecommand" gives the owner a command window on sneak + right click.
+    bool IsOwnPet(string playerUid) =>
+        entity.HasBehavior("receivecommand")
+        && entity.WatchedAttributes.GetTreeAttribute("domesticationstatus")?.GetString("owner") == playerUid;
+
     /// <param name="langCode">Language to use, or null for the local game language.</param>
     public string FormatAge(string? langCode = null)
     {
@@ -204,6 +209,8 @@ public class EntityBehaviorLivestockAge : EntityBehavior
         if (mode != EnumInteractMode.Interact || !byEntity.Controls.ShiftKey || !itemslot.Empty) return;
         if (entity.World.Side != EnumAppSide.Server || !entity.Alive) return;
         if (byEntity is not EntityPlayer { Player: IServerPlayer player }) return;
+        // Pet AI opens its command window on the same click for the owner; the needs are in the hover info.
+        if (IsOwnPet(player.PlayerUID)) return;
 
         long now = entity.World.ElapsedMilliseconds;
         bool held = now - lastStatusInteractMs < StatusRepeatMs;

@@ -52,7 +52,14 @@ public class SelfTest : ModSystem
                 continue;
             }
             bool patched = type.Server?.BehaviorsAsJsonObj?.Any(b => b["code"].AsString() == EntityBehaviorLivestockDog.Code) == true;
-            sapi.Logger.Notification("[lwselftest] dog check {0}: dog behavior {1}", code, patched ? "found" : "MISSING");
+            bool diet = type.Attributes?["creatureDiet"].Exists == true;
+            sapi.Logger.Notification("[lwselftest] dog check {0}: dog behavior {1}, diet {2}", code, patched ? "found" : "MISSING", diet ? "found" : "MISSING");
+        }
+
+        foreach (string code in new[] { "livestockwelfare:waterbowl-fired", "livestockwelfare:foodbowl-fired-ns", "livestockwelfare:dogpoop" })
+        {
+            var block = sapi.World.GetBlock(new AssetLocation(code));
+            sapi.Logger.Notification("[lwselftest] dog check block {0}: {1} {2}", code, block == null ? "MISSING" : block.GetType().Name, block?.EntityClass);
         }
 
         var config = livestockwelfareModSystem.Config;
@@ -72,6 +79,47 @@ public class SelfTest : ModSystem
         bool owned = Kept(e => e.WatchedAttributes.GetOrAddTreeAttribute("domesticationstatus").SetString("owner", "testplayeruid"));
         sapi.Logger.Notification("[lwselftest] dog check kept: wild {0} (expect False), bred {1}, Pet AI owner {2} (expect True) — {3}",
             wild, bred, owned, !wild && bred && owned ? "OK" : "FAILED");
+    }
+
+    // Feral Kinship: its tame sheep, goats, pigs and chickens have our behaviors and an "eat"
+    // animation, and taming (old animal removed, tame one spawned in its place) keeps the dirt.
+    void CheckFeralKinship(BlockPos spawn)
+    {
+        string[] behaviors = { EntityBehaviorLivestockAge.Code, EntityBehaviorLivestockHygiene.Code, "livestockwelfare.shelter", "livestockwelfare.thirst" };
+        foreach (string code in new[] { "feralkinship:tamesheep-bighorn-female", "feralkinship:tamegoat-nubian-female", "feralkinship:tamepig-eurasian-female", "feralkinship:tamechicken-hen" })
+        {
+            var type = sapi.World.GetEntityType(new AssetLocation(code));
+            if (type == null)
+            {
+                sapi.Logger.Notification("[lwselftest] feral kinship {0}: not installed", code);
+                return;
+            }
+            var missing = behaviors.Where(b => type.Server?.BehaviorsAsJsonObj?.Any(j => j["code"].AsString() == b) != true).ToArray();
+            bool eat = type.Client?.Animations?.Any(a => a.Code == "eat") == true;
+            sapi.Logger.Notification("[lwselftest] feral kinship {0}: missing behaviors [{1}], eat animation {2} — {3}",
+                code, string.Join(", ", missing), eat, missing.Length == 0 && eat ? "OK" : "FAILED");
+        }
+
+        var pos = spawn.AddCopy(-24, 40, 0);
+        Entity Spawn(string code)
+        {
+            var e = sapi.World.ClassRegistry.CreateEntity(sapi.World.GetEntityType(new AssetLocation(code)));
+            e.Pos.SetPos(pos.X + 0.5, pos.Y, pos.Z + 0.5);
+            spawning = true;
+            sapi.World.SpawnEntity(e);
+            spawning = false;
+            return e;
+        }
+        var wild = Spawn("game:sheep-bighorn-adult-female");
+        wild.WatchedAttributes.SetFloat("lwFilth", 0.77f);
+        double birth = wild.WatchedAttributes.GetDouble("lwBirthTotalDays");
+        wild.Die(EnumDespawnReason.Expire);
+        var tame = Spawn("feralkinship:tamesheep-bighorn-female");
+        float filth = tame.WatchedAttributes.GetFloat("lwFilth");
+        bool sameBirth = tame.WatchedAttributes.GetDouble("lwBirthTotalDays") == birth;
+        sapi.Logger.Notification("[lwselftest] feral kinship taming carry-over: filth {0} (expect 0.77), same birth day {1} — {2}",
+            filth, sameBirth, filth == 0.77f && sameBirth ? "OK" : "FAILED");
+        tame.Die(EnumDespawnReason.Removed);
     }
 
     void Run()
@@ -113,6 +161,7 @@ public class SelfTest : ModSystem
                 CheckDustBath(spawn);
                 CheckCoop(spawn);
                 CheckTreats(spawn);
+                CheckFeralKinship(spawn);
                 if (Environment.GetEnvironmentVariable("LW_SELFTEST_POND") == "1") PondTest(spawn);
                 else SpawnAndWatch(spawn);
             }, "lwselftest") });
@@ -199,6 +248,21 @@ public class SelfTest : ModSystem
             return e;
         }
         var hen = Spawn("game:chicken-hen");
+        var pup = Spawn("game:wolf-eurasian-baby-female");
+        bool pupFollows = pup.GetBehavior<Vintagestory.GameContent.EntityBehaviorTaskAI>()?.TaskManager.AllTasks
+            .OfType<AiTaskLivestockFollowFood>().Any(t => t.Lures?.Invoke(new ItemStack(sapi.World.GetItem(new AssetLocation("game:redmeat-raw")))) == true) == true;
+        sapi.Logger.Notification("[lwselftest] pup lure: follows raw meat {0} — {1}", pupFollows, pupFollows ? "OK" : "FAILED");
+        pup.Die(EnumDespawnReason.Removed);
+        var dogAdult = Spawn("game:wolf-eurasian-adult-male");
+        var dogBh = dogAdult.GetBehavior<EntityBehaviorLivestockDog>();
+        float width = dogAdult.CollisionBox.XSize;
+        dogBh?.SqueezeThroughDoor();
+        float squeezed = dogAdult.CollisionBox.XSize;
+        dogBh?.StopSqueezing();
+        float restored = dogAdult.CollisionBox.XSize;
+        sapi.Logger.Notification("[lwselftest] dog door squeeze: width {0} -> {1}, then back to {2} - {3}",
+            width, squeezed, restored, width < 1 && squeezed < width && restored == width ? "OK" : "FAILED");
+        dogAdult.Die(EnumDespawnReason.Removed);
         var sheep = Spawn("game:sheep-bighorn-adult-female");
         bool follows = hen.GetBehavior<Vintagestory.GameContent.EntityBehaviorTaskAI>()?.TaskManager.AllTasks.Any(t => t is AiTaskLivestockFollowFood) == true;
         var slot = new DummySlot(new ItemStack(grain, 3));

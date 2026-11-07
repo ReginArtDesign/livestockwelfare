@@ -41,4 +41,10 @@
 	{"op": "add", "path": "/server/behaviors/-", "value": {"code": "livestockwelfare.thirst", "species": "dog", "walkSpeed": 0.008}, "file": "feralkinship:entities/tamewolf.json", "dependsOn": [{"modid": "feralkinship"}]},
 	{"op": "add", "path": "/client/behaviors/-", "value": {"code": "livestockwelfare.dog"}, "file": "feralkinship:entities/tamewolf.json", "dependsOn": [{"modid": "feralkinship"}]},
 	{"op": "add", "path": "/server/behaviors/-", "value": {"code": "livestockwelfare.dog", "runSpeed": 0.03}, "file": "feralkinship:entities/tamewolf.json", "dependsOn": [{"modid": "feralkinship"}]}
+,
+	{"op": "add", "path": "/attributes/creatureDiet", "value": {"weightedFoodTags": [{"weight": 0.9, "code": "meat"}, {"weight": 1, "code": "egg"}]}, "file": "wolftaming:entities/land/dog-adult.json", "dependsOn": [{"modid": "wolftaming"}]}
+,
+	{"op": "add", "path": "/attributes/creatureDiet", "value": {"weightedFoodTags": [{"weight": 0.9, "code": "meat"}, {"weight": 1, "code": "egg"}]}, "file": "wolftaming:entities/land/dog-pup.json", "dependsOn": [{"modid": "wolftaming"}]}
+,
+	{"op": "add", "path": "/attributes/creatureDiet", "value": {"weightedFoodTags": [{"weight": 0.9, "code": "meat"}, {"weight": 1, "code": "egg"}]}, "file": "feralkinship:entities/tamewolf.json", "dependsOn": [{"modid": "feralkinship"}]}
 ]

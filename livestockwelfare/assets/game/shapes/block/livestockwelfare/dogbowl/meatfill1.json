@@ -1,0 +1,71 @@
+{
+	"editor": {
+		"allAngles": false,
+		"entityTextureMode": false
+	},
+	"textureWidth": 16,
+	"textureHeight": 16,
+	"textures": {},
+	"elements": [
+		{
+			"name": "meat fill",
+			"from": [
+				5,
+				1,
+				5
+			],
+			"to": [
+				11,
+				1.6,
+				11
+			],
+			"faces": {
+				"north": {
+					"texture": "#contents",
+					"uv": [
+						5,
+						14.4,
+						11,
+						15
+					]
+				},
+				"east": {
+					"texture": "#contents",
+					"uv": [
+						5,
+						14.4,
+						11,
+						15
+					]
+				},
+				"south": {
+					"texture": "#contents",
+					"uv": [
+						5,
+						14.4,
+						11,
+						15
+					]
+				},
+				"west": {
+					"texture": "#contents",
+					"uv": [
+						5,
+						14.4,
+						11,
+						15
+					]
+				},
+				"up": {
+					"texture": "#contents",
+					"uv": [
+						5,
+						5,
+						11,
+						11
+					]
+				}
+			}
+		}
+	]
+}

@@ -1,0 +1,116 @@
+{
+	// A dog's food bowl: a fired-clay bowl that holds meat like a trough holds grain, so kept dogs
+	// walk to it and eat (see EntityBehaviorLivestockDog, which teaches Wolf taming's and Feral
+	// Kinship's dogs to eat from it). Livestock leaves it alone. Placeholder model (shapes/block/dogbowl).
+	// The meat fill shapes live in the game domain (assets/game/shapes/block/livestockwelfare/dogbowl):
+	// vanilla BlockEntityTrough loads them as "shapes/" + path, which only finds game assets.
+	code: "foodbowl",
+	classByType: {
+		"*-fired-*": "BlockTrough"
+	},
+	entityClassByType: {
+		"*-fired-*": "livestockwelfare.dogbowl"
+	},
+	variantgroups: [
+		{ code: "state", states: ["raw", "fired"] },
+		{ code: "side", states: ["ns", "we"] }
+	],
+	behaviorsByType: {
+		"*-raw-*": [
+			{ name: "GroundStorable", properties: { layout: "SingleCenter", collisionBox: { x1: 0.25, y1: 0, z1: 0.25, x2: 0.75, y2: 0.1875, z2: 0.75 } } },
+			{ name: "Unplaceable" },
+			{ name: "RightClickPickup" }
+		],
+		"*-fired-*": [
+			{ name: "NWOrientable" }
+		]
+	},
+	attributesByType: {
+		"*-fired-*": {
+			canStep: false,
+			contentConfig: [
+			{
+				code: "redmeat",
+				content: { type: "item", code: "game:redmeat-*" },
+				quantityPerFillLevel: 1,
+				maxFillLevels: 8,
+				shapesPerFillLevel: ["block/livestockwelfare/dogbowl/meatfill1", "block/livestockwelfare/dogbowl/meatfill1", "block/livestockwelfare/dogbowl/meatfill2", "block/livestockwelfare/dogbowl/meatfill2", "block/livestockwelfare/dogbowl/meatfill3", "block/livestockwelfare/dogbowl/meatfill3", "block/livestockwelfare/dogbowl/meatfill4", "block/livestockwelfare/dogbowl/meatfill4"],
+				textureCode: "contents-meat"
+			},
+			{
+				code: "bushmeat",
+				content: { type: "item", code: "game:bushmeat-*" },
+				quantityPerFillLevel: 1,
+				maxFillLevels: 8,
+				shapesPerFillLevel: ["block/livestockwelfare/dogbowl/meatfill1", "block/livestockwelfare/dogbowl/meatfill1", "block/livestockwelfare/dogbowl/meatfill2", "block/livestockwelfare/dogbowl/meatfill2", "block/livestockwelfare/dogbowl/meatfill3", "block/livestockwelfare/dogbowl/meatfill3", "block/livestockwelfare/dogbowl/meatfill4", "block/livestockwelfare/dogbowl/meatfill4"],
+				textureCode: "contents-meat"
+			},
+			{
+				code: "poultry",
+				content: { type: "item", code: "game:poultry-*" },
+				quantityPerFillLevel: 1,
+				maxFillLevels: 8,
+				shapesPerFillLevel: ["block/livestockwelfare/dogbowl/meatfill1", "block/livestockwelfare/dogbowl/meatfill1", "block/livestockwelfare/dogbowl/meatfill2", "block/livestockwelfare/dogbowl/meatfill2", "block/livestockwelfare/dogbowl/meatfill3", "block/livestockwelfare/dogbowl/meatfill3", "block/livestockwelfare/dogbowl/meatfill4", "block/livestockwelfare/dogbowl/meatfill4"],
+				textureCode: "contents-meat"
+			}
+			],
+			unsuitableFor: [ "sheep-*", "goat-*", "pig-*", "chicken-*", "deer-*", "gazelle-*", "bear-*", "hyena-*", "fox-*" ]
+		},
+		"*-raw-*": {
+			groundStorageTransform: { origin: { x: 0.5, y: 0, z: 0.5 } }
+		}
+	},
+	combustiblePropsByType: {
+		"*-raw-*": {
+			meltingPoint: 600,
+			meltingDuration: 30,
+			smeltedRatio: 1,
+			smeltingType: "fire",
+			requiresContainer: false,
+			smeltedStack: { type: "block", code: "livestockwelfare:foodbowl-fired-ns" }
+		}
+	},
+	creativeinventory: { "general": ["foodbowl-raw-ns", "foodbowl-fired-ns"], "decorative": ["foodbowl-fired-ns"] },
+	shapeByType: {
+		"*-we": { base: "block/dogbowl/bowl", rotateY: 90 },
+		"*": { base: "block/dogbowl/bowl" }
+	},
+	texturesByType: {
+		// Vanilla BlockTrough takes the map colour from a texture named "wood".
+		"*-raw-*": { bowl: { base: "game:block/clay/blueclay" }, wood: { base: "game:block/clay/blueclay" } },
+		"*": {
+			bowl: { base: "game:block/clay/ceramic" },
+			wood: { base: "game:block/clay/ceramic" },
+			"contents-meat": { base: "game:item/food/meat/raw" },
+			// Meat that rots in the bowl (BlockEntityDogBowl).
+			"contents-rot": { base: "game:item/resource/rot/rot-solids" }
+		}
+	},
+	doNotRenderAtLod2: true,
+	blockmaterial: "Ceramic",
+	replaceable: 500,
+	resistance: 0.75,
+	maxStackSize: 4,
+	lightAbsorption: 0,
+	sounds: {
+		walk: "game:walk/stone",
+		place: "game:block/ceramicplace",
+		hit: "game:block/ceramichit",
+		break: "game:block/ceramicbreak"
+	},
+	sidesolid: { all: false },
+	sideopaque: { all: false },
+	collisionbox: { x1: 0.25, y1: 0, z1: 0.25, x2: 0.75, y2: 0.1875, z2: 0.75 },
+	selectionbox: { x1: 0.25, y1: 0, z1: 0.25, x2: 0.75, y2: 0.1875, z2: 0.75 },
+	materialDensity: 600,
+	heldTpIdleAnimation: "holdunderarm",
+	guiTransform: {
+		translation: { x: 0, y: 3, z: 0 },
+		origin: { x: 0.5, y: 0.1, z: 0.5 },
+		scale: 3
+	},
+	groundTransform: {
+		origin: { x: 0.5, y: 0, z: 0.5 },
+		scale: 3
+	}
+}

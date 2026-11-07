@@ -25,6 +25,7 @@ public class livestockwelfareModSystem : ModSystem
         api.RegisterCollectibleBehaviorClass(CollectibleBehaviorHandFeed.Code, typeof(CollectibleBehaviorHandFeed));
         api.RegisterBlockBehaviorClass(BlockBehaviorMuckNeedsGround.Code, typeof(BlockBehaviorMuckNeedsGround));
         api.RegisterItemClass(ItemChickenCoop.ClassName, typeof(ItemChickenCoop));
+        api.RegisterBlockEntityClass(BlockEntityDogBowl.ClassName, typeof(BlockEntityDogBowl));
         // Added to livestock in code (see the thirst and shelter behaviors), not through JSON.
         AiTaskRegistry.Register<AiTaskLivestockSeekWater>(AiTaskLivestockSeekWater.Code);
         AiTaskRegistry.Register<AiTaskLivestockSeekShelter>(AiTaskLivestockSeekShelter.Code);
@@ -32,6 +33,7 @@ public class livestockwelfareModSystem : ModSystem
         AiTaskRegistry.Register<AiTaskLivestockFollowFood>(AiTaskLivestockFollowFood.Code);
         AiTaskRegistry.Register<AiTaskLivestockDogGuard>(AiTaskLivestockDogGuard.Code);
         AiTaskRegistry.Register<AiTaskLivestockDogRest>(AiTaskLivestockDogRest.Code);
+        AiTaskRegistry.Register<AiTaskLivestockDogPotty>(AiTaskLivestockDogPotty.Code);
     }
 
     // Hand feeding works with any food or liquid container (milk is checked on use), so it is added in

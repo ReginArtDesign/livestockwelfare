@@ -1,0 +1,33 @@
+{
+	// What a kept dog leaves outdoors (never under a roof: it is house-trained). Placed by the hygiene
+	// behavior, counts as a dropping, and can be shovelled up as rot. Placeholder model (shapes/block/dogpoop).
+	code: "dogpoop",
+	creativeinventory: { "general": ["*"] },
+	// Breaks (dropping its rot) when the ground under it is dug out.
+	behaviors: [{ name: "livestockwelfare.needsground" }],
+	blockmaterial: "Soil",
+	drawtype: "JSON",
+	shape: { base: "block/dogpoop/dogpoop", alternates: [{ base: "block/dogpoop/dogpoop", rotateY: 90 }, { base: "block/dogpoop/dogpoop", rotateY: 180 }, { base: "block/dogpoop/dogpoop", rotateY: 270 }] },
+	textures: {
+		all: { base: "block/muck" }
+	},
+	resistance: 0.2,
+	lightabsorption: 0,
+	sideopaque: { all: false },
+	sidesolid: { all: false },
+	emitsideao: { all: false },
+	replaceable: 6000,
+	collisionbox: null,
+	selectionbox: { x1: 0.3, y1: 0, z1: 0.25, x2: 0.75, y2: 0.25, z2: 0.7 },
+	drops: [{ type: "item", code: "game:rot", quantity: { avg: 1 } }],
+	sounds: {
+		place: "game:block/dirt",
+		break: "game:block/dirt",
+		hit: "game:block/dirt",
+		walk: "game:walk/grass"
+	},
+	guiTransform: {
+		origin: { x: 0.5, y: 0.1, z: 0.5 },
+		scale: 2
+	}
+}
