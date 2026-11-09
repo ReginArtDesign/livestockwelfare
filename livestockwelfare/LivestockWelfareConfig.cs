@@ -124,7 +124,7 @@ public class SpeciesBreeding
     /// <summary>In-game days of rest after a birth or an egg before the next one, picked at random in this range.</summary>
     public double? RestDaysMin { get; set; }
     public double? RestDaysMax { get; set; }
-    /// <summary>In-game days from birth or hatching until the young is grown up (all stages together).</summary>
+    /// <summary>In-game days from birth or hatching until a well-fed young is grown up (all stages together). Poorly fed young take longer (see Babies.SlowGrowthBelow).</summary>
     public double? GrowUpDays { get; set; }
 }
 
