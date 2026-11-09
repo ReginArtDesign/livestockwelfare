@@ -93,7 +93,7 @@ Many players asked for a way to play without losing animals:
 - **Pause while nobody is around** (`PauseWhenNoPlayerNearby`): no aging, dirt, sickness, stress or thirst for animals with no player within 64 blocks. Useful on servers where owners aren't always online.
 
 ## Configuration
-Everything is in `ModConfig/livestockwelfare.json` (created on first start): lifespans, dirt and disease rates, muck, grooming, dust baths, species cold and heat limits, shelter, thirst and water amounts, babies and hand feeding, treats for hens, and the safety options. Mod managers that edit config files (like eViSTool) can change it too. Each system can be switched off on its own.
+Everything is in `ModConfig/livestockwelfare.json` (created on first start): lifespans, dirt and disease rates, muck, grooming, dust baths, species cold and heat limits, shelter, thirst and water amounts, babies and hand feeding, treats for hens, the safety options, and breeding settings per species (how much an animal must eat before it can breed, pregnancy length, rest time between births and how long the young take to grow up; off by default so other mods' values are kept). Mod managers that edit config files (like eViSTool) can change it too. Each system can be switched off on its own.
 
 ## Compatibility
 - Works next to Natural Fertilizer, Feed or Fallow, Better Husbandry and Hydrate or Diedrate. Petting with an empty hand also triggers Better Husbandry's petting.

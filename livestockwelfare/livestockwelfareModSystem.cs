@@ -45,7 +45,11 @@ public class livestockwelfareModSystem : ModSystem
             if (collectible?.Code == null || (collectible.NutritionProps == null && collectible is not BlockLiquidContainerBase)) continue;
             collectible.CollectibleBehaviors = collectible.CollectibleBehaviors.Append(new CollectibleBehaviorHandFeed(collectible));
         }
-        if (api.Side == EnumAppSide.Server) MoveHygieneBeforeHealth(api);
+        if (api is ICoreServerAPI sapi)
+        {
+            MoveHygieneBeforeHealth(api);
+            LivestockBreeding.Apply(api, LoadConfig(sapi).Breeding);
+        }
     }
 
     // Hygiene must run before vanilla "health" so it can cancel shovel damage. The patches append it
@@ -68,6 +72,15 @@ public class livestockwelfareModSystem : ModSystem
 
     public override void StartServerSide(ICoreServerAPI api)
     {
+        LoadConfig(api);
+        api.Event.OnEntitySpawn += CarryOverFromBaby;
+        DogHunting.Start(api);
+    }
+
+    // Needed by AssetsFinalize (breeding settings) and StartServerSide; loaded by whichever runs first.
+    LivestockWelfareConfig LoadConfig(ICoreServerAPI api)
+    {
+        if (Config != null) return Config;
         LivestockWelfareConfig config;
         try
         {
@@ -84,8 +97,7 @@ public class livestockwelfareModSystem : ModSystem
         }
 
         Config = config;
-        api.Event.OnEntitySpawn += CarryOverFromBaby;
-        DogHunting.Start(api);
+        return config;
     }
 
     // Kept when a baby grows up: its age, sickness and how stressed it is by the weather.

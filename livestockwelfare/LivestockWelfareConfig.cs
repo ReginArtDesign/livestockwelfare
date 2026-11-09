@@ -37,6 +37,7 @@ public class LivestockWelfareConfig
         ["giantboar"] = new SpeciesAging { LifespanYearsMin = 4, LifespanYearsMax = 6 },
         ["greathorn"] = new SpeciesAging { LifespanYearsMin = 4, LifespanYearsMax = 6 },
         ["giantredriver"] = new SpeciesAging { LifespanYearsMin = 3, LifespanYearsMax = 5 },
+        ["cow"] = new SpeciesAging { LifespanYearsMin = 5, LifespanYearsMax = 8 },
     };
 
     public HygieneSettings Hygiene { get; set; } = new();
@@ -52,6 +53,8 @@ public class LivestockWelfareConfig
     public DogSettings Dogs { get; set; } = new();
 
     public TreatSettings Treats { get; set; } = new();
+
+    public BreedingSettings Breeding { get; set; } = new();
 
     public void Sanitize()
     {
@@ -71,7 +74,58 @@ public class LivestockWelfareConfig
         Dogs.Sanitize();
         Treats ??= new();
         Treats.Sanitize();
+        Breeding ??= new();
+        Breeding.Sanitize();
     }
+}
+
+/// <summary>
+/// How often animals breed and how fast their young grow up, per species (the key is the "species"
+/// set in the entity patch, so other mods' animals covered by this mod can be added too). Off by
+/// default, because other mods may change these values as well; when on, it overrides them.
+/// Takes effect after a restart, for existing animals too. A value left out (null) keeps the
+/// game's own one. For hens, "breeding" means laying an egg.
+/// </summary>
+public class BreedingSettings
+{
+    public bool Enabled { get; set; } = false;
+
+    // Pre-filled with the game's own values, so they are easy to change.
+    public Dictionary<string, SpeciesBreeding> Species { get; set; } = new()
+    {
+        ["sheep"] = new SpeciesBreeding { PortionsToBreed = 10, PregnancyDays = 20, RestDaysMin = 4, RestDaysMax = 11, GrowUpDays = 14 },
+        ["goat"] = new SpeciesBreeding { PortionsToBreed = 10, PregnancyDays = 20, RestDaysMin = 4, RestDaysMax = 11, GrowUpDays = 14 },
+        ["pig"] = new SpeciesBreeding { PortionsToBreed = 10, PregnancyDays = 25, RestDaysMin = 6, RestDaysMax = 11, GrowUpDays = 7 },
+        // Chick (128 h) and young hen (72 h) together; young roosters take a few hours longer.
+        ["chicken"] = new SpeciesBreeding { PortionsToBreed = 4, RestDaysMin = 0, RestDaysMax = 3, GrowUpDays = 8.3 },
+    };
+
+    public void Sanitize()
+    {
+        Species ??= new();
+        foreach (var breeding in Species.Values)
+        {
+            if (breeding == null) continue;
+            if (breeding.PortionsToBreed < 0) breeding.PortionsToBreed = 0;
+            if (breeding.PregnancyDays < 0) breeding.PregnancyDays = 0;
+            if (breeding.RestDaysMin < 0) breeding.RestDaysMin = 0;
+            if (breeding.RestDaysMax < breeding.RestDaysMin) breeding.RestDaysMax = breeding.RestDaysMin;
+            if (breeding.GrowUpDays < 0.1) breeding.GrowUpDays = 0.1;
+        }
+    }
+}
+
+public class SpeciesBreeding
+{
+    /// <summary>Portions a female must eat (from a trough or by hand) before she can get pregnant or lay an egg.</summary>
+    public double? PortionsToBreed { get; set; }
+    /// <summary>In-game days from mating to birth (not used for hens).</summary>
+    public double? PregnancyDays { get; set; }
+    /// <summary>In-game days of rest after a birth or an egg before the next one, picked at random in this range.</summary>
+    public double? RestDaysMin { get; set; }
+    public double? RestDaysMax { get; set; }
+    /// <summary>In-game days from birth or hatching until the young is grown up (all stages together).</summary>
+    public double? GrowUpDays { get; set; }
 }
 
 /// <summary>
@@ -227,6 +281,8 @@ public class WeatherSettings
         ["giantboar"] = new WeatherTolerance { ColdBelowC = -8, HotAboveC = 27 },
         ["greathorn"] = new WeatherTolerance { ColdBelowC = -15, HotAboveC = 25 },
         ["giantredriver"] = new WeatherTolerance { ColdBelowC = 6, HotAboveC = 33 },
+        // Cattle cope well with cold but suffer in the heat.
+        ["cow"] = new WeatherTolerance { ColdBelowC = -15, HotAboveC = 26 },
     };
 
     public WeatherTolerance ToleranceFor(string species) =>
@@ -302,6 +358,7 @@ public class ThirstSettings
         ["giantboar"] = 2.5,
         ["greathorn"] = 2,
         ["giantredriver"] = 2,
+        ["cow"] = 3,
     };
 
     public double LitresFor(string species) =>
