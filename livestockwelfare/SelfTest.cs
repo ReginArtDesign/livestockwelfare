@@ -358,10 +358,14 @@ public class SelfTest : ModSystem
         hen.WatchedAttributes.SetFloat("lwFilth", 0.4f);
 
         var found = hygiene?.FindDustBath(settings, _ => false);
+        // Wavy sand counts too (a player's andesite sand from the creative inventory was wavy).
+        var wavy = sapi.World.GetBlock(new AssetLocation("game:sandwavy-andesite"));
+        if (wavy != null) accessor.SetBlock(wavy.Id, roofed);
+        bool foundWavy = wavy != null && hygiene?.FindDustBath(settings, _ => false)?.Equals(roofed) == true;
         hygiene?.DustBathed();
         bool clean = hygiene?.Filth == 0;
-        sapi.Logger.Notification("[lwselftest] dust bath: finds the sand {0}, clean after bathing {1} — {2}",
-            found?.Equals(roofed) == true, clean, found?.Equals(roofed) == true && clean ? "OK" : "FAILED");
+        sapi.Logger.Notification("[lwselftest] dust bath: finds the sand {0}, wavy sand {1}, clean after bathing {2} — {3}",
+            found?.Equals(roofed) == true, foundWavy, clean, found?.Equals(roofed) == true && foundWavy && clean ? "OK" : "FAILED");
 
         hen.Die(EnumDespawnReason.Removed);
         foreach (var pos in changed) accessor.SetBlock(0, pos);

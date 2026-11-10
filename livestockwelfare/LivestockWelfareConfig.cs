@@ -479,7 +479,8 @@ public class HygieneSettings
     /// scruffy (filth rises to UnbathedFilth). Off: they get clean on their own (SelfCleaningHours).
     /// </summary>
     public bool DustBathing { get; set; } = true;
-    public string[] DustBathBlockCodes { get; set; } = { "game:sand-*" };
+    /// <summary>Plain, layered and wavy sand of every rock (wavy sand is also just called "Andesite sand" and so on).</summary>
+    public string[] DustBathBlockCodes { get; set; } = { "game:sand-*", "game:sandwavy-*" };
     public int DustBathRadius { get; set; } = 10;
     /// <summary>They go for a bath once this dirty, or anyway after DustBathEveryHours.</summary>
     public double DustBathAboveFilth { get; set; } = 0.1;
@@ -533,6 +534,8 @@ public class HygieneSettings
         if (SelfCleaningHours < 1) SelfCleaningHours = 1;
         SelfCleaningSpecies ??= Array.Empty<string>();
         DustBathBlockCodes ??= Array.Empty<string>();
+        // The old default missed wavy sand; a list the player changed is kept.
+        if (DustBathBlockCodes is ["game:sand-*"]) DustBathBlockCodes = new[] { "game:sand-*", "game:sandwavy-*" };
         DustBathRadius = Math.Clamp(DustBathRadius, 1, 24);
         DustBathAboveFilth = Math.Clamp(DustBathAboveFilth, 0, 1);
         if (DustBathEveryHours < 1) DustBathEveryHours = 1;
