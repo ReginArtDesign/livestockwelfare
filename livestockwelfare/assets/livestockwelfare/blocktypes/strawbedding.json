@@ -1,0 +1,39 @@
+{
+	// A thin layer of straw (dry grass) on the floor. Kept livestock only mates and stays pregnant
+	// on clean bedding under a roof (BreedingSettings.RequireBedding). A birth soils it; soiled
+	// bedding no longer counts and is shovelled up as rot.
+	code: "strawbedding",
+	variantgroups: [
+		{ code: "state", states: ["clean", "soiled"] }
+	],
+	creativeinventory: { "general": ["*"], "livestockwelfare": ["*"] },
+	behaviors: [{ name: "livestockwelfare.needsground" }],
+	blockmaterial: "Plant",
+	drawtype: "JSON",
+	shape: { base: "block/strawbedding/strawbedding", alternates: [{ base: "block/strawbedding/strawbedding", rotateY: 90 }, { base: "block/strawbedding/strawbedding", rotateY: 180 }, { base: "block/strawbedding/strawbedding", rotateY: 270 }] },
+	texturesByType: {
+		"*-clean": { all: { base: "game:block/hay/normal-top" } },
+		"*-soiled": { all: { base: "game:block/hay/aged-top" } }
+	},
+	resistance: 0.3,
+	lightabsorption: 0,
+	sideopaque: { all: false },
+	sidesolid: { all: false },
+	emitsideao: { all: false },
+	replaceable: 5000,
+	collisionbox: null,
+	selectionbox: { x1: 0, y1: 0, z1: 0, x2: 1, y2: 0.125, z2: 1 },
+	dropsByType: {
+		"*-clean": [{ type: "block", code: "strawbedding-clean", quantity: { avg: 1 } }],
+		"*-soiled": [{ type: "item", code: "game:rot", quantity: { avg: 1 } }]
+	},
+	sounds: {
+		place: "game:block/plant",
+		break: "game:block/plant",
+		hit: "game:block/plant",
+		walk: "game:walk/grass"
+	},
+	guiTransform: {
+		origin: { x: 0.5, y: 0.0625, z: 0.5 }
+	}
+}

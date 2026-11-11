@@ -193,6 +193,10 @@ public class EntityBehaviorLivestockNursing : EntityBehavior
         return mother.Pos.SquareDistanceTo(entity.Pos) <= settings.NursingDistance * settings.NursingDistance ? mother : null;
     }
 
+    /// <summary>The mother remembered at birth (or adopted), if she is still around; for the bedding.</summary>
+    public static Entity? MotherOf(Entity baby) =>
+        baby.WatchedAttributes.HasAttribute(MotherIdAttr) ? baby.World.GetEntityById(baby.WatchedAttributes.GetLong(MotherIdAttr)) : null;
+
     /// <summary>How good the mother's milk is, from 0 (none) to 1 (healthy mother).</summary>
     static double MilkQuality(Entity mother, BabySettings settings)
     {

@@ -55,12 +55,13 @@ public class AiTaskLivestockSeekShelter : AiTaskLivestockGoTo
     /// hungry or thirsty enough (WeatherSettings.ShelterYields...). Otherwise it would step out to
     /// the trough and be called straight back by this task, over and over.
     /// </summary>
-    public bool HoldsBackFoodAndWater =>
-        shelter != null && Arrived && !SleepTime && shelter.BadWeather && !NeedsFoodOrWater
-        && taskManager?.ActiveTasksBySlot.Contains(this) == true;
+    public bool HoldsBackFoodAndWater => Arrived && WaitsOutWeather && taskManager?.ActiveTasksBySlot.Contains(this) == true;
 
-    // Hungry or thirsty enough to go out in bad weather; never at night, when it sleeps.
-    bool NeedsFoodOrWater
+    /// <summary>Daytime bad weather, and not yet hungry or thirsty enough to go out in it.</summary>
+    public bool WaitsOutWeather => shelter != null && !SleepTime && shelter.BadWeather && !NeedsFoodOrWater;
+
+    /// <summary>Hungry or thirsty enough to go out in bad weather (or to leave its bedding); never at night, when it sleeps.</summary>
+    public bool NeedsFoodOrWater
     {
         get
         {

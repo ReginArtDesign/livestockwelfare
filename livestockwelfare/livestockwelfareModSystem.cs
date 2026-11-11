@@ -34,6 +34,7 @@ public class livestockwelfareModSystem : ModSystem
         AiTaskRegistry.Register<AiTaskLivestockDogGuard>(AiTaskLivestockDogGuard.Code);
         AiTaskRegistry.Register<AiTaskLivestockDogRest>(AiTaskLivestockDogRest.Code);
         AiTaskRegistry.Register<AiTaskLivestockDogPotty>(AiTaskLivestockDogPotty.Code);
+        AiTaskRegistry.Register<AiTaskLivestockBedding>(AiTaskLivestockBedding.Code);
     }
 
     // Hand feeding works with any food or liquid container (milk is checked on use), so it is added in
@@ -75,6 +76,7 @@ public class livestockwelfareModSystem : ModSystem
         LoadConfig(api);
         api.Event.OnEntitySpawn += CarryOverFromBaby;
         DogHunting.Start(api);
+        beddingPatches = LivestockBedding.Patch(Mod.Info.ModID + ".bedding");
     }
 
     // Needed by AssetsFinalize (breeding settings) and StartServerSide; loaded by whichever runs first.
@@ -123,8 +125,11 @@ public class livestockwelfareModSystem : ModSystem
         adult.World.Logger.Debug("[livestockwelfare] {0} #{1} grew up from #{2}, sick: {3}", adult.Code, adult.EntityId, baby.EntityId, adult.WatchedAttributes.GetBool("lwSick"));
     }
 
+    HarmonyLib.Harmony? beddingPatches;
+
     public override void Dispose()
     {
+        beddingPatches?.UnpatchAll(beddingPatches.Id);
         Config = null;
         DogHunting.Clear();
         // The client texture atlas is rebuilt for every world, so cached positions become invalid.

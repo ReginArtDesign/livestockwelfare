@@ -78,8 +78,11 @@ public class EntityBehaviorLivestockShelter : EntityBehavior
 
     float walkSpeed;
     AiTaskLivestockSeekShelter? shelterTask;
+    AiTaskLivestockBedding? beddingTask;
     // Above wandering and idling, below vanilla eating: sheltered animals still go to the trough.
     const float SeekShelterPriority = 1.29f;
+    // The task raises its own priority while it is wanted (see AiTaskLivestockBedding).
+    const float BeddingPriority = 1.29f;
 
     public override void AfterInitialized(bool onFirstSpawn)
     {
@@ -90,7 +93,17 @@ public class EntityBehaviorLivestockShelter : EntityBehavior
         {
             // Sitting out bad weather, food and water wait until the animal really needs them.
             taskAi.TaskManager.OnShouldExecuteTask += task => (task is not AiTaskSeekFoodAndEat || !NoAppetite)
-                && !(AiTaskLivestockSeekShelter.IsFoodOrWater(task) && shelterTask?.HoldsBackFoodAndWater == true);
+                && !(AiTaskLivestockSeekShelter.IsFoodOrWater(task) && HoldsBackFoodAndWater)
+                // Resting on her bedding she doesn't get up to graze on the spot or look about
+                // (vanilla sheep "idle: eat" 1.3 had her up every few seconds).
+                && !(task is AiTaskIdle && beddingTask?.Resting == true);
+        }
+        // Mating and pregnancy on straw bedding (hens lay eggs, so they never take part); the young
+        // lie there next to their mother for the first days.
+        if (LivestockBedding.Settings is { } bedding && (!baby || bedding.NewbornDays > 0))
+        {
+            LivestockUtil.AddAiTask(agent, AiTaskLivestockBedding.Code, BeddingPriority, walkSpeed, 0, 0,
+                (taskConfig, aiConfig) => beddingTask = new AiTaskLivestockBedding(agent, taskConfig, aiConfig));
         }
         if (livestockwelfareModSystem.Config?.Weather is not { Enabled: true, SeekShelter: true } || Settings == null) return;
 
@@ -110,6 +123,12 @@ public class EntityBehaviorLivestockShelter : EntityBehavior
 
     /// <summary>The weather is bad right now (as of the last check), even if this animal is sheltered.</summary>
     public bool BadWeather => (Current & Conditions.BadWeather) != 0;
+
+    // Sitting out bad weather under the roof, or resting on its straw bedding: it goes for food and
+    // water once it really needs them. Otherwise it stepped out to the trough and was called straight
+    // back, over and over (and a vanilla trough walk starts every few seconds, hungry or not).
+    bool HoldsBackFoodAndWater =>
+        shelterTask?.HoldsBackFoodAndWater == true || (beddingTask?.Resting == true && shelterTask?.NeedsFoodOrWater == false);
     public bool Roofed => (Current & Conditions.Roofed) != 0;
     public bool Night => (Current & Conditions.Night) != 0;
     public bool NoAppetite => (Current & Conditions.NoAppetite) != 0;
@@ -320,6 +339,8 @@ public class EntityBehaviorLivestockShelter : EntityBehavior
         entity.World.SpawnParticles(hearts);
     }
 
+    const int MildHeatBelowPercent = 20;
+
     /// <summary>Weather status for the info text and chat, e.g. "Getting wet, cold (weather stress: 45%)".</summary>
     /// <param name="langCode">Language to use, or null for the local game language.</param>
     public string StatusText(string? langCode = null)
@@ -331,7 +352,8 @@ public class EntityBehaviorLivestockShelter : EntityBehavior
         if ((conditions & Conditions.Wet) != 0) problems.Add("livestockwelfare:weather-wet");
         if ((conditions & Conditions.Snowed) != 0) problems.Add("livestockwelfare:weather-snow");
         if ((conditions & Conditions.Cold) != 0) problems.Add("livestockwelfare:weather-cold");
-        if ((conditions & Conditions.Hot) != 0) problems.Add("livestockwelfare:weather-hot");
+        // "Suffering" only once the heat has really started to stress the animal.
+        if ((conditions & Conditions.Hot) != 0) problems.Add(stressPercent < MildHeatBelowPercent ? "livestockwelfare:weather-hot-mild" : "livestockwelfare:weather-hot");
         if ((conditions & Conditions.NoAppetite) != 0) problems.Add("livestockwelfare:weather-noappetite");
         if ((conditions & Conditions.SleepingOutside) != 0) problems.Add("livestockwelfare:weather-sleepoutside");
 
@@ -357,6 +379,8 @@ public class EntityBehaviorLivestockShelter : EntityBehavior
 
     public override void GetInfoText(StringBuilder infotext)
     {
-        if (entity.Alive) infotext.AppendLine(StatusText());
+        if (!entity.Alive) return;
+        infotext.AppendLine(StatusText());
+        if (entity.WatchedAttributes.GetBool(LivestockBedding.NeedsBeddingAttr)) infotext.AppendLine(Lang.Get("livestockwelfare:needs-bedding"));
     }
 }

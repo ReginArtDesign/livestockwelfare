@@ -88,7 +88,31 @@ public class LivestockWelfareConfig
 /// </summary>
 public class BreedingSettings
 {
+    /// <summary>Switches the per-species values below on. The straw bedding rules work on their own.</summary>
     public bool Enabled { get; set; } = false;
+
+    /// <summary>
+    /// Kept animals only mate on clean straw bedding under a roof: the ewe and the ram walk there and
+    /// lie down together for a while. A pregnant female then spends her pregnancy on the bedding,
+    /// leaving only to eat and drink, and gives birth there, which soils it. Wild animals and hens
+    /// (they lay eggs) are not affected.
+    /// </summary>
+    public bool RequireBedding { get; set; } = true;
+
+    /// <summary>How far (in blocks) animals look for bedding.</summary>
+    public int BeddingRadius { get; set; } = 16;
+
+    /// <summary>How long (real seconds) the pair lies together on the bedding before she can get pregnant.</summary>
+    public float MatingSeconds { get; set; } = 15;
+
+    /// <summary>
+    /// After giving birth on the bedding, the mother stays there with her young this many in-game
+    /// days, nursing them, and goes out only to eat and drink. The newborns lie next to her. 0: off.
+    /// </summary>
+    public double NewbornDays { get; set; } = 1;
+
+    /// <summary>Blocks that count as clean bedding (wildcards allowed).</summary>
+    public string[] BeddingBlockCodes { get; set; } = { "livestockwelfare:strawbedding-clean" };
 
     // Pre-filled with the game's own values, so they are easy to change.
     public Dictionary<string, SpeciesBreeding> Species { get; set; } = new()
@@ -102,6 +126,10 @@ public class BreedingSettings
 
     public void Sanitize()
     {
+        BeddingRadius = Math.Clamp(BeddingRadius, 2, 32);
+        MatingSeconds = Math.Clamp(MatingSeconds, 1, 300);
+        NewbornDays = Math.Clamp(NewbornDays, 0, 10);
+        BeddingBlockCodes ??= Array.Empty<string>();
         Species ??= new();
         foreach (var breeding in Species.Values)
         {

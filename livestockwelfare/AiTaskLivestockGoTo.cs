@@ -4,6 +4,7 @@ using System.Linq;
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
+using Vintagestory.GameContent;
 
 namespace livestockwelfare;
 
@@ -14,7 +15,8 @@ namespace livestockwelfare;
 /// </summary>
 public abstract class AiTaskLivestockGoTo : AiTaskBase
 {
-    const long SearchIntervalMs = 10000;
+    /// <summary>How often it looks for a target while not running.</summary>
+    protected virtual long SearchIntervalMs => 10000;
     const long FailedTargetMemoryMs = 60000;
     const long GiveUpAfterStuckMs = 3000;
 
@@ -23,7 +25,7 @@ public abstract class AiTaskLivestockGoTo : AiTaskBase
     protected BlockPos? TargetBlock;
 
     readonly Dictionary<BlockPos, long> failedTargets = new();
-    long lastSearchMs = -SearchIntervalMs;
+    long lastSearchMs = long.MinValue / 2;
     bool arrived;
     bool stuck;
     long stuckAtMs;
@@ -80,8 +82,15 @@ public abstract class AiTaskLivestockGoTo : AiTaskBase
         return false;
     }
 
+    /// <summary>Whether this task is the one running now.</summary>
+    protected bool IsActive => entity.GetBehavior<EntityBehaviorTaskAI>()?.TaskManager?.ActiveTasksBySlot.Contains(this) == true;
+
     public override bool ShouldExecute()
     {
+        // Vanilla also asks a running task, and a task that lets lower ones interrupt it (a lower
+        // PriorityForCancel) would cancel and restart itself every search: the animal got up from
+        // its bedding every 10 seconds, and her young left her each time.
+        if (IsActive) return false;
         long now = entity.World.ElapsedMilliseconds;
         if (now - lastSearchMs < SearchIntervalMs) return false;
         if (IsOnCooldown() || !PreconditionsSatisfied() || !Wanted()) return false;
@@ -160,7 +169,7 @@ public abstract class AiTaskLivestockGoTo : AiTaskBase
     }
 
     // Goes to server-debug.log, to see in a test world what the animals are doing.
-    void Log(string message, params object?[] args) =>
+    protected void Log(string message, params object?[] args) =>
         entity.World.Logger.Debug("[livestockwelfare] {0} #{1} {2}: {3}", entity.Code.Path, entity.EntityId, GetType().Name, string.Format(message, args));
 
     void OnGoalReached()

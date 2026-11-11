@@ -1,6 +1,7 @@
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
+using Vintagestory.GameContent;
 
 namespace livestockwelfare;
 
@@ -31,7 +32,14 @@ public class AiTaskLivestockDustBath : AiTaskLivestockGoTo
     {
         base.AfterInitialize();
         hygiene = entity.GetBehavior<EntityBehaviorLivestockHygiene>();
+        // Vanilla hens run back to the rooster once more than 5 blocks away, and that task (1.3)
+        // outranks the bath: with the sand further from him she turned back halfway, again and
+        // again, and never bathed. While she goes for her bath, he can wait.
+        var taskManager = entity.GetBehavior<EntityBehaviorTaskAI>()?.TaskManager;
+        if (taskManager != null) taskManager.OnShouldExecuteTask += task => !(running && task is AiTaskStayCloseToEntity);
     }
+
+    bool running;
 
     static HygieneSettings? Settings =>
         livestockwelfareModSystem.Config?.Hygiene is { Enabled: true, DustBathing: true } settings ? settings : null;
@@ -65,6 +73,7 @@ public class AiTaskLivestockDustBath : AiTaskLivestockGoTo
     {
         base.StartExecute();
         bathStarted = false;
+        running = true;
     }
 
     protected override bool ActAtTarget(float dt, float timeAtTarget)
@@ -97,6 +106,7 @@ public class AiTaskLivestockDustBath : AiTaskLivestockGoTo
 
     protected override void OnFinish(bool arrivedAtTarget)
     {
+        running = false;
         entity.AnimManager.StopAnimation(SitAnimation);
     }
 

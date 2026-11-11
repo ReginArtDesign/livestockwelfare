@@ -56,6 +56,13 @@ A Vintage Story mod that deepens animal husbandry: your livestock age, get dirty
 - **Hydrate or Diedrate**: animals drink its clean rainwater, well water, distilled and boiled water (from barrels too), but not its salt, muddy, tainted or poisoned water.
 - Very thirsty animals don't breed. Parched ones stop healing and lose health.
 
+### Breeding on straw bedding
+- Kept sheep, goats and pigs only mate on clean **straw bedding** under a roof (three dry grass in a row make two). When a female is ready, she and the male walk to it and lie down together for a while; then she can get pregnant.
+- While pregnant she rests on the bedding and only leaves to eat and drink, and sleeps there at night.
+- The birth **soils** the bedding: shovel it up (it gives rot) and put down fresh straw.
+- For the first day after the birth the mother stays on the bedding with her young, nursing them, and only leaves to eat and drink; the newborns lie next to her (`Breeding.NewbornDays`).
+- A female that is ready but finds no bedding says so in her info. Wild animals and hens are not affected, and it can be turned off (`Breeding.RequireBedding`).
+
 ### Babies and orphans
 - Lambs, kids and piglets **suckle** from their mother, so her condition matters: a thirsty, sick or stressed mother has less milk, and a sick mother can pass her illness on.
 - Poorly fed babies grow more slowly; starving ones stop healing and can die of malnutrition.

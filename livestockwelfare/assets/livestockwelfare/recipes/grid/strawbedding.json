@@ -1,0 +1,12 @@
+[
+	{
+		// Three dry grass spread out make two layers of bedding.
+		ingredientPattern: "GGG",
+		ingredients: {
+			"G": { type: "item", code: "game:drygrass" }
+		},
+		width: 3,
+		height: 1,
+		output: { type: "block", code: "strawbedding-clean", quantity: 2 }
+	}
+]
