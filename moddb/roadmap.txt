@@ -54,6 +54,6 @@ PLANNED FOR LATER
 - Old animals slow down: they walk more slowly and become calmer, so an old bear or boar is less aggressive.
 - Rotting carcasses: after a while flies gather over a dead animal (wild or kept), a sign that its meat is no longer fresh, and butchering it then gives rot instead of meat.
 - In-game settings menu (with the ConfigLib mod), so you can tune the animals' needs without editing files.
-- Breeding settings (requested by a player): how many portions an animal must eat before it can breed, pregnancy length, rest time between births and how long babies take to grow up, per species.
+- Breeding settings (requested by a player): how many portions an animal must eat before it can breed, pregnancy length, rest time between births and how long babies take to grow up, per species. (done in 0.15.0)
 - A bigger feeding trough that holds more food and lasts longer.
 - Testing in existing world saves and in multiplayer.

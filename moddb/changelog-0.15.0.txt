@@ -1,0 +1,26 @@
+Version 0.15.0 (beta)
+
+Note: Livestock Welfare is still in beta. Please back up your world before updating, and tell me if something goes wrong. New settings are added to your config file automatically; the values you changed are kept.
+
+Breeding on straw bedding
+- Kept sheep, goats and pigs now only mate on clean straw bedding under a roof. Three dry grass in a row on the crafting grid make two straw bedding.
+- When a female is ready to mate, she walks to the bedding and lies down, and a male nearby follows her and lies down next to her. After a while together she can get pregnant.
+- A female that is ready but finds no bedding says so in her info text, so you know what is missing.
+- While pregnant she rests on her bedding, goes out only to eat and drink, and sleeps there at night.
+- The birth soils the bedding: shovel it up (it gives rot) and put down fresh straw.
+- For the first day after the birth the mother stays on the bedding with her young and nurses them. The newborns lie next to her, and when she gets up to eat or drink they follow her and stay within a couple of blocks.
+- Wild animals and hens are not affected. If you don't want it, set Breeding.RequireBedding to false in the config.
+
+Breeding settings (requested by a player)
+- A new "Breeding" section in the config sets, per species, how much a female must eat before she can breed (or a hen before she lays), how long the pregnancy lasts, the rest days between births and how long the young take to grow up.
+- It is off by default, so the game's and other mods' values are kept. Existing animals pick up the new values after a restart.
+
+Handbook
+- Livestock Welfare has its own creative inventory tab, so mods that list handbook tabs show the guide too.
+- The guide page now explains breeding on straw bedding.
+
+Fixes
+- Hens bathe in wavy sand too (for example the creative inventory's "Andesite sand"). Before, they never used it.
+- Hens no longer turn back to the rooster halfway to their dust bath, again and again, when the sand is further away from him.
+- Animals sitting out bad weather under a roof no longer restart their shelter search every 10 seconds, so they stay settled in their spot.
+- An animal in mild sun is shown as "In the hot sun", and "Suffering in the hot sun" only once the heat really stresses it.
