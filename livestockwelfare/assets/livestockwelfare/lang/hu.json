@@ -83,5 +83,7 @@
 	"tip-first-animal": "Livestock Welfare: az állataidnak most már víz, fedett hely és gondoskodás kell. Guggolva jobb klikk üres kézzel egy állatra a teljes állapotáért, és a kézikönyvben (H) a \"Livestock Welfare\" oldalon többet is olvashatsz.",
 	"block-strawbedding-clean": "Szalmaalom",
 	"block-strawbedding-soiled": "Elhasznált szalmaalom",
+	"block-haybale-*": "Szénabála",
+	"blockdesc-haybale-*": "Tedd le a karámban: a juhok, kecskék és más füvet evő állatok odamennek, és esznek belőle, mint egy vályúból. Négy adag van benne, és minden adaggal kisebb lesz. Ha lebontod, visszakapod a maradék szénát.",
 	"needs-bedding": "Párzásra kész, de tiszta szalmaalom kell neki tető alatt"
 }

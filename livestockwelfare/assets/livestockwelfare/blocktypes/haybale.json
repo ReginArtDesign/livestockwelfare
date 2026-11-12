@@ -1,0 +1,53 @@
+{
+	// A bale of hay set down in the pen: sheep, goats and other grass eaters eat from it directly,
+	// like from a trough (BlockEntityHayBale). It holds four portions, one hay block each, and gets
+	// a size smaller with every portion eaten. Broken, it gives back the hay that is left.
+	code: "haybale",
+	entityClass: "livestockwelfare.haybale",
+	variantgroups: [
+		{ code: "portions", states: ["4", "3", "2", "1"] }
+	],
+	creativeinventory: { "general": ["haybale-4"], "livestockwelfare": ["haybale-4"] },
+	blockmaterial: "Plant",
+	drawtype: "JSON",
+	shapeByType: {
+		"*-4": { base: "block/haybale/haybale4" },
+		"*-3": { base: "block/haybale/haybale3" },
+		"*-2": { base: "block/haybale/haybale2" },
+		"*-1": { base: "block/haybale/haybale1" }
+	},
+	resistance: 0.6,
+	lightabsorption: 0,
+	sideopaque: { all: false },
+	sidesolid: { all: false },
+	emitsideao: { all: false },
+	collisionboxByType: {
+		"*-4": { x1: 0.0625, y1: 0, z1: 0.1875, x2: 0.9375, y2: 0.875, z2: 0.8125 },
+		"*-3": { x1: 0.0625, y1: 0, z1: 0.1875, x2: 0.9375, y2: 0.6875, z2: 0.8125 },
+		"*-2": { x1: 0.0625, y1: 0, z1: 0.1875, x2: 0.9375, y2: 0.4375, z2: 0.8125 },
+		"*-1": { x1: 0.0625, y1: 0, z1: 0.1875, x2: 0.9375, y2: 0.25, z2: 0.8125 }
+	},
+	selectionboxByType: {
+		"*-4": { x1: 0.0625, y1: 0, z1: 0.1875, x2: 0.9375, y2: 0.875, z2: 0.8125 },
+		"*-3": { x1: 0.0625, y1: 0, z1: 0.1875, x2: 0.9375, y2: 0.6875, z2: 0.8125 },
+		"*-2": { x1: 0.0625, y1: 0, z1: 0.1875, x2: 0.9375, y2: 0.4375, z2: 0.8125 },
+		"*-1": { x1: 0.0625, y1: 0, z1: 0.1875, x2: 0.9375, y2: 0.25, z2: 0.8125 }
+	},
+	dropsByType: {
+		"*-4": [{ type: "block", code: "haybale-4", quantity: { avg: 1 } }],
+		"*-3": [{ type: "block", code: "game:hay-normal-ud", quantity: { avg: 3 } }],
+		"*-2": [{ type: "block", code: "game:hay-normal-ud", quantity: { avg: 2 } }],
+		"*-1": [{ type: "block", code: "game:hay-normal-ud", quantity: { avg: 1 } }]
+	},
+	sounds: {
+		place: "game:block/plant",
+		break: "game:block/plant",
+		hit: "game:block/plant",
+		walk: "game:walk/grass"
+	},
+	guiTransform: {
+		rotation: { x: -22.6, y: -45.3, z: 0 },
+		origin: { x: 0.5, y: 0.4, z: 0.5 },
+		scale: 1.3
+	}
+}

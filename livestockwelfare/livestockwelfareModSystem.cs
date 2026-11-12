@@ -26,6 +26,7 @@ public class livestockwelfareModSystem : ModSystem
         api.RegisterBlockBehaviorClass(BlockBehaviorMuckNeedsGround.Code, typeof(BlockBehaviorMuckNeedsGround));
         api.RegisterItemClass(ItemChickenCoop.ClassName, typeof(ItemChickenCoop));
         api.RegisterBlockEntityClass(BlockEntityDogBowl.ClassName, typeof(BlockEntityDogBowl));
+        api.RegisterBlockEntityClass(BlockEntityHayBale.ClassName, typeof(BlockEntityHayBale));
         // Added to livestock in code (see the thirst and shelter behaviors), not through JSON.
         AiTaskRegistry.Register<AiTaskLivestockSeekWater>(AiTaskLivestockSeekWater.Code);
         AiTaskRegistry.Register<AiTaskLivestockSeekShelter>(AiTaskLivestockSeekShelter.Code);

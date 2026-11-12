@@ -56,4 +56,5 @@ PLANNED FOR LATER
 - In-game settings menu (with the ConfigLib mod), so you can tune the animals' needs without editing files.
 - Breeding settings (requested by a player): how many portions an animal must eat before it can breed, pregnancy length, rest time between births and how long babies take to grow up, per species. (done in 0.15.0)
 - A bigger feeding trough that holds more food and lasts longer.
+- Hay bale (requested by a player): put a bale down in the pen, and sheep, goats and other grass eaters walk to it and eat from it directly, like from a trough. The bale gets smaller with every portion eaten until it is gone.
 - Testing in existing world saves and in multiplayer.

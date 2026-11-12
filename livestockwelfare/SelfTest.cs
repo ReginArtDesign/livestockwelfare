@@ -161,6 +161,7 @@ public class SelfTest : ModSystem
                 CheckDustBath(spawn);
                 CheckCoop(spawn);
                 CheckTreats(spawn);
+                CheckHayBale(spawn);
                 CheckFeralKinship(spawn);
                 if (Environment.GetEnvironmentVariable("LW_SELFTEST_POND") == "1") PondTest(spawn);
                 else SpawnAndWatch(spawn);
@@ -228,6 +229,51 @@ public class SelfTest : ModSystem
         accessor.SetBlock(0, floor);
 
         chicken.Die(EnumDespawnReason.Removed);
+        accessor.SetBlock(0, pos);
+    }
+
+    // Hay bale: a sheep finds it as food and a hen doesn't; each portion eaten makes it a size
+    // smaller, and the last one takes it away. Done high in the air and cleaned up after.
+    void CheckHayBale(BlockPos spawn)
+    {
+        var bale = sapi.World.GetBlock(new AssetLocation("livestockwelfare:haybale-4"));
+        var accessor = sapi.World.BlockAccessor;
+        var pos = spawn.AddCopy(-20, 40, 6);
+        if (bale == null)
+        {
+            sapi.Logger.Warning("[lwselftest] hay bale: block missing — FAILED");
+            return;
+        }
+        accessor.SetBlock(bale.Id, pos);
+        if (accessor.GetBlockEntity(pos) == null) accessor.SpawnBlockEntity(bale.EntityClass, pos);
+        var be = accessor.GetBlockEntity(pos) as BlockEntityHayBale;
+        Entity Spawn(string code)
+        {
+            var e = sapi.World.ClassRegistry.CreateEntity(sapi.World.GetEntityType(new AssetLocation(code)));
+            e.Pos.SetPos(pos.X + 2.5, pos.Y, pos.Z + 0.5);
+            spawning = true;
+            sapi.World.SpawnEntity(e);
+            spawning = false;
+            return e;
+        }
+        var sheep = Spawn("game:sheep-bighorn-adult-female");
+        var hen = Spawn("game:chicken-hen");
+        var poi = sapi.ModLoader.GetModSystem<Vintagestory.GameContent.POIRegistry>()
+            .GetNearestPoi(sheep.Pos.XYZ, 8, p => p is BlockEntityHayBale);
+        bool sheepEats = be != null && be.IsSuitableFor(sheep, LivestockTreats.Diet(sheep)!);
+        bool henEats = be != null && LivestockTreats.Diet(hen) is { } henDiet && be.IsSuitableFor(hen, henDiet);
+        var sizes = new List<string>();
+        for (int i = 0; i < 4 && be != null; i++)
+        {
+            be.ConsumeOnePortion(sheep);
+            sizes.Add(accessor.GetBlock(pos).Code?.Path ?? "?");
+        }
+        bool gone = accessor.GetBlock(pos).Id == 0;
+        bool ok = be != null && poi == be && sheepEats && !henEats && string.Join(",", sizes) == "haybale-3,haybale-2,haybale-1,air" && gone;
+        sapi.Logger.Notification("[lwselftest] hay bale: found as food {0}, sheep eats {1}, hen eats {2} (expect False), sizes {3} — {4}",
+            poi == be, sheepEats, henEats, string.Join(", ", sizes), ok ? "OK" : "FAILED");
+        sheep.Die(EnumDespawnReason.Removed);
+        hen.Die(EnumDespawnReason.Removed);
         accessor.SetBlock(0, pos);
     }
 

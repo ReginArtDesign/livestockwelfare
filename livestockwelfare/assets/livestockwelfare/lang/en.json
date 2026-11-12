@@ -83,5 +83,7 @@
 	"tip-first-animal": "Livestock Welfare: your animals now need water, shelter and care. Sneak + right click an animal with an empty hand for its full status, and read the \"Livestock Welfare\" page in the handbook (H) to learn more.",
 	"block-strawbedding-clean": "Straw bedding",
 	"block-strawbedding-soiled": "Soiled straw bedding",
+	"block-haybale-*": "Hay bale",
+	"blockdesc-haybale-*": "Set it down in the pen: sheep, goats and other grass eaters walk to it and eat from it like from a trough. It holds four portions and gets smaller with each one. Broken, it gives back the hay that is left.",
 	"needs-bedding": "Ready to mate, but needs clean straw bedding under a roof"
 }

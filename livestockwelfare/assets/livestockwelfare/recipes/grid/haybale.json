@@ -1,0 +1,12 @@
+[
+	{
+		// Four hay blocks tied into a bale: four portions for the animals.
+		ingredientPattern: "HH,HH",
+		ingredients: {
+			"H": { type: "block", code: "game:hay-normal-ud" }
+		},
+		width: 2,
+		height: 2,
+		output: { type: "block", code: "haybale-4" }
+	}
+]
