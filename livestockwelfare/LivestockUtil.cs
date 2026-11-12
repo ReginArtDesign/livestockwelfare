@@ -60,15 +60,21 @@ public static class LivestockUtil
     /// Kept animals were bred by the player (generation at least Hygiene.MuckMinGeneration), placed
     /// by them, or tamed by them with the Pet AI mod (Wolf taming's dogs). Only these make muck,
     /// suffer from thirst, weather and disease, or need a safe place to sleep, so wild animals don't
-    /// die off all over the world.
+    /// die off all over the world. Also kept: animals the player raised into a semi-tamed or tamed
+    /// variant (Fauna of the Stone Age cattle, elephants, giant deer: a hand-fed calf grows up
+    /// semi-tamed, still generation 0) and animals that have an owner (vanilla "ownable").
     /// </summary>
     public static bool IsKept(Entity entity) =>
         entity.WatchedAttributes.GetInt("generation") >= (livestockwelfareModSystem.Config?.Hygiene.MuckMinGeneration ?? 1)
         || entity.Attributes.GetString("origin") == "playerplaced"
-        || !string.IsNullOrEmpty(entity.WatchedAttributes.GetTreeAttribute(PetAiStatusAttr)?.GetString("owner"));
+        || !string.IsNullOrEmpty(entity.WatchedAttributes.GetTreeAttribute(PetAiStatusAttr)?.GetString("owner"))
+        || entity.WatchedAttributes.HasAttribute(OwnableAttr)
+        || entity.Properties?.Variant is { } variant && variant.TryGetValue("behavior", out string? tame) && tame is "semitamed" or "tamed";
 
     // Pet AI keeps the owner's player uid in this tree.
     const string PetAiStatusAttr = "domesticationstatus";
+    // The vanilla "ownable" behavior keeps the owner in this tree.
+    const string OwnableAttr = "ownedby";
 
     /// <summary>The health the "HarmPerDay" and "SickDamagePerDay" settings are given for: an adult sheep's.</summary>
     public const float HarmReferenceHealth = 17;

@@ -38,6 +38,17 @@ public class LivestockWelfareConfig
         ["greathorn"] = new SpeciesAging { LifespanYearsMin = 4, LifespanYearsMax = 6 },
         ["giantredriver"] = new SpeciesAging { LifespanYearsMin = 3, LifespanYearsMax = 5 },
         ["cow"] = new SpeciesAging { LifespanYearsMin = 5, LifespanYearsMax = 8 },
+        // Fauna of the Stone Age (patches/othermods/fotsa.json). Elephant calves take most of a
+        // game year to grow up and their pregnancy is longer than that, so they live longest.
+        ["cattle"] = new SpeciesAging { LifespanYearsMin = 5, LifespanYearsMax = 8 },
+        ["bison"] = new SpeciesAging { LifespanYearsMin = 5, LifespanYearsMax = 8 },
+        ["waterbuffalo"] = new SpeciesAging { LifespanYearsMin = 5, LifespanYearsMax = 8 },
+        ["dwarfbuffalo"] = new SpeciesAging { LifespanYearsMin = 4, LifespanYearsMax = 6 },
+        ["capebuffalo"] = new SpeciesAging { LifespanYearsMin = 6, LifespanYearsMax = 9 },
+        ["antelope"] = new SpeciesAging { LifespanYearsMin = 4, LifespanYearsMax = 6 },
+        ["elephant"] = new SpeciesAging { LifespanYearsMin = 10, LifespanYearsMax = 14 },
+        ["mammoth"] = new SpeciesAging { LifespanYearsMin = 10, LifespanYearsMax = 14 },
+        ["giantdeer"] = new SpeciesAging { LifespanYearsMin = 5, LifespanYearsMax = 7 },
     };
 
     public HygieneSettings Hygiene { get; set; } = new();
@@ -311,6 +322,17 @@ public class WeatherSettings
         ["giantredriver"] = new WeatherTolerance { ColdBelowC = 6, HotAboveC = 33 },
         // Cattle cope well with cold but suffer in the heat.
         ["cow"] = new WeatherTolerance { ColdBelowC = -15, HotAboveC = 26 },
+        // Fauna of the Stone Age: steppe bison, woolly mammoths and giant deer lived through ice
+        // ages; buffaloes, antelopes and elephants come from warm lands.
+        ["cattle"] = new WeatherTolerance { ColdBelowC = -15, HotAboveC = 26 },
+        ["bison"] = new WeatherTolerance { ColdBelowC = -25, HotAboveC = 26 },
+        ["waterbuffalo"] = new WeatherTolerance { ColdBelowC = 2, HotAboveC = 35 },
+        ["dwarfbuffalo"] = new WeatherTolerance { ColdBelowC = 8, HotAboveC = 32 },
+        ["capebuffalo"] = new WeatherTolerance { ColdBelowC = 5, HotAboveC = 36 },
+        ["antelope"] = new WeatherTolerance { ColdBelowC = 2, HotAboveC = 34 },
+        ["elephant"] = new WeatherTolerance { ColdBelowC = 5, HotAboveC = 35 },
+        ["mammoth"] = new WeatherTolerance { ColdBelowC = -30, HotAboveC = 18 },
+        ["giantdeer"] = new WeatherTolerance { ColdBelowC = -15, HotAboveC = 24 },
     };
 
     public WeatherTolerance ToleranceFor(string species) =>
@@ -387,6 +409,15 @@ public class ThirstSettings
         ["greathorn"] = 2,
         ["giantredriver"] = 2,
         ["cow"] = 3,
+        ["cattle"] = 3,
+        ["bison"] = 3,
+        ["waterbuffalo"] = 3,
+        ["dwarfbuffalo"] = 1,
+        ["capebuffalo"] = 3,
+        ["antelope"] = 1.5,
+        ["elephant"] = 8,
+        ["mammoth"] = 8,
+        ["giantdeer"] = 2.5,
     };
 
     public double LitresFor(string species) =>

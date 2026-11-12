@@ -27,6 +27,20 @@ public class SelfTestOtherMods : ModSystem
         ("teapotsgiantredriver:tame-giantredriver-male", "giantredriver", false),
         ("teapotsgiantredriver:giantredriver-baby-female", "giantredriver", true),
         ("teapotsgiantredriver:tame-giantredriver-baby-male", "giantredriver", true),
+        ("bovinae:bovinae-adult-female-bosprimigeniusprimigenius", "cattle", false),
+        ("bovinae:bovinae-adult-male-synceruscaffer", "capebuffalo", false),
+        ("bovinae:bovinae-adult-female-tragelaphusstrepsiceros", "antelope", false),
+        ("bovinae:bovinae-adult-female-bostaurustaurus-tamed", "cattle", false),
+        ("bovinae:bovinae-adult-male-bubalusbubalis-semitamed", "waterbuffalo", false),
+        ("bovinae:bovinae-baby-female-bostaurustaurus", "cattle", true),
+        ("tamablesfotsa:tame-bovinae-bovinae-adult-female-bosprimigeniusprimigenius", "cattle", false),
+        ("elephantidae:elephantidae-adult-female-mammuthusprimigenius", "mammoth", false),
+        ("elephantidae:elephantidae-adult-male-loxodontaafricana-tamed", "elephant", false),
+        ("elephantidae:elephantidae-adult-female-elephasmaximus-semitamed", "elephant", false),
+        ("elephantidae:elephantidae-baby-male-mammuthusprimigenius", "mammoth", true),
+        ("cervinae:cervidae-cervini-adult-female-megalocerosgiganteus", "giantdeer", false),
+        ("cervinae:cervidae-cervini-adult-male-megalocerosgiganteus-semitamed", "giantdeer", false),
+        ("cervinae:cervidae-cervini-baby-female-megalocerosgiganteus", "giantdeer", true),
     };
 
     ICoreServerAPI sapi = null!;
@@ -60,7 +74,7 @@ public class SelfTestOtherMods : ModSystem
             var missing = wanted.Where(w => !server.Contains(w) || !client.Contains(w)).ToArray();
             bool speciesOk = server.Length > 0 && type.Server!.BehaviorsAsJsonObj
                 .Where(b => b["code"].AsString()?.StartsWith("livestockwelfare.") == true)
-                .All(b => b["species"].AsString() is null || b["species"].AsString() == species);
+                .All(b => b["species"].AsString() == species || b["code"].AsString() is "livestockwelfare.mouth");
             bool configOk = config?.Species.ContainsKey(species) == true && config.Weather.Species.ContainsKey(species)
                 && config.Thirst.LitresPerFullDrink.ContainsKey(species);
 
