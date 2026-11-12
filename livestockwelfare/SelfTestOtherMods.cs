@@ -41,7 +41,33 @@ public class SelfTestOtherMods : ModSystem
         ("cervinae:cervidae-cervini-adult-female-megalocerosgiganteus", "giantdeer", false),
         ("cervinae:cervidae-cervini-adult-male-megalocerosgiganteus-semitamed", "giantdeer", false),
         ("cervinae:cervidae-cervini-baby-female-megalocerosgiganteus", "giantdeer", true),
+        ("caninae:caninae-canina-adult-female-canis-lupus", "wolf", false),
+        ("caninae:caninae-canina-adult-male-canis-aureus", "jackal", false),
+        ("caninae:caninae-canina-adult-female-canis-familiaris-semitamed", "wolf", false),
+        ("caninae:caninae-canina-baby-male-canis-lupus", "wolf", true),
+        ("caninae:caninae-vulpini-adult-female-vulpes-lagopus", "arcticfox", false),
+        ("caninae:caninae-vulpini-adult-male-vulpes-zerda", "desertfox", false),
+        ("caninae:caninae-vulpini-baby-female-vulpes-vulpes", "fox", true),
+        ("caninae:caninae-cerdocyonina-adult-female-chrysocyon-brachyurus", "smallcanid", false),
+        ("caninae:caninae-urocyonini-adult-male-urocyon-cinereoargenteus", "fox", false),
+        ("felinae:felinae-adult-female-lynxlynx", "lynx", false),
+        ("felinae:felinae-adult-male-caracalcaracal", "caracal", false),
+        ("felinae:felinae-baby-female-lynxlynx", "lynx", true),
+        ("pantherinae:pantherinae-panthera-adult-female-leo-normal", "bigcat", false),
+        ("pantherinae:pantherinae-panthera-adult-male-spelaea-normal", "cavelion", false),
+        ("pantherinae:pantherinae-panthera-baby-female-uncia-normal", "snowleopard", true),
+        ("pantherinae:pantherinae-neofelis-adult-female-nebulosa-normal", "cloudedleopard", false),
+        ("tamablesfotsa:tame-pantherinae-pantherinae-panthera-adult-female-leo-normal", "bigcat", false),
+        ("machairodontinae:machairodontinae-adult-female-smilodon-fatalis", "sabertooth", false),
+        ("machairodontinae:machairodontinae-baby-male-homotherium-serum", "sabertooth", true),
+        ("viverridae:viverridae-adult-female-genettagenetta", "civet", false),
+        ("viverridae:nandiniidae-baby-male-nandiniabinotata", "civet", true),
+        ("manidae:manidae-adult-female-gigantea", "pangolin", false),
+        ("manidae:manidae-baby-male-javanica", "pangolin", true),
     };
+
+    // Small animals that get the lighter set: no dirt and sickness (patches/othermods/fotsa-predators.json).
+    static readonly string[] LightSpecies = { "fox", "arcticfox", "desertfox", "smallcanid", "civet", "pangolin" };
 
     ICoreServerAPI sapi = null!;
 
@@ -69,6 +95,7 @@ public class SelfTestOtherMods : ModSystem
             string[] wanted = baby
                 ? new[] { "livestockwelfare.age", "livestockwelfare.hygiene", "livestockwelfare.shelter", "livestockwelfare.nursing" }
                 : new[] { "livestockwelfare.age", "livestockwelfare.hygiene", "livestockwelfare.shelter", "livestockwelfare.thirst" };
+            if (LightSpecies.Contains(species)) wanted = wanted.Where(w => w != "livestockwelfare.hygiene").ToArray();
             var server = type.Server?.BehaviorsAsJsonObj?.Select(b => b["code"].AsString()).ToArray() ?? Array.Empty<string>();
             var client = type.Client?.BehaviorsAsJsonObj?.Select(b => b["code"].AsString()).ToArray() ?? Array.Empty<string>();
             var missing = wanted.Where(w => !server.Contains(w) || !client.Contains(w)).ToArray();

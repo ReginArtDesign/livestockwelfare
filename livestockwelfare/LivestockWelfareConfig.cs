@@ -49,6 +49,23 @@ public class LivestockWelfareConfig
         ["elephant"] = new SpeciesAging { LifespanYearsMin = 10, LifespanYearsMax = 14 },
         ["mammoth"] = new SpeciesAging { LifespanYearsMin = 10, LifespanYearsMax = 14 },
         ["giantdeer"] = new SpeciesAging { LifespanYearsMin = 5, LifespanYearsMax = 7 },
+        // Fauna of the Stone Age predators and small mammals (patches/othermods/fotsa-predators.json),
+        // kept as pets with Tamables: FOTSA.
+        ["bigcat"] = new SpeciesAging { LifespanYearsMin = 6, LifespanYearsMax = 9 },
+        ["cavelion"] = new SpeciesAging { LifespanYearsMin = 6, LifespanYearsMax = 9 },
+        ["snowleopard"] = new SpeciesAging { LifespanYearsMin = 6, LifespanYearsMax = 9 },
+        ["cloudedleopard"] = new SpeciesAging { LifespanYearsMin = 5, LifespanYearsMax = 8 },
+        ["sabertooth"] = new SpeciesAging { LifespanYearsMin = 6, LifespanYearsMax = 9 },
+        ["lynx"] = new SpeciesAging { LifespanYearsMin = 5, LifespanYearsMax = 7 },
+        ["caracal"] = new SpeciesAging { LifespanYearsMin = 5, LifespanYearsMax = 7 },
+        ["wolf"] = new SpeciesAging { LifespanYearsMin = 5, LifespanYearsMax = 7 },
+        ["jackal"] = new SpeciesAging { LifespanYearsMin = 4, LifespanYearsMax = 6 },
+        ["smallcanid"] = new SpeciesAging { LifespanYearsMin = 4, LifespanYearsMax = 6 },
+        ["fox"] = new SpeciesAging { LifespanYearsMin = 3, LifespanYearsMax = 5 },
+        ["arcticfox"] = new SpeciesAging { LifespanYearsMin = 3, LifespanYearsMax = 5 },
+        ["desertfox"] = new SpeciesAging { LifespanYearsMin = 3, LifespanYearsMax = 5 },
+        ["civet"] = new SpeciesAging { LifespanYearsMin = 4, LifespanYearsMax = 6 },
+        ["pangolin"] = new SpeciesAging { LifespanYearsMin = 4, LifespanYearsMax = 6 },
     };
 
     public HygieneSettings Hygiene { get; set; } = new();
@@ -333,6 +350,23 @@ public class WeatherSettings
         ["elephant"] = new WeatherTolerance { ColdBelowC = 5, HotAboveC = 35 },
         ["mammoth"] = new WeatherTolerance { ColdBelowC = -30, HotAboveC = 18 },
         ["giantdeer"] = new WeatherTolerance { ColdBelowC = -15, HotAboveC = 24 },
+        // Cave lions, snow leopards, wolves and arctic foxes are made for the cold; civets,
+        // pangolins, desert foxes and caracals for the heat.
+        ["bigcat"] = new WeatherTolerance { ColdBelowC = 0, HotAboveC = 38 },
+        ["cavelion"] = new WeatherTolerance { ColdBelowC = -20, HotAboveC = 28 },
+        ["snowleopard"] = new WeatherTolerance { ColdBelowC = -25, HotAboveC = 22 },
+        ["cloudedleopard"] = new WeatherTolerance { ColdBelowC = 8, HotAboveC = 34 },
+        ["sabertooth"] = new WeatherTolerance { ColdBelowC = -10, HotAboveC = 32 },
+        ["lynx"] = new WeatherTolerance { ColdBelowC = -25, HotAboveC = 28 },
+        ["caracal"] = new WeatherTolerance { ColdBelowC = 2, HotAboveC = 40 },
+        ["wolf"] = new WeatherTolerance { ColdBelowC = -25, HotAboveC = 28 },
+        ["jackal"] = new WeatherTolerance { ColdBelowC = 0, HotAboveC = 38 },
+        ["smallcanid"] = new WeatherTolerance { ColdBelowC = 2, HotAboveC = 34 },
+        ["fox"] = new WeatherTolerance { ColdBelowC = -15, HotAboveC = 30 },
+        ["arcticfox"] = new WeatherTolerance { ColdBelowC = -40, HotAboveC = 18 },
+        ["desertfox"] = new WeatherTolerance { ColdBelowC = 5, HotAboveC = 42 },
+        ["civet"] = new WeatherTolerance { ColdBelowC = 10, HotAboveC = 34 },
+        ["pangolin"] = new WeatherTolerance { ColdBelowC = 12, HotAboveC = 34 },
     };
 
     public WeatherTolerance ToleranceFor(string species) =>
@@ -418,6 +452,21 @@ public class ThirstSettings
         ["elephant"] = 8,
         ["mammoth"] = 8,
         ["giantdeer"] = 2.5,
+        ["bigcat"] = 2.5,
+        ["cavelion"] = 2.5,
+        ["snowleopard"] = 1.5,
+        ["cloudedleopard"] = 1,
+        ["sabertooth"] = 3,
+        ["lynx"] = 0.7,
+        ["caracal"] = 0.5,
+        ["wolf"] = 1,
+        ["jackal"] = 0.5,
+        ["smallcanid"] = 0.5,
+        ["fox"] = 0.3,
+        ["arcticfox"] = 0.3,
+        ["desertfox"] = 0.3,
+        ["civet"] = 0.3,
+        ["pangolin"] = 0.3,
     };
 
     public double LitresFor(string species) =>
