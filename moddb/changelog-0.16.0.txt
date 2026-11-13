@@ -1,0 +1,17 @@
+Version 0.16.0 (beta)
+
+Note: Livestock Welfare is still in beta. Please back up your world before updating, and tell me if something goes wrong. New settings are added to your config file automatically; the values you changed are kept.
+
+Fauna of the Stone Age support (requested by a player)
+- If you play with the Fauna of the Stone Age mods, their animals now have welfare needs too: thirst, a roof for the night and bad weather, cleanliness and disease, old age, and nursing for the young. Without those mods nothing changes.
+- Bovinae, Elephantidae and Cervinae: aurochs and cattle, bison, buffaloes, antelopes, elephants, mammoths and the giant deer, wild, semi-tamed and tamed, with their calves.
+- A calf you raised by hand counts as your own animal once it grows up semi-tamed, even if it was born in the wild.
+- Caninae, Felinae, Pantherinae, Machairodontinae, Viverridae and Manidae, which you can keep with Tamables: FOTSA: wolves, jackals, lynxes, caracals, lions, tigers, cave lions, snow leopards, sabre-tooths and more.
+- Dinornithidae: moas and adzebills, plus kiwis, ducks, geese, rails and kakapos. Their chicks hatch from eggs, so like chicken chicks they neither suckle nor drink.
+- Smaller animals (foxes, civets, pangolins, kiwis, ducks, rails, kakapos...) get a lighter set without dirt and disease, since grooming them would just be annoying.
+- Each group has its own lifespan, the temperatures it copes with (a woolly mammoth or an arctic fox shrugs off the cold, a pangolin or a desert fox does not) and how much it drinks. You can change them in the config.
+- Sea turtles, the river dolphin and the tiniest birds are left out.
+
+Hay bale (requested by a player)
+- Craft a hay bale from four hay blocks and set it down in the pen. Sheep, goats and other grass eaters walk to it and eat from it like from a trough.
+- It holds four portions and gets smaller with each one. Broken, it gives back the hay that is left.
