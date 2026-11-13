@@ -64,10 +64,23 @@ public class SelfTestOtherMods : ModSystem
         ("viverridae:nandiniidae-baby-male-nandiniabinotata", "civet", true),
         ("manidae:manidae-adult-female-gigantea", "pangolin", false),
         ("manidae:manidae-baby-male-javanica", "pangolin", true),
+        ("dinornithidae:dinornithidae-adult-female-dinornisrobustus", "giantmoa", false),
+        ("dinornithidae:dinornithidae-baby-male-dinornisrobustus", "giantmoa", true),
+        ("dinornithidae:emeidae-adult-male-pachyorniselephantopus", "moa", false),
+        ("dinornithidae:megalapterygidae-baby-female-megalapteryxdidinus", "moa", true),
+        ("dinornithidae:aptornithidae-adult-female-aptornisdefossor", "adzebill", false),
+        ("dinornithidae:apterygidae-adult-male-apteryxhaastii", "kiwi", false),
+        ("dinornithidae:anatidae-adult-female-anasaucklandica", "duck", false),
+        ("dinornithidae:anatidae-adult-male-cnemiorniscalcitrans", "goose", false),
+        ("dinornithidae:rallidae-baby-female-porphyriohochstetteri", "rail", true),
+        ("dinornithidae:strigopidae-adult-female-strigopshabroptila", "kakapo", false),
+        ("tamablesfotsa:tame-dinornithidae-dinornithidae-adult-female-dinornisrobustus", "giantmoa", false),
     };
 
     // Small animals that get the lighter set: no dirt and sickness (patches/othermods/fotsa-predators.json).
-    static readonly string[] LightSpecies = { "fox", "arcticfox", "desertfox", "smallcanid", "civet", "pangolin" };
+    static readonly string[] LightSpecies = { "fox", "arcticfox", "desertfox", "smallcanid", "civet", "pangolin", "kiwi", "duck", "goose", "rail", "kakapo" };
+    // Birds hatch from eggs: their chicks have no mother to suckle from (patches/othermods/fotsa-birds.json).
+    static readonly string[] HatchedSpecies = { "giantmoa", "moa", "adzebill", "kiwi", "duck", "goose", "rail", "kakapo" };
 
     ICoreServerAPI sapi = null!;
 
@@ -96,6 +109,7 @@ public class SelfTestOtherMods : ModSystem
                 ? new[] { "livestockwelfare.age", "livestockwelfare.hygiene", "livestockwelfare.shelter", "livestockwelfare.nursing" }
                 : new[] { "livestockwelfare.age", "livestockwelfare.hygiene", "livestockwelfare.shelter", "livestockwelfare.thirst" };
             if (LightSpecies.Contains(species)) wanted = wanted.Where(w => w != "livestockwelfare.hygiene").ToArray();
+            if (HatchedSpecies.Contains(species)) wanted = wanted.Where(w => w != "livestockwelfare.nursing").ToArray();
             var server = type.Server?.BehaviorsAsJsonObj?.Select(b => b["code"].AsString()).ToArray() ?? Array.Empty<string>();
             var client = type.Client?.BehaviorsAsJsonObj?.Select(b => b["code"].AsString()).ToArray() ?? Array.Empty<string>();
             var missing = wanted.Where(w => !server.Contains(w) || !client.Contains(w)).ToArray();

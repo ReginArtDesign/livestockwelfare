@@ -66,6 +66,15 @@ public class LivestockWelfareConfig
         ["desertfox"] = new SpeciesAging { LifespanYearsMin = 3, LifespanYearsMax = 5 },
         ["civet"] = new SpeciesAging { LifespanYearsMin = 4, LifespanYearsMax = 6 },
         ["pangolin"] = new SpeciesAging { LifespanYearsMin = 4, LifespanYearsMax = 6 },
+        // Fauna of the Stone Age birds of New Zealand (patches/othermods/fotsa-birds.json).
+        ["giantmoa"] = new SpeciesAging { LifespanYearsMin = 6, LifespanYearsMax = 9 },
+        ["moa"] = new SpeciesAging { LifespanYearsMin = 5, LifespanYearsMax = 8 },
+        ["adzebill"] = new SpeciesAging { LifespanYearsMin = 4, LifespanYearsMax = 6 },
+        ["kiwi"] = new SpeciesAging { LifespanYearsMin = 4, LifespanYearsMax = 6 },
+        ["duck"] = new SpeciesAging { LifespanYearsMin = 2, LifespanYearsMax = 4 },
+        ["goose"] = new SpeciesAging { LifespanYearsMin = 3, LifespanYearsMax = 5 },
+        ["rail"] = new SpeciesAging { LifespanYearsMin = 3, LifespanYearsMax = 5 },
+        ["kakapo"] = new SpeciesAging { LifespanYearsMin = 6, LifespanYearsMax = 9 },
     };
 
     public HygieneSettings Hygiene { get; set; } = new();
@@ -367,6 +376,15 @@ public class WeatherSettings
         ["desertfox"] = new WeatherTolerance { ColdBelowC = 5, HotAboveC = 42 },
         ["civet"] = new WeatherTolerance { ColdBelowC = 10, HotAboveC = 34 },
         ["pangolin"] = new WeatherTolerance { ColdBelowC = 12, HotAboveC = 34 },
+        // New Zealand birds: mild climate; moas also lived in the mountains.
+        ["giantmoa"] = new WeatherTolerance { ColdBelowC = -8, HotAboveC = 28 },
+        ["moa"] = new WeatherTolerance { ColdBelowC = -8, HotAboveC = 28 },
+        ["adzebill"] = new WeatherTolerance { ColdBelowC = -4, HotAboveC = 28 },
+        ["kiwi"] = new WeatherTolerance { ColdBelowC = -2, HotAboveC = 26 },
+        ["duck"] = new WeatherTolerance { ColdBelowC = -10, HotAboveC = 30 },
+        ["goose"] = new WeatherTolerance { ColdBelowC = -10, HotAboveC = 28 },
+        ["rail"] = new WeatherTolerance { ColdBelowC = -2, HotAboveC = 28 },
+        ["kakapo"] = new WeatherTolerance { ColdBelowC = -4, HotAboveC = 26 },
     };
 
     public WeatherTolerance ToleranceFor(string species) =>
@@ -467,6 +485,14 @@ public class ThirstSettings
         ["desertfox"] = 0.3,
         ["civet"] = 0.3,
         ["pangolin"] = 0.3,
+        ["giantmoa"] = 1.5,
+        ["moa"] = 1,
+        ["adzebill"] = 0.5,
+        ["kiwi"] = 0.2,
+        ["duck"] = 0.15,
+        ["goose"] = 0.3,
+        ["rail"] = 0.15,
+        ["kakapo"] = 0.2,
     };
 
     public double LitresFor(string species) =>
