@@ -1,0 +1,18 @@
+Version 0.17.0 (beta)
+
+Note: Livestock Welfare is still in beta. Please back up your world before updating, and tell me if something goes wrong. New settings are added to your config file automatically; the values you changed are kept.
+
+Scattered grain
+- Four grains of one kind make a handful to scatter on the ground. Chickens and grain-eating Fauna of the Stone Age birds find it like a trough and peck it up portion by portion. Pigs leave it alone.
+- It thins out in four steps and is gone when eaten. A second handful on top makes eight portions. Left out in the rain, it spoils.
+- Chickens now peck with their own animation when they eat, at troughs too.
+
+Old animals look old
+- From the start of old age an animal's coat slowly greys and fades, in three steps, so you can tell your old animals apart at a glance.
+- It works for every species, other mods' animals included, and dirt still shows on top of the grey coat. You can switch it off in the config (OldAnimalsLookOld).
+
+Straw bedding
+- The straw bedding is now a thick, heaped layer with loose straws over the edges.
+
+Fixes
+- Feed or Fallow: pregnant animals and hens that cannot lay (for example when their nests are full of eggs) starved next to full troughs, because in the base game they don't go to eat. With Feed or Fallow installed, they now go to the trough once they haven't eaten for a day (Breeding.HungryEatAfterHours). Thanks for the report!
