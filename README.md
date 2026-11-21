@@ -105,6 +105,7 @@ Everything is in `ModConfig/livestockwelfare.json` (created on first start): lif
 
 ## Compatibility
 - Works next to Natural Fertilizer, Feed or Fallow, Better Husbandry and Hydrate or Diedrate. Petting with an empty hand also triggers Better Husbandry's petting.
+- With Feed or Fallow, pregnant females and hens that have nowhere to lay still go to the trough once they haven't eaten for a day (`Breeding.HungryEatAfterHours`). In the base game they skip it, and Feed or Fallow would let them starve.
 - Animals whose textures are changed by **genelib** (e.g. Detailed Animals) may not show the mud spots or the grey old coat. Flies and everything else still work.
 - **Feral Kinship Companions**: tamed sheep, goats, pigs, chickens and wolves get the same needs, and taming keeps their age, dirt and needs. The companion window opens with **K** (changeable in the controls) so an empty-hand right click pets; set `CompanionWindowOnRightClick` to true in `ModConfig/livestockwelfare-client.json` to keep it on right click. Hungarian translation for Feral Kinship Companions included.
 - **Wolf taming** and **Pet AI** dogs are covered (see Dogs); Wolf taming's dog backpack fits Feral Kinship's companion backpack slot.

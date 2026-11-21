@@ -161,6 +161,13 @@ public class BreedingSettings
     /// <summary>Blocks that count as clean bedding (wildcards allowed).</summary>
     public string[] BeddingBlockCodes { get; set; } = { "livestockwelfare:strawbedding-clean" };
 
+    /// <summary>
+    /// Only with Feed or Fallow installed: in vanilla a pregnant female, or a hen that has nowhere to
+    /// lay, never goes to the trough, and Feed or Fallow then lets her starve. After this many hours
+    /// without a meal she goes to eat anyway (Feed or Fallow starts hurting at 72). 0: off.
+    /// </summary>
+    public double HungryEatAfterHours { get; set; } = 24;
+
     // Pre-filled with the game's own values, so they are easy to change.
     public Dictionary<string, SpeciesBreeding> Species { get; set; } = new()
     {
@@ -176,6 +183,7 @@ public class BreedingSettings
         BeddingRadius = Math.Clamp(BeddingRadius, 2, 32);
         MatingSeconds = Math.Clamp(MatingSeconds, 1, 300);
         NewbornDays = Math.Clamp(NewbornDays, 0, 10);
+        HungryEatAfterHours = Math.Clamp(HungryEatAfterHours, 0, 1000);
         BeddingBlockCodes ??= Array.Empty<string>();
         Species ??= new();
         foreach (var breeding in Species.Values)

@@ -81,6 +81,7 @@ public class livestockwelfareModSystem : ModSystem
         api.Event.OnEntitySpawn += CarryOverFromBaby;
         DogHunting.Start(api);
         beddingPatches = LivestockBedding.Patch(Mod.Info.ModID + ".bedding");
+        if (api.ModLoader.IsModEnabled(FeedOrFallowCompat.ModId)) feedOrFallowPatches = FeedOrFallowCompat.Patch(Mod.Info.ModID + ".feedorfallow");
     }
 
     // Needed by AssetsFinalize (breeding settings) and StartServerSide; loaded by whichever runs first.
@@ -130,10 +131,12 @@ public class livestockwelfareModSystem : ModSystem
     }
 
     HarmonyLib.Harmony? beddingPatches;
+    HarmonyLib.Harmony? feedOrFallowPatches;
 
     public override void Dispose()
     {
         beddingPatches?.UnpatchAll(beddingPatches.Id);
+        feedOrFallowPatches?.UnpatchAll(feedOrFallowPatches.Id);
         Config = null;
         DogHunting.Clear();
         // The client texture atlas is rebuilt for every world, so cached positions become invalid.
