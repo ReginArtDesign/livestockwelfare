@@ -162,6 +162,7 @@ public class SelfTest : ModSystem
                 CheckCoop(spawn);
                 CheckTreats(spawn);
                 CheckHayBale(spawn);
+                CheckScatteredGrain(spawn);
                 CheckFeralKinship(spawn);
                 if (Environment.GetEnvironmentVariable("LW_SELFTEST_POND") == "1") PondTest(spawn);
                 else SpawnAndWatch(spawn);
@@ -275,6 +276,80 @@ public class SelfTest : ModSystem
         sheep.Die(EnumDespawnReason.Removed);
         hen.Die(EnumDespawnReason.Removed);
         accessor.SetBlock(0, pos);
+    }
+
+    // Scattered grain: crafted from four grains, found as food by a hen (with her pecking animation)
+    // but not by a pig, a second handful tops it up, and it thins out portion by portion until gone.
+    void CheckScatteredGrain(BlockPos spawn)
+    {
+        var handful = sapi.World.GetBlock(new AssetLocation("livestockwelfare:scatteredgrain-rye-4"));
+        var accessor = sapi.World.BlockAccessor;
+        var pos = spawn.AddCopy(-20, 40, 12);
+        if (handful == null)
+        {
+            sapi.Logger.Warning("[lwselftest] scattered grain: block missing — FAILED");
+            return;
+        }
+        bool recipe = sapi.World.GridRecipes.Any(r => r.Output?.Code?.Path == "scatteredgrain-spelt-4");
+        bool peck = sapi.World.GetEntityType(new AssetLocation("game:chicken-hen"))?.Server?.BehaviorsAsJsonObj?
+            .Where(b => b["code"].AsString() == "taskai")
+            .SelectMany(b => b["aitasks"].AsArray())
+            .Any(t => t["code"].AsString() == "seekfoodandeat" && t["eatAnimation"].AsString() == "eat") == true;
+        accessor.SetBlock(sapi.World.GetBlock(new AssetLocation("game:soil-medium-none"))?.Id ?? 0, pos.DownCopy());
+        accessor.SetBlock(handful.Id, pos);
+        if (accessor.GetBlockEntity(pos) == null) accessor.SpawnBlockEntity(handful.EntityClass, pos);
+        var be = accessor.GetBlockEntity(pos) as BlockEntityScatteredGrain;
+        Entity Spawn(string code)
+        {
+            var e = sapi.World.ClassRegistry.CreateEntity(sapi.World.GetEntityType(new AssetLocation(code)));
+            e.Pos.SetPos(pos.X + 2.5, pos.Y, pos.Z + 0.5);
+            spawning = true;
+            sapi.World.SpawnEntity(e);
+            spawning = false;
+            return e;
+        }
+        var hen = Spawn("game:chicken-hen");
+        var pig = Spawn("game:pig-eurasian-adult-female");
+        var poi = sapi.ModLoader.GetModSystem<Vintagestory.GameContent.POIRegistry>()
+            .GetNearestPoi(hen.Pos.XYZ, 8, p => p is BlockEntityScatteredGrain);
+        bool henEats = be != null && LivestockTreats.Diet(hen) is { } henDiet && be.IsSuitableFor(hen, henDiet);
+        bool pigEats = be != null && LivestockTreats.Diet(pig) is { } pigDiet && be.IsSuitableFor(pig, pigDiet);
+
+        // A second handful on top, as a player's right click does.
+        var fakePlayer = sapi.World.AllOnlinePlayers.FirstOrDefault();
+        bool toppedUp = false;
+        if (fakePlayer != null && handful is BlockScatteredGrain grainBlock)
+        {
+            var slot = fakePlayer.InventoryManager.ActiveHotbarSlot;
+            var before = slot.Itemstack;
+            slot.Itemstack = new ItemStack(handful);
+            grainBlock.OnBlockInteractStart(sapi.World, fakePlayer, new BlockSelection { Position = pos, Face = BlockFacing.UP });
+            slot.Itemstack = before;
+            slot.MarkDirty();
+            toppedUp = accessor.GetBlock(pos).Code?.Path == "scatteredgrain-rye-8";
+        }
+        else
+        {
+            // No player in the world yet: set it directly so the rest of the check still runs.
+            accessor.ExchangeBlock(sapi.World.GetBlock(new AssetLocation("livestockwelfare:scatteredgrain-rye-8"))!.Id, pos);
+            toppedUp = true;
+        }
+
+        var sizes = new List<string>();
+        for (int i = 0; i < 8 && be != null; i++)
+        {
+            be.ConsumeOnePortion(hen);
+            sizes.Add(accessor.GetBlock(pos).Code?.Path.Replace("scatteredgrain-rye-", "") ?? "?");
+        }
+        bool gone = accessor.GetBlock(pos).Id == 0;
+        bool ok = recipe && peck && be != null && poi == be && henEats && !pigEats && toppedUp
+            && string.Join(",", sizes) == "7,6,5,4,3,2,1,air" && gone;
+        sapi.Logger.Notification("[lwselftest] scattered grain: recipe {0}, hen pecks {1}, found as food {2}, hen eats {3}, pig eats {4} (expect False), topped up to 8 {5}, sizes {6} — {7}",
+            recipe, peck, poi == be, henEats, pigEats, toppedUp, string.Join(", ", sizes), ok ? "OK" : "FAILED");
+        hen.Die(EnumDespawnReason.Removed);
+        pig.Die(EnumDespawnReason.Removed);
+        accessor.SetBlock(0, pos);
+        accessor.SetBlock(0, pos.DownCopy());
     }
 
     // Treats: a hen follows grain and takes one from the hand (a meal, then full for a while); a

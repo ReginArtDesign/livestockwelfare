@@ -99,6 +99,8 @@ public class LivestockWelfareConfig
 
     public BreedingSettings Breeding { get; set; } = new();
 
+    public ScatteredGrainSettings ScatteredGrain { get; set; } = new();
+
     public void Sanitize()
     {
         if (OldAgeFraction is < 0.1 or > 1) OldAgeFraction = 0.75;
@@ -119,6 +121,8 @@ public class LivestockWelfareConfig
         Treats.Sanitize();
         Breeding ??= new();
         Breeding.Sanitize();
+        ScatteredGrain ??= new();
+        ScatteredGrain.Sanitize();
     }
 }
 

@@ -85,5 +85,9 @@
 	"block-strawbedding-soiled": "Elhasznált szalmaalom",
 	"block-haybale-*": "Szénabála",
 	"blockdesc-haybale-*": "Tedd le a karámban: a juhok, kecskék és más füvet evő állatok odamennek, és esznek belőle, mint egy vályúból. Négy adag van benne, és minden adaggal kisebb lesz. Ha lebontod, visszakapod a maradék szénát.",
+	"block-scatteredgrain-*": "Szórt mag",
+	"blockdesc-scatteredgrain-*": "Egy marék gabona, amit a földre szórhatsz: a tyúkok és más magevő madarak odamennek, és adagonként felcsipegetik, mint egy vályúból. A disznók nem nyúlnak hozzá. Egy marék négy adag, egy második marékkal rászórva nyolc. Esőben elázik és megromlik, ezért tető alá tedd.",
+	"scatteredgrain-portions": "Maradék adag: {0}",
+	"scatteredgrain-soaked": "Elázott az esőben: hamarosan megromlik",
 	"needs-bedding": "Párzásra kész, de tiszta szalmaalom kell neki tető alatt"
 }

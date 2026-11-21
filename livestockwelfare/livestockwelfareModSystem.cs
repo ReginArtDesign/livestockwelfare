@@ -27,6 +27,8 @@ public class livestockwelfareModSystem : ModSystem
         api.RegisterItemClass(ItemChickenCoop.ClassName, typeof(ItemChickenCoop));
         api.RegisterBlockEntityClass(BlockEntityDogBowl.ClassName, typeof(BlockEntityDogBowl));
         api.RegisterBlockEntityClass(BlockEntityHayBale.ClassName, typeof(BlockEntityHayBale));
+        api.RegisterBlockClass(BlockScatteredGrain.ClassName, typeof(BlockScatteredGrain));
+        api.RegisterBlockEntityClass(BlockEntityScatteredGrain.ClassName, typeof(BlockEntityScatteredGrain));
         // Added to livestock in code (see the thirst and shelter behaviors), not through JSON.
         AiTaskRegistry.Register<AiTaskLivestockSeekWater>(AiTaskLivestockSeekWater.Code);
         AiTaskRegistry.Register<AiTaskLivestockSeekShelter>(AiTaskLivestockSeekShelter.Code);
@@ -50,6 +52,7 @@ public class livestockwelfareModSystem : ModSystem
         if (api is ICoreServerAPI sapi)
         {
             MoveHygieneBeforeHealth(api);
+            api.Logger.Notification("[livestockwelfare] Pecking animation added to {0} chicken eating tasks", BlockEntityScatteredGrain.AddPeckAnimation(api));
             LivestockBreeding.Apply(api, LoadConfig(sapi).Breeding);
         }
     }

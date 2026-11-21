@@ -1,0 +1,12 @@
+[
+	{
+		// Four grains of one kind make a handful to scatter: four portions for the birds.
+		ingredientPattern: "GG,GG",
+		ingredients: {
+			"G": { type: "item", code: "game:grain-*", name: "type" }
+		},
+		width: 2,
+		height: 2,
+		output: { type: "block", code: "scatteredgrain-{type}-4" }
+	}
+]
