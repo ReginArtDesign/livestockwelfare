@@ -417,32 +417,46 @@ public class SelfTest : ModSystem
         foreach (var pos in changed) accessor.SetBlock(0, pos);
     }
 
-    // Paints a few vanilla textures with every mud stage and saves them as PNG into the folder in
-    // LW_SELFTEST_OUT, to check how the dirty coats look without starting a client.
+    // Paints a few vanilla textures with every mud stage and every old-age stage (and an old, dirty
+    // coat) and saves them as PNG into the folder in LW_SELFTEST_OUT, to check how the coats look
+    // without starting a client: name-<mud>.png, name-old<age>.png and name-old3-2.png.
     void ExportDirtPreviews()
     {
         string? outDir = Environment.GetEnvironmentVariable("LW_SELFTEST_OUT");
         if (string.IsNullOrEmpty(outDir)) return;
 
         foreach (string path in new[] {
-            "textures/entity/animal/mammal/hooved/sheep/bighorn/female.png",
+            "textures/entity/animal/mammal/hooved/sheep/bighorn-female.png",
             "textures/entity/animal/mammal/hooved/goat/mountain-adult.png",
-            "textures/entity/animal/mammal/hooved/pig/eurasian-female1.png",
-            "textures/entity/animal/bird/chicken/hen1.png" })
+            "textures/entity/animal/mammal/hooved/pig/eurasian-adult.png",
+            "textures/entity/animal/bird/chicken/hen1.png",
+            "textures/entity/animal/mammal/wolf/eurasian-adult1.png" })
         {
             var asset = sapi.Assets.TryGet(new AssetLocation("game", path));
             if (asset == null) { sapi.Logger.Warning("[lwselftest] preview texture {0} not found", path); continue; }
 
             var source = new BitmapExternal(asset.Data, asset.Data.Length, sapi.Logger);
             string name = System.IO.Path.GetFileNameWithoutExtension(path);
-            for (int stage = 0; stage <= DirtTextures.Stages; stage++)
+            void Export(int stage, int ageStage, string suffix)
             {
-                using var bmp = DirtTextures.PaintBitmap(source, stage);
+                using var bmp = DirtTextures.PaintBitmap(source, stage, ageStage);
                 using var data = SkiaSharp.SKImage.FromBitmap(bmp).Encode(SkiaSharp.SKEncodedImageFormat.Png, 100);
-                System.IO.File.WriteAllBytes(System.IO.Path.Combine(outDir, $"{name}-{stage}.png"), data.ToArray());
+                System.IO.File.WriteAllBytes(System.IO.Path.Combine(outDir, $"{name}-{suffix}.png"), data.ToArray());
             }
-            sapi.Logger.Notification("[lwselftest] exported dirt previews for {0}", name);
+            for (int stage = 0; stage <= DirtTextures.Stages; stage++) Export(stage, 0, stage.ToString());
+            for (int ageStage = 1; ageStage <= DirtTextures.AgeStages; ageStage++) Export(0, ageStage, "old" + ageStage);
+            Export(2, DirtTextures.AgeStages, "old3-2");
+            sapi.Logger.Notification("[lwselftest] exported dirt and old-age previews for {0}", name);
         }
+
+        // The greying steps follow the start of old age: none before it, the last one before death.
+        bool stagesOk = EntityBehaviorLivestockAge.AgeLookStage(0.74, 0.75) == 0
+            && EntityBehaviorLivestockAge.AgeLookStage(0.75, 0.75) == 1
+            && EntityBehaviorLivestockAge.AgeLookStage(0.85, 0.75) == 2
+            && EntityBehaviorLivestockAge.AgeLookStage(0.95, 0.75) == 3
+            && EntityBehaviorLivestockAge.AgeLookStage(1.2, 0.75) == 3
+            && EntityBehaviorLivestockAge.AgeLookStage(1, 1) == 1;
+        sapi.Logger.Notification("[lwselftest] old-age look stages — {0}", stagesOk ? "OK" : "FAILED");
     }
 
     // Loads the schematic in LW_SELFTEST_SCHEMATIC and reports block codes the game doesn't know.

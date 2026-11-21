@@ -20,6 +20,8 @@ public class EntityBehaviorLivestockAge : EntityBehavior
     const string BirthAttr = "lwBirthTotalDays";
     const string LifespanAttr = "lwLifespanYears";
     const string OldAttr = "lwOld";
+    /// <summary>How grey the coat looks from old age, 0 (not old) to 3; synced to the client.</summary>
+    public const string AgeLookAttr = "lwAgeLook";
     // Set by vanilla EntityBehaviorGrow when a baby becomes an adult. Careful: vanilla
     // EntityBehaviorAntlerGrowth (sheep, goats, pigs...) also sets it on every new adult, to a random
     // day up to 900 days in the past, so it only means "grown up" together with the marker below.
@@ -149,7 +151,22 @@ public class EntityBehaviorLivestockAge : EntityBehavior
         bool old = ageYears >= lifespanYears * config.OldAgeFraction;
         if (old != IsOld) entity.WatchedAttributes.SetBool(OldAttr, old);
 
+        int look = config.OldAnimalsLookOld ? AgeLookStage(ageYears / lifespanYears, config.OldAgeFraction) : 0;
+        if (look != entity.WatchedAttributes.GetInt(AgeLookAttr)) entity.WatchedAttributes.SetInt(AgeLookAttr, look);
+
         if (old && config.OldAnimalsInfertile) LivestockUtil.BlockBreeding(entity);
+    }
+
+    /// <summary>
+    /// The coat starts greying when the animal becomes old and gets greyer twice more before the end
+    /// of its life: with old age from 75%, at 75%, 83% and 92% of the lifespan.
+    /// </summary>
+    public static int AgeLookStage(double lifeFraction, double oldAgeFraction)
+    {
+        if (lifeFraction < oldAgeFraction) return 0;
+        double step = (1 - oldAgeFraction) / DirtTextures.AgeStages;
+        int stage = 1 + (step > 0 ? (int)((lifeFraction - oldAgeFraction) / step) : 0);
+        return Math.Min(stage, DirtTextures.AgeStages);
     }
 
     const string LastAgingTickAttr = "lwAgingLastDays";

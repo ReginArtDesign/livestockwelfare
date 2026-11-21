@@ -17,6 +17,12 @@ public class LivestockWelfareConfig
     /// <summary>Old females can no longer get pregnant.</summary>
     public bool OldAnimalsInfertile { get; set; } = true;
 
+    /// <summary>
+    /// Old animals look old: their coat turns grey and faded in 3 steps, from the start of old age
+    /// to the end of their life.
+    /// </summary>
+    public bool OldAnimalsLookOld { get; set; } = true;
+
     /// <summary>Animals die when they reach the end of their lifespan.</summary>
     public bool DieOfOldAge { get; set; } = true;
 

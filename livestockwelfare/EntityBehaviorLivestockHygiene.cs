@@ -58,11 +58,19 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
         if (entity.World.Side == EnumAppSide.Client)
         {
             shownDirtStage = DirtStage;
+            shownAgeStage = AgeStage;
             // Re-render with a dirtier or cleaner coat when the synced filth crosses a stage.
             entity.WatchedAttributes.RegisterModifiedListener(FilthAttr, () =>
             {
                 if (DirtStage == shownDirtStage) return;
                 shownDirtStage = DirtStage;
+                entity.MarkShapeModified();
+            });
+            // And with a greyer coat when the animal reaches the next stage of old age.
+            entity.WatchedAttributes.RegisterModifiedListener(EntityBehaviorLivestockAge.AgeLookAttr, () =>
+            {
+                if (AgeStage == shownAgeStage) return;
+                shownAgeStage = AgeStage;
                 entity.MarkShapeModified();
             });
         }
@@ -101,6 +109,10 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
     // Filth at which the coat shows mud stage 1, 2 and 3.
     static readonly float[] DirtStageThresholds = { 0.33f, 0.66f, 0.9f };
     int shownDirtStage;
+    int shownAgeStage;
+
+    // How grey the coat is from old age (0..3), set by EntityBehaviorLivestockAge on the server.
+    int AgeStage => Math.Clamp(entity.WatchedAttributes.GetInt(EntityBehaviorLivestockAge.AgeLookAttr), 0, DirtTextures.AgeStages);
 
     int DirtStage
     {
@@ -113,12 +125,12 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
         }
     }
 
-    // Client side: swap the coat textures for muddy copies (see DirtTextures). Animals whose
-    // textures another mod already replaces (e.g. genelib) keep that mod's look.
+    // Client side: swap the coat textures for muddy and/or grey old copies (see DirtTextures).
+    // Animals whose textures another mod already replaces (e.g. genelib) keep that mod's look.
     public override ITexPositionSource? GetTextureSource(ref EnumHandling handling)
     {
-        int stage = DirtStage;
-        if (stage == 0 || entity.Api is not ICoreClientAPI capi) return null;
+        int stage = DirtStage, ageStage = AgeStage;
+        if ((stage == 0 && ageStage == 0) || entity.Api is not ICoreClientAPI capi) return null;
 
         var textures = entity.Properties.Client?.Textures;
         if (textures == null || textures.Count == 0) return null;
@@ -131,7 +143,7 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
             if (baked?.BakedName == null) continue;
             // Same alternate selection as the vanilla tesselator.
             if (baked.BakedVariants is { Length: > 1 } variants) baked = variants[textureIndex % variants.Length];
-            subIds[code] = DirtTextures.GetSubId(capi, baked.BakedName, stage);
+            subIds[code] = DirtTextures.GetSubId(capi, baked.BakedName, stage, ageStage);
         }
 
         var fallback = capi.Tesselator.GetTextureSource(entity, null, textureIndex);

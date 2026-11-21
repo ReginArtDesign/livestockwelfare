@@ -8,13 +8,14 @@ using Vintagestory.API.MathTools;
 namespace livestockwelfare;
 
 /// <summary>
-/// Client side: builds "dirty" copies of entity textures by painting mud spots onto them, and
-/// inserts them into the entity texture atlas. Generated in code because vanilla texture overlays
+/// Client side: builds "dirty" and "old" copies of entity textures by greying the coat and painting
+/// mud spots onto it, and inserts them into the entity texture atlas. Generated in code because vanilla texture overlays
 /// must be exactly as large as the base texture, and livestock textures come in many sizes.
 /// </summary>
 public static class DirtTextures
 {
     public const int Stages = 3;
+    public const int AgeStages = 3;
 
     // How much of the coat is covered with mud at each stage (index = stage).
     static readonly float[] Coverage = { 0, 0.18f, 0.35f, 0.55f };
@@ -24,18 +25,30 @@ public static class DirtTextures
     // Spot size in texture pixels.
     const float SpotSize = 3.5f;
 
-    static readonly Dictionary<(AssetLocation, int), int> subIds = new();
+    // Old age (index = age stage): how much colour the coat loses, how much it fades toward
+    // light grey, and the share of single grey hairs.
+    static readonly float[] AgeDesaturate = { 0, 0.30f, 0.50f, 0.70f };
+    static readonly float[] AgeFade = { 0, 0.15f, 0.28f, 0.40f };
+    static readonly float[] AgeGreyHairs = { 0, 0.12f, 0.25f, 0.40f };
+    static readonly SKColor Grey = new(205, 200, 192);
+    // Many faint hairs rather than few strong ones: on a black coat strong ones look like dots.
+    const float GreyHairOpacity = 0.2f;
 
-    /// <summary>Atlas sub id of the given texture with mud of the given stage (1..Stages).</summary>
-    public static int GetSubId(ICoreClientAPI capi, AssetLocation bakedName, int stage)
+    static readonly Dictionary<(AssetLocation, int, int), int> subIds = new();
+
+    /// <summary>
+    /// Atlas sub id of the given texture with mud of the given stage (0..Stages) on a coat greyed
+    /// by the given age stage (0..AgeStages).
+    /// </summary>
+    public static int GetSubId(ICoreClientAPI capi, AssetLocation bakedName, int stage, int ageStage)
     {
-        if (subIds.TryGetValue((bakedName, stage), out int cached)) return cached;
+        if (subIds.TryGetValue((bakedName, stage, ageStage), out int cached)) return cached;
 
-        var key = new AssetLocation(LivestockUtil.Domain, "dirty/" + Sanitize(bakedName.ToString()) + "-" + stage);
+        var key = new AssetLocation(LivestockUtil.Domain, "dirty/" + Sanitize(bakedName.ToString()) + "-" + stage + "-old" + ageStage);
         var atlas = capi.EntityTextureAtlas;
         atlas.GetOrInsertTexture(new AssetLocationAndSource(key), out int subId, out _,
-            () => Paint(atlas.LoadCompositeBitmap(new AssetLocationAndSource(bakedName)), stage));
-        subIds[(bakedName, stage)] = subId;
+            () => Paint(atlas.LoadCompositeBitmap(new AssetLocationAndSource(bakedName)), stage, ageStage));
+        subIds[(bakedName, stage, ageStage)] = subId;
         return subId;
     }
 
@@ -54,12 +67,12 @@ public static class DirtTextures
     }
 
     // A texture that fails to load must never crash the client: then the coat simply stays clean.
-    static IBitmap Paint(IBitmap? source, int stage)
+    static IBitmap Paint(IBitmap? source, int stage, int ageStage)
     {
         if (source == null || source.Width <= 0 || source.Height <= 0) return source ?? new BitmapExternal(1, 1);
         try
         {
-            return new BitmapExternal(PaintBitmap(source, stage));
+            return new BitmapExternal(PaintBitmap(source, stage, ageStage));
         }
         catch (Exception)
         {
@@ -67,18 +80,21 @@ public static class DirtTextures
         }
     }
 
-    /// <summary>The muddy copy of a texture; internal so the self-test can export previews.</summary>
-    internal static SKBitmap PaintBitmap(IBitmap source, int stage)
+    /// <summary>The old and/or muddy copy of a texture; internal so the self-test can export previews.</summary>
+    internal static SKBitmap PaintBitmap(IBitmap source, int stage, int ageStage = 0)
     {
         int width = source.Width, height = source.Height;
         var result = new SKBitmap(width, height, SKColorType.Bgra8888, SKAlphaType.Unpremul);
         float coverage = Coverage[Math.Clamp(stage, 0, Stages)];
+        ageStage = Math.Clamp(ageStage, 0, AgeStages);
 
         for (int y = 0; y < height; y++)
         {
             for (int x = 0; x < width; x++)
             {
                 SKColor color = source.GetPixel(x, y);
+                // Old age first, so the mud lies on top of the grey coat.
+                if (ageStage > 0 && color.Alpha > 0) color = Age(color, x, y, ageStage);
                 // Patchy mud: spots where the noise is low, with soft, uneven strength.
                 float n = Noise(x / SpotSize, y / SpotSize);
                 if (color.Alpha > 0 && n < coverage)
@@ -94,6 +110,35 @@ public static class DirtTextures
             }
         }
         return result;
+    }
+
+    // Faded, greyer coat with single grey hairs. The hairs come from a per-pixel hash, so a later
+    // stage keeps the hairs of the earlier ones and every animal with the same texture looks alike.
+    static SKColor Age(SKColor color, int x, int y, int ageStage)
+    {
+        float luminance = 0.299f * color.Red + 0.587f * color.Green + 0.114f * color.Blue;
+        luminance += (Grey.Red - luminance) * AgeFade[ageStage];
+        // Slightly warm grey, like grey hair rather than ash.
+        var grey = new SKColor(
+            (byte)Math.Clamp(luminance * 1.02f, 0, 255),
+            (byte)Math.Clamp(luminance, 0, 255),
+            (byte)Math.Clamp(luminance * 0.97f, 0, 255));
+        float desaturate = AgeDesaturate[ageStage];
+        color = new SKColor(
+            Lerp(color.Red, grey.Red, desaturate),
+            Lerp(color.Green, grey.Green, desaturate),
+            Lerp(color.Blue, grey.Blue, desaturate),
+            color.Alpha);
+
+        if (Hash(x + 101, y + 7) < AgeGreyHairs[ageStage])
+        {
+            color = new SKColor(
+                Lerp(color.Red, Grey.Red, GreyHairOpacity),
+                Lerp(color.Green, Grey.Green, GreyHairOpacity),
+                Lerp(color.Blue, Grey.Blue, GreyHairOpacity),
+                color.Alpha);
+        }
+        return color;
     }
 
     static byte Lerp(byte from, byte to, float t) => (byte)Math.Clamp(from + (to - from) * t, 0, 255);

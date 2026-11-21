@@ -12,6 +12,7 @@ A Vintage Story mod that deepens animal husbandry: your livestock age, get dirty
 - Every animal has an age and its own lifespan: chickens 2–3 years, pigs 3–4, sheep 3–5, goats 4–6 (in-game years).
 - Lambs and chicks start at age 0 when they grow up. Wild and existing animals get a random adult age.
 - From 75% of its lifespan an animal is **old** and can no longer breed.
+- Old animals **look old**: their coat greys and fades in 3 steps until the end of their life, so you can spot them at a glance. Works with any texture, other mods' animals too (switch: `OldAnimalsLookOld`).
 - At the end of its lifespan it **dies of old age**. The carcass then gives only **40% of the usual drops**, so it pays to cull old animals in time.
 
 ### Dirt, muck and disease
@@ -104,7 +105,7 @@ Everything is in `ModConfig/livestockwelfare.json` (created on first start): lif
 
 ## Compatibility
 - Works next to Natural Fertilizer, Feed or Fallow, Better Husbandry and Hydrate or Diedrate. Petting with an empty hand also triggers Better Husbandry's petting.
-- Animals whose textures are changed by **genelib** (e.g. Detailed Animals) may not show the mud spots. Flies and everything else still work.
+- Animals whose textures are changed by **genelib** (e.g. Detailed Animals) may not show the mud spots or the grey old coat. Flies and everything else still work.
 - **Feral Kinship Companions**: tamed sheep, goats, pigs, chickens and wolves get the same needs, and taming keeps their age, dirt and needs. The companion window opens with **K** (changeable in the controls) so an empty-hand right click pets; set `CompanionWindowOnRightClick` to true in `ModConfig/livestockwelfare-client.json` to keep it on right click. Hungarian translation for Feral Kinship Companions included.
 - **Wolf taming** and **Pet AI** dogs are covered (see Dogs); Wolf taming's dog backpack fits Feral Kinship's companion backpack slot.
 - Teapot's Giant Boar, Great Bighorn and Giant Redriver are covered.
