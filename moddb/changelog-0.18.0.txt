@@ -1,0 +1,19 @@
+Version 0.18.0 (beta)
+
+Note: Livestock Welfare is still in beta. Please back up your world before updating, and tell me if something goes wrong. New settings are added to your config file automatically; the values you changed are kept.
+
+Traditional Livestock support
+- Its cows, domestic pigs and sheep, adults and young, get the same needs as the vanilla animals. Cows have their own settings; pigs and sheep share the vanilla ones.
+- The black and brown cows and sheep get hand-painted old coats: the muzzle, the spine and the legs grey first, with scattered grey hairs elsewhere.
+
+Predators eat carcasses
+- Kept meat eaters (raised wolves, Wolf taming and Feral Kinship dogs, Fauna of the Stone Age canines) walk to a skinned carcass and eat from it like from a trough: a vanilla carcass with something left in it, or a skinned or bled-out Butchering body put down on the ground. Rotten bodies are left alone.
+- A carcass gives 1 to 6 meals depending on its size, then a bone carcass of the same size is left in its place.
+- A kept predator that has gone 12 in-game hours without a meal goes to eat even if vanilla says it is full (Carcasses.HungryAfterHours). Settings are in the "Carcasses" section of the config.
+
+Hand feeding
+- Raw meat and fish can now be fed by hand to meat-eating babies.
+- Holding the button after a feeding keeps feeding, and no longer opens Pet AI's command window on a tamed kitten or pup.
+
+Dogs
+- Dog poop has its own brown look instead of the grey muck one.
