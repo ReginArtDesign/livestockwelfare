@@ -60,7 +60,17 @@ public class CollectibleBehaviorHandFeed : CollectibleBehavior
 
     public override void OnHeldInteractStart(ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel, bool firstEvent, ref EnumHandHandling handHandling, ref EnumHandling handling)
     {
-        if (!firstEvent) return;
+        if (!firstEvent)
+        {
+            // The right button still held after a feeding: without this the click falls through to
+            // the animal, and Pet AI opens its command window for a tamed one.
+            if (byEntity.Controls.ShiftKey && (Target(slot, byEntity, entitySel) != null || Refusal(slot, entitySel) != null))
+            {
+                handHandling = EnumHandHandling.PreventDefaultAction;
+                handling = EnumHandling.PreventSubsequent;
+            }
+            return;
+        }
         if (Target(slot, byEntity, entitySel) == null)
         {
             // Food it would eat, but not now: say why, instead of the player eating it.

@@ -46,7 +46,10 @@ public class livestockwelfareModSystem : ModSystem
     {
         foreach (var collectible in api.World.Collectibles)
         {
-            if (collectible?.Code == null || (collectible.NutritionProps == null && collectible is not BlockLiquidContainerBase)) continue;
+            // Raw meat and fish have no nutrition of their own (people can't eat them), only food
+            // tags; animals that eat meat can still be fed them by hand.
+            bool food = collectible?.NutritionProps != null || collectible?.Attributes?["foodTags"].Exists == true;
+            if (collectible?.Code == null || (!food && collectible is not BlockLiquidContainerBase)) continue;
             collectible.CollectibleBehaviors = collectible.CollectibleBehaviors.Append(new CollectibleBehaviorHandFeed(collectible));
         }
         if (api is ICoreServerAPI sapi)
