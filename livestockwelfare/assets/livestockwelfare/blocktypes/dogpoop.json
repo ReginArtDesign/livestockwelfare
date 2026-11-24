@@ -9,7 +9,7 @@
 	drawtype: "JSON",
 	shape: { base: "block/dogpoop/dogpoop", alternates: [{ base: "block/dogpoop/dogpoop", rotateY: 90 }, { base: "block/dogpoop/dogpoop", rotateY: 180 }, { base: "block/dogpoop/dogpoop", rotateY: 270 }] },
 	textures: {
-		all: { base: "block/muck" }
+		all: { base: "block/dogpoop" }
 	},
 	resistance: 0.2,
 	lightabsorption: 0,

@@ -5,7 +5,7 @@
 	"textureWidth": 16,
 	"textureHeight": 16,
 	"textures": {
-		"all": "livestockwelfare:block/muck"
+		"all": "livestockwelfare:block/dogpoop"
 	},
 	"elements": [
 		{
