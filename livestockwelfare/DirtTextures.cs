@@ -44,16 +44,82 @@ public static class DirtTextures
     {
         if (subIds.TryGetValue((bakedName, stage, ageStage), out int cached)) return cached;
 
-        var key = new AssetLocation(LivestockUtil.Domain, "dirty/" + Sanitize(bakedName.ToString()) + "-" + stage + "-old" + ageStage);
+        var key = AtlasKey(bakedName, stage, ageStage);
         var atlas = capi.EntityTextureAtlas;
         atlas.GetOrInsertTexture(new AssetLocationAndSource(key), out int subId, out _,
-            () => Paint(atlas.LoadCompositeBitmap(new AssetLocationAndSource(bakedName)), stage, ageStage));
+            () => PaintedOld(capi, bakedName, ageStage) is { } painted
+                ? Paint(painted, stage, 0)
+                : Paint(atlas.LoadCompositeBitmap(new AssetLocationAndSource(bakedName)), stage, ageStage));
         subIds[(bakedName, stage, ageStage)] = subId;
         return subId;
     }
 
+    /// <summary>
+    /// Where a hand-painted old coat for a texture goes: the texture's own path under
+    /// livestockwelfare:textures/old/&lt;its mod&gt;/, with "-old1".."-old3" before ".png". For
+    /// tradlivestock:textures/entity/land/cow/black-adult.png, stage 2 is
+    /// livestockwelfare:textures/old/tradlivestock/entity/land/cow/black-adult-old2.png.
+    /// </summary>
+    public static AssetLocation PaintedOldLocation(AssetLocation bakedName, int ageStage)
+    {
+        string path = bakedName.Path;
+        if (path.StartsWith("textures/")) path = path["textures/".Length..];
+        if (path.EndsWith(".png")) path = path[..^4];
+        return new AssetLocation(LivestockUtil.Domain, $"textures/old/{bakedName.Domain}/{path}-old{ageStage}.png");
+    }
+
+    // A hand-painted old coat, if there is one for this texture and stage (same size as the
+    // original); otherwise the coat is greyed in code. Mud is still painted on top.
+    static IBitmap? PaintedOld(ICoreClientAPI capi, AssetLocation bakedName, int ageStage)
+    {
+        if (ageStage <= 0 || bakedName.Path.Contains("++")) return null;
+        try
+        {
+            var asset = capi.Assets.TryGet(PaintedOldLocation(bakedName, ageStage));
+            if (asset == null) return null;
+            var painted = new BitmapExternal(asset.Data, asset.Data.Length, capi.Logger);
+            var original = capi.EntityTextureAtlas.LoadCompositeBitmap(new AssetLocationAndSource(bakedName));
+            if (original != null && (painted.Width != original.Width || painted.Height != original.Height))
+            {
+                capi.Logger.Warning("[livestockwelfare] Painted old texture {0} is {1}x{2}, but {3} is {4}x{5}; greying in code instead.",
+                    asset.Location, painted.Width, painted.Height, bakedName, original.Width, original.Height);
+                return null;
+            }
+            return painted;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Reads the hand-painted old coats from disk again and drops the cached old coats, so loaded
+    /// animals show the new paint at once (for painting without restarting the game).
+    /// Returns how many painted files were found.
+    /// </summary>
+    public static int ReloadPainted(ICoreClientAPI capi)
+    {
+        int found = capi.Assets.Reload(new AssetLocation(LivestockUtil.Domain, "textures/old/"));
+        foreach (var key in new List<(AssetLocation, int, int)>(subIds.Keys))
+        {
+            if (key.Item3 == 0) continue;
+            var (bakedName, stage, ageStage) = key;
+            capi.EntityTextureAtlas.FreeTextureSpace(new AssetLocationAndSource(AtlasKey(bakedName, stage, ageStage)));
+            subIds.Remove(key);
+        }
+        foreach (var e in capi.World.LoadedEntities.Values)
+        {
+            if (e.HasBehavior<EntityBehaviorLivestockHygiene>()) e.MarkShapeModified();
+        }
+        return found;
+    }
+
     /// <summary>Forget cached textures, e.g. when leaving a world (the atlas is rebuilt then).</summary>
     public static void Clear() => subIds.Clear();
+
+    static AssetLocation AtlasKey(AssetLocation bakedName, int stage, int ageStage) =>
+        new(LivestockUtil.Domain, "dirty/" + Sanitize(bakedName.ToString()) + "-" + stage + "-old" + ageStage);
 
     static string Sanitize(string name)
     {

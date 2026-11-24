@@ -501,17 +501,25 @@ public class SelfTest : ModSystem
         if (string.IsNullOrEmpty(outDir)) return;
 
         foreach (string path in new[] {
-            "textures/entity/animal/mammal/hooved/sheep/bighorn-female.png",
-            "textures/entity/animal/mammal/hooved/goat/mountain-adult.png",
-            "textures/entity/animal/mammal/hooved/pig/eurasian-adult.png",
-            "textures/entity/animal/bird/chicken/hen1.png",
-            "textures/entity/animal/mammal/wolf/eurasian-adult1.png" })
+            "game:textures/entity/animal/mammal/hooved/sheep/bighorn-female.png",
+            "game:textures/entity/animal/mammal/hooved/goat/mountain-adult.png",
+            "game:textures/entity/animal/mammal/hooved/pig/eurasian-adult.png",
+            "game:textures/entity/animal/bird/chicken/hen1.png",
+            "game:textures/entity/animal/mammal/wolf/eurasian-adult1.png",
+            // Dark coats of other mods, starting points for hand-painted old coats (DirtTextures.PaintedOldLocation).
+            "tradlivestock:textures/entity/land/cow/black-adult.png",
+            "tradlivestock:textures/entity/land/cow/brown-adult.png",
+            "tradlivestock:textures/entity/land/sheep/black-adult.png",
+            "tradlivestock:textures/entity/land/sheep/brown-adult.png" })
         {
-            var asset = sapi.Assets.TryGet(new AssetLocation("game", path));
-            if (asset == null) { sapi.Logger.Warning("[lwselftest] preview texture {0} not found", path); continue; }
+            var loc = new AssetLocation(path);
+            var asset = sapi.Assets.TryGet(loc);
+            if (asset == null) { sapi.Logger.Notification("[lwselftest] preview texture {0} not installed", path); continue; }
 
             var source = new BitmapExternal(asset.Data, asset.Data.Length, sapi.Logger);
-            string name = System.IO.Path.GetFileNameWithoutExtension(path);
+            // Other mods' textures get the mod and the animal in the name: tradlivestock-cow-black-adult.
+            string name = loc.Domain == "game" ? System.IO.Path.GetFileNameWithoutExtension(loc.Path)
+                : $"{loc.Domain}-{loc.Path.Split('/')[^2]}-{System.IO.Path.GetFileNameWithoutExtension(loc.Path)}";
             void Export(int stage, int ageStage, string suffix)
             {
                 using var bmp = DirtTextures.PaintBitmap(source, stage, ageStage);
