@@ -59,4 +59,5 @@ PLANNED FOR LATER
 - Hay bale (requested by a player): put a bale down in the pen, and sheep, goats and other grass eaters walk to it and eat from it directly, like from a trough. The bale gets smaller with every portion eaten until it is gone. (done in 0.16.0)
 - Scattered grain: scatter a handful of grain on the ground, and chickens peck it up portion by portion. (done in 0.17.0)
 - Old animals look old: their coat greys and fades as they age. (done in 0.17.0)
+- Luring with food (requested by a player): tamed animals follow you when you hold the food they like (pigs vegetables, goats and sheep grass), so you can lead them from pen to pen. Wild animals don't follow, but if you crouch with their food in your hand, they may not run off at once, and a wolf may not attack within a certain distance. Stay crouched patiently and an animal may come close enough to take the food from your hand. After that first portion it stays around the area, so you can come back and slowly tame it.
 - Testing in existing world saves and in multiplayer.
