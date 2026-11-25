@@ -1,0 +1,159 @@
+{
+	"textureWidth": 16,
+	"textureHeight": 16,
+	"textures": {
+		"veg": "game:block/plant/crop/carrot/bulb"
+	},
+	"elements": [
+		{
+			"name": "Veg1",
+			"from": [
+				2.5,
+				0,
+				3.4
+			],
+			"to": [
+				7.5,
+				2.8,
+				6.6
+			],
+			"rotationOrigin": [
+				5,
+				0,
+				5
+			],
+			"rotationY": 20,
+			"faces": {
+				"north": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"east": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"south": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"west": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"up": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"down": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				}
+			}
+		},
+		{
+			"name": "Veg2",
+			"from": [
+				7.75,
+				0,
+				4.4
+			],
+			"to": [
+				13.25,
+				2.8,
+				7.6
+			],
+			"rotationOrigin": [
+				10.5,
+				0,
+				6
+			],
+			"rotationY": -35,
+			"faces": {
+				"north": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"east": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"south": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"west": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"up": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"down": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				}
+			}
+		}
+	]
+}

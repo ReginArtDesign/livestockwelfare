@@ -8,7 +8,8 @@ namespace livestockwelfare;
 /// <summary>
 /// A hay bale set down in the pen: grass eaters (sheep, goats) find it like a trough and eat from
 /// it directly. Each portion eaten makes it one size smaller (haybale-4 to haybale-1), and the
-/// last one is gone. One portion is one hay block, as in the large trough.
+/// last one is gone. One portion is one hay block, as in the large trough. The vegetable pile for
+/// pigs works the same, with a vegetable as its portion (the block's "foodCode" attribute).
 /// </summary>
 public class BlockEntityHayBale : BlockEntity, IAnimalFoodSource
 {
@@ -29,7 +30,13 @@ public class BlockEntityHayBale : BlockEntity, IAnimalFoodSource
     {
         base.Initialize(api);
         if (api.Side != EnumAppSide.Server) return;
-        if (api.World.GetBlock(HayCode) is { } hayBlock) hay = new ItemStack(hayBlock);
+        if (Block.Attributes?["foodCode"].AsString() is { } foodCode)
+        {
+            var code = new AssetLocation(foodCode.Replace("{type}", Block.Variant["type"]));
+            if (api.World.GetItem(code) is { } item) hay = new ItemStack(item);
+            else if (api.World.GetBlock(code) is { } block) hay = new ItemStack(block);
+        }
+        else if (api.World.GetBlock(HayCode) is { } hayBlock) hay = new ItemStack(hayBlock);
         api.ModLoader.GetModSystem<POIRegistry>().AddPOI(this);
     }
 

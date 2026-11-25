@@ -1,0 +1,609 @@
+{
+	"textureWidth": 16,
+	"textureHeight": 16,
+	"textures": {
+		"veg": "game:block/plant/crop/carrot/bulb"
+	},
+	"elements": [
+		{
+			"name": "Veg1",
+			"from": [
+				2.5,
+				0,
+				3.4
+			],
+			"to": [
+				7.5,
+				2.8,
+				6.6
+			],
+			"rotationOrigin": [
+				5,
+				0,
+				5
+			],
+			"rotationY": 20,
+			"faces": {
+				"north": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"east": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"south": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"west": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"up": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"down": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				}
+			}
+		},
+		{
+			"name": "Veg2",
+			"from": [
+				7.75,
+				0,
+				4.4
+			],
+			"to": [
+				13.25,
+				2.8,
+				7.6
+			],
+			"rotationOrigin": [
+				10.5,
+				0,
+				6
+			],
+			"rotationY": -35,
+			"faces": {
+				"north": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"east": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"south": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"west": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"up": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"down": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				}
+			}
+		},
+		{
+			"name": "Veg3",
+			"from": [
+				3.5,
+				0,
+				8.9
+			],
+			"to": [
+				8.5,
+				2.8,
+				12.1
+			],
+			"rotationOrigin": [
+				6,
+				0,
+				10.5
+			],
+			"rotationY": 70,
+			"faces": {
+				"north": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"east": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"south": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"west": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"up": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"down": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				}
+			}
+		},
+		{
+			"name": "Veg4",
+			"from": [
+				8.5,
+				0,
+				9.4
+			],
+			"to": [
+				13.5,
+				2.8,
+				12.6
+			],
+			"rotationOrigin": [
+				11,
+				0,
+				11
+			],
+			"rotationY": 10,
+			"faces": {
+				"north": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"east": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"south": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"west": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"up": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"down": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				}
+			}
+		},
+		{
+			"name": "Veg5",
+			"from": [
+				5.5,
+				2.6,
+				6.4
+			],
+			"to": [
+				10.5,
+				5.4,
+				9.6
+			],
+			"rotationOrigin": [
+				8,
+				2.6,
+				8
+			],
+			"rotationY": -60,
+			"faces": {
+				"north": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"east": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"south": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"west": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"up": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"down": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				}
+			}
+		},
+		{
+			"name": "Veg6",
+			"from": [
+				6.25,
+				2.6,
+				3.9
+			],
+			"to": [
+				10.75,
+				5.4,
+				7.1
+			],
+			"rotationOrigin": [
+				8.5,
+				2.6,
+				5.5
+			],
+			"rotationY": 45,
+			"faces": {
+				"north": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"east": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"south": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"west": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"up": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"down": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				}
+			}
+		},
+		{
+			"name": "Veg7",
+			"from": [
+				4.25,
+				2.6,
+				7.4
+			],
+			"to": [
+				8.75,
+				5.4,
+				10.6
+			],
+			"rotationOrigin": [
+				6.5,
+				2.6,
+				9
+			],
+			"rotationY": -10,
+			"faces": {
+				"north": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"east": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"south": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"west": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"up": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"down": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				}
+			}
+		},
+		{
+			"name": "Veg8",
+			"from": [
+				7.75,
+				5,
+				7.9
+			],
+			"to": [
+				12.25,
+				7.8,
+				11.1
+			],
+			"rotationOrigin": [
+				10,
+				5,
+				9.5
+			],
+			"rotationY": 30,
+			"faces": {
+				"north": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"east": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"south": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"west": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"up": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				},
+				"down": {
+					"texture": "#veg",
+					"uv": [
+						1,
+						4,
+						7,
+						7
+					]
+				}
+			}
+		}
+	]
+}

@@ -1,0 +1,12 @@
+[
+	{
+		// Four vegetables of one kind make a pile to set down in the pen: four portions for the pigs.
+		ingredientPattern: "VV,VV",
+		ingredients: {
+			"V": { type: "item", code: "game:vegetable-*", name: "type", allowedVariants: ["carrot", "cabbage", "onion", "turnip", "pumpkin", "bellpepper"] }
+		},
+		width: 2,
+		height: 2,
+		output: { type: "block", code: "vegetablepile-{type}-4" }
+	}
+]

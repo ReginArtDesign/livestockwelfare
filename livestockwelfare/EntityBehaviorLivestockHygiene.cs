@@ -618,7 +618,14 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
         LivestockUtil.AddAiTask(agent, AiTaskLivestockFollowFood.Code, FollowFoodPriority, canRun ? 0.015f : walkSpeed * 2, 0, 0,
             (taskConfig, aiConfig) => follow = new AiTaskLivestockFollowFood(agent, taskConfig, aiConfig), canRun ? "run" : "walk");
         taskAi.TaskManager.OnShouldExecuteTask += task => task is not (AiTaskFleeEntity or AiTaskFleeEntityR) || follow?.KeepsFromFleeing != true;
+        // Waiting by the player, it doesn't graze or wander off: vanilla idle grazing looked as if it
+        // ate from the hand.
+        taskAi.TaskManager.OnShouldExecuteTask += task => !WaitsForFood(task, follow);
+        taskAi.TaskManager.OnExecuteTask += (task, _) => !WaitsForFood(task, follow);
     }
+
+    static bool WaitsForFood(IAiTask task, AiTaskLivestockFollowFood? follow) =>
+        task is AiTaskIdle or AiTaskIdleR or AiTaskWander or AiTaskWanderR && follow?.Lure != null;
     float walkSpeed;
 
     bool DustBathes(HygieneSettings settings) => SelfCleaning && settings.DustBathing && !KeptClean;

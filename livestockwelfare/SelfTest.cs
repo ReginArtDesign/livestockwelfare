@@ -162,6 +162,7 @@ public class SelfTest : ModSystem
                 CheckCoop(spawn);
                 CheckTreats(spawn);
                 CheckHayBale(spawn);
+                CheckHayBale(spawn, "livestockwelfare:vegetablepile-carrot-4", "game:pig-eurasian-adult-female", "vegetable pile");
                 CheckScatteredGrain(spawn);
                 CheckFeralKinship(spawn);
                 if (Environment.GetEnvironmentVariable("LW_SELFTEST_POND") == "1") PondTest(spawn);
@@ -233,16 +234,16 @@ public class SelfTest : ModSystem
         accessor.SetBlock(0, pos);
     }
 
-    // Hay bale: a sheep finds it as food and a hen doesn't; each portion eaten makes it a size
-    // smaller, and the last one takes it away. Done high in the air and cleaned up after.
-    void CheckHayBale(BlockPos spawn)
+    // Hay bale (or vegetable pile): a sheep (pig) finds it as food and a hen doesn't; each portion
+    // eaten makes it a size smaller, and the last one takes it away. Done high in the air and cleaned up after.
+    void CheckHayBale(BlockPos spawn, string baleCode = "livestockwelfare:haybale-4", string eaterCode = "game:sheep-bighorn-adult-female", string label = "hay bale")
     {
-        var bale = sapi.World.GetBlock(new AssetLocation("livestockwelfare:haybale-4"));
+        var bale = sapi.World.GetBlock(new AssetLocation(baleCode));
         var accessor = sapi.World.BlockAccessor;
         var pos = spawn.AddCopy(-20, 40, 6);
         if (bale == null)
         {
-            sapi.Logger.Warning("[lwselftest] hay bale: block missing — FAILED");
+            sapi.Logger.Warning("[lwselftest] {0}: block missing — FAILED", label);
             return;
         }
         accessor.SetBlock(bale.Id, pos);
@@ -257,7 +258,7 @@ public class SelfTest : ModSystem
             spawning = false;
             return e;
         }
-        var sheep = Spawn("game:sheep-bighorn-adult-female");
+        var sheep = Spawn(eaterCode);
         var hen = Spawn("game:chicken-hen");
         var poi = sapi.ModLoader.GetModSystem<Vintagestory.GameContent.POIRegistry>()
             .GetNearestPoi(sheep.Pos.XYZ, 8, p => p is BlockEntityHayBale);
@@ -270,9 +271,10 @@ public class SelfTest : ModSystem
             sizes.Add(accessor.GetBlock(pos).Code?.Path ?? "?");
         }
         bool gone = accessor.GetBlock(pos).Id == 0;
-        bool ok = be != null && poi == be && sheepEats && !henEats && string.Join(",", sizes) == "haybale-3,haybale-2,haybale-1,air" && gone;
-        sapi.Logger.Notification("[lwselftest] hay bale: found as food {0}, sheep eats {1}, hen eats {2} (expect False), sizes {3} — {4}",
-            poi == be, sheepEats, henEats, string.Join(", ", sizes), ok ? "OK" : "FAILED");
+        string prefix = bale.Code.Path[..^1];
+        bool ok = be != null && poi == be && sheepEats && !henEats && string.Join(",", sizes) == $"{prefix}3,{prefix}2,{prefix}1,air" && gone;
+        sapi.Logger.Notification("[lwselftest] {0}: found as food {1}, {2} eats {3}, hen eats {4} (expect False), sizes {5} — {6}",
+            label, poi == be, sheep.Code.Path, sheepEats, henEats, string.Join(", ", sizes), ok ? "OK" : "FAILED");
         sheep.Die(EnumDespawnReason.Removed);
         hen.Die(EnumDespawnReason.Removed);
         accessor.SetBlock(0, pos);
@@ -352,17 +354,18 @@ public class SelfTest : ModSystem
         accessor.SetBlock(0, pos.DownCopy());
     }
 
-    // Treats: a hen follows grain and takes one from the hand (a meal, then full for a while); a
-    // sheep doesn't. Done high in the air and cleaned up after.
+    // Treats: a hen follows grain and takes one from the hand (a meal, then full for a while). A kept
+    // sheep follows only a hay bale, a kept pig only a vegetable pile, a wild sheep nothing. Done high in
+    // the air and cleaned up after.
     void CheckTreats(BlockPos spawn)
     {
         var grain = sapi.World.GetItem(new AssetLocation("game:grain-spelt"));
         var pos = spawn.AddCopy(-20, 40, 0);
-        Entity Spawn(string code)
+        Entity Spawn(string code, bool kept = true)
         {
             var e = sapi.World.ClassRegistry.CreateEntity(sapi.World.GetEntityType(new AssetLocation(code)));
             e.Pos.SetPos(pos.X + 0.5, pos.Y, pos.Z + 0.5);
-            e.Attributes.SetString("origin", "playerplaced");
+            if (kept) e.Attributes.SetString("origin", "playerplaced");
             spawning = true;
             sapi.World.SpawnEntity(e);
             spawning = false;
@@ -385,6 +388,23 @@ public class SelfTest : ModSystem
             width, squeezed, restored, width < 1 && squeezed < width && restored == width ? "OK" : "FAILED");
         dogAdult.Die(EnumDespawnReason.Removed);
         var sheep = Spawn("game:sheep-bighorn-adult-female");
+        var wildSheep = Spawn("game:sheep-bighorn-adult-female", kept: false);
+        var pig = Spawn("game:pig-eurasian-adult-female");
+        ItemStack Food(string code) => new(sapi.World.GetItem(new AssetLocation(code)));
+        Block? GroundFood(string code) => sapi.World.GetBlock(new AssetLocation(code));
+        ItemStack? Stack(CollectibleObject? c) => c == null ? null : new ItemStack(c);
+        var bale = Stack(GroundFood("livestockwelfare:haybale-4"));
+        var pile = Stack(GroundFood("livestockwelfare:vegetablepile-carrot-4"));
+        var handful = Stack(GroundFood("livestockwelfare:scatteredgrain-spelt-4"));
+        bool sheepLured = LivestockTreats.IsLured(sheep) && LivestockTreats.Lures(sheep, bale) && !LivestockTreats.Lures(sheep, Food("game:drygrass"))
+            && !LivestockTreats.TakesTreats(sheep) && !LivestockTreats.IsLured(wildSheep) && !LivestockTreats.Lures(wildSheep, bale);
+        bool pigLured = LivestockTreats.IsLured(pig) && LivestockTreats.Lures(pig, pile) && !LivestockTreats.Lures(pig, Food("game:vegetable-carrot"))
+            && !LivestockTreats.Lures(pig, bale) && !LivestockTreats.TakesTreats(pig);
+        bool henLured = LivestockTreats.Lures(hen, handful) && LivestockTreats.Lures(hen, Food("game:grain-spelt"));
+        sapi.Logger.Notification("[lwselftest] lure foods: kept sheep hay bale only, wild sheep not {0}; kept pig vegetable pile only {1}; hen scattered grain and grain {2} — {3}",
+            sheepLured, pigLured, henLured, sheepLured && pigLured && henLured ? "OK" : "FAILED");
+        wildSheep.Die(EnumDespawnReason.Removed);
+        pig.Die(EnumDespawnReason.Removed);
         bool follows = hen.GetBehavior<Vintagestory.GameContent.EntityBehaviorTaskAI>()?.TaskManager.AllTasks.Any(t => t is AiTaskLivestockFollowFood) == true;
         var slot = new DummySlot(new ItemStack(grain, 3));
         double saturation = hen.WatchedAttributes.GetTreeAttribute("hunger")?.GetFloat("saturation") ?? 0;
@@ -393,9 +413,9 @@ public class SelfTest : ModSystem
         string? refusal = LivestockTreats.Refusal(hen);
         LivestockTreats.HandFeed(hen, slot, (EntityAgent)hen);
         bool ok = grain != null && follows && LivestockTreats.TakesTreats(hen) && LivestockTreats.Eats(hen, slot.Itemstack)
-            && !LivestockTreats.TakesTreats(sheep) && after > saturation && refusal != null && slot.StackSize == 2;
-        sapi.Logger.Notification("[lwselftest] treats: hen follows {0}, takes treats {1}, sheep {2}, saturation {3} -> {4}, then {5}, grain left {6} — {7}",
-            follows, LivestockTreats.TakesTreats(hen), LivestockTreats.TakesTreats(sheep), saturation, after, refusal, slot.StackSize, ok ? "OK" : "FAILED");
+            && after > saturation && refusal != null && slot.StackSize == 2;
+        sapi.Logger.Notification("[lwselftest] treats: hen follows {0}, takes treats {1}, saturation {2} -> {3}, then {4}, grain left {5} — {6}",
+            follows, LivestockTreats.TakesTreats(hen), saturation, after, refusal, slot.StackSize, ok ? "OK" : "FAILED");
         hen.Die(EnumDespawnReason.Removed);
         sheep.Die(EnumDespawnReason.Removed);
     }

@@ -9,8 +9,9 @@ using Vintagestory.GameContent;
 namespace livestockwelfare;
 
 /// <summary>
-/// Treats (see TreatSettings): the animal walks after a player holding food it eats, and stops a
-/// little way off, waiting to be fed. Meanwhile it doesn't run from that player, but still runs
+/// Treats (see TreatSettings): the animal walks after a player holding food it eats, or once kept
+/// its ground food (scattered grain, a hay bale, a vegetable pile), and stops a little way off,
+/// waiting to be fed. Meanwhile it doesn't run from that player, but still runs
 /// from predators and when hurt. Kept predators (the player's own dogs) don't scare it off.
 /// </summary>
 public class AiTaskLivestockFollowFood : AiTaskBase
@@ -63,7 +64,7 @@ public class AiTaskLivestockFollowFood : AiTaskBase
 
     EntityPlayer? FindLure()
     {
-        if (LivestockTreats.Settings is not { } settings || (Lures == null && !LivestockTreats.TakesTreats(entity))) return null;
+        if (LivestockTreats.Settings is not { } settings || (Lures == null && !LivestockTreats.IsLured(entity))) return null;
 
         double range = settings.FollowRadius;
         EntityPlayer? nearest = null;
@@ -88,7 +89,7 @@ public class AiTaskLivestockFollowFood : AiTaskBase
 
     bool Holds(EntityPlayer player) => Tempts(player.RightHandItemSlot?.Itemstack) || Tempts(player.LeftHandItemSlot?.Itemstack);
 
-    bool Tempts(ItemStack? stack) => Lures != null ? stack != null && Lures(stack) : LivestockTreats.Eats(entity, stack);
+    bool Tempts(ItemStack? stack) => Lures != null ? stack != null && Lures(stack) : LivestockTreats.Lures(entity, stack);
 
     double StopDistance => LivestockTreats.Settings?.FollowDistance ?? 1.5;
 

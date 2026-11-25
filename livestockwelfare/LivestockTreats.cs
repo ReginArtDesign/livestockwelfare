@@ -20,23 +20,63 @@ public static class LivestockTreats
     const float ChewSeconds = 2.5f;
     static readonly AssetLocation EatSound = new("game", "sounds/creature/animal-eat-small");
     static readonly Dictionary<AssetLocation, CreatureDiet?> diets = new();
+    // Server: the ground foods that lure each kind of animal (TreatSettings.LureFoods).
+    static readonly Dictionary<AssetLocation, AssetLocation[]> lureFoods = new();
 
     public static TreatSettings? Settings =>
         livestockwelfareModSystem.Config?.Treats is { Enabled: true } settings ? settings : null;
 
     /// <summary>
-    /// Server: whether this animal takes treats (TreatSettings.AnimalCodes). Orphaned babies are fed
-    /// by hand their own way (EntityBehaviorLivestockNursing).
+    /// Server: whether this animal is lured by food at all: by any food it eats, which it also takes
+    /// from the hand (TreatSettings.AnimalCodes), or, once kept, by a food to set down on the ground
+    /// (TreatSettings.LureFoods). Orphaned babies are fed by hand their own way
+    /// (EntityBehaviorLivestockNursing).
     /// </summary>
     public static bool Setup(Entity entity)
     {
-        bool takes = Settings is { } settings && Diet(entity) != null && !entity.HasBehavior<EntityBehaviorLivestockNursing>()
-            && settings.AnimalCodes.Any(code => WildcardUtil.Match(new AssetLocation(code), entity.Code));
+        bool takes = false;
+        lureFoods.Remove(entity.Code);
+        if (Settings is { } settings && Diet(entity) != null && !entity.HasBehavior<EntityBehaviorLivestockNursing>())
+        {
+            takes = settings.AnimalCodes.Any(code => Matches(code, entity.Code));
+        }
         if (entity.WatchedAttributes.GetBool(TakesTreatsAttr) != takes) entity.WatchedAttributes.SetBool(TakesTreatsAttr, takes);
-        return takes;
+        return takes || LureFoods(entity).Length > 0;
     }
 
+    static bool Matches(string code, AssetLocation entityCode) => WildcardUtil.Match(new AssetLocation(code), entityCode);
+
     public static bool TakesTreats(Entity entity) => entity.Alive && entity.WatchedAttributes.GetBool(TakesTreatsAttr);
+
+    // The ground foods that lure this kind of animal, once kept.
+    static AssetLocation[] LureFoods(Entity entity)
+    {
+        if (!lureFoods.TryGetValue(entity.Code, out var codes))
+        {
+            codes = Settings is { } settings && !entity.HasBehavior<EntityBehaviorLivestockNursing>()
+                ? settings.LureFoods.Where(lure => lure.AnimalCodes.Any(code => Matches(code, entity.Code)))
+                    .SelectMany(lure => lure.FoodCodes).Select(code => new AssetLocation(code)).ToArray()
+                : Array.Empty<AssetLocation>();
+            lureFoods[entity.Code] = codes;
+        }
+        return codes;
+    }
+
+    /// <summary>Server: whether a player holding food would lure this animal now (a wild one only by treats).</summary>
+    public static bool IsLured(Entity entity) =>
+        entity.Alive && (TakesTreats(entity) || LureFoods(entity).Length > 0 && LivestockUtil.IsKept(entity));
+
+    /// <summary>
+    /// Server: food in a player's hand that lures this animal: a treat it takes from the hand, or,
+    /// once kept, its ground food (scattered grain for chickens, a hay bale for sheep).
+    /// </summary>
+    public static bool Lures(Entity entity, ItemStack? stack)
+    {
+        if (stack == null) return false;
+        if (TakesTreats(entity) && Eats(entity, stack)) return true;
+        var foods = LureFoods(entity);
+        return foods.Length > 0 && foods.Any(code => WildcardUtil.Match(code, stack.Collectible.Code)) && LivestockUtil.IsKept(entity);
+    }
 
     public static CreatureDiet? Diet(Entity entity)
     {

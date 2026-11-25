@@ -84,10 +84,12 @@
 	"block-strawbedding-clean": "Straw bedding",
 	"block-strawbedding-soiled": "Soiled straw bedding",
 	"block-haybale-*": "Hay bale",
-	"blockdesc-haybale-*": "Set it down in the pen: sheep, goats and other grass eaters walk to it and eat from it like from a trough. It holds four portions and gets smaller with each one. Broken, it gives back the hay that is left.",
+	"blockdesc-haybale-*": "Set it down in the pen: sheep, goats and other grass eaters walk to it and eat from it like from a trough. Your own grass eaters follow you while you carry it, so you can lead them from pen to pen. It holds four portions and gets smaller with each one. Broken, it gives back the hay that is left.",
 	"block-scatteredgrain-*": "Scattered grain",
-	"blockdesc-scatteredgrain-*": "A handful of grain to scatter on the ground: chickens and other grain-eating birds walk to it and peck it up, one portion at a time, like from a trough. Pigs leave it alone. A handful is four portions; scatter a second one on top for eight. Out in the rain it gets soaked and spoils, so keep it under a roof.",
+	"blockdesc-scatteredgrain-*": "A handful of grain to scatter on the ground: chickens and other grain-eating birds walk to it and peck it up, one portion at a time, like from a trough. Your own chickens follow you while you carry it. Pigs leave it alone. A handful is four portions; scatter a second one on top for eight. Out in the rain it gets soaked and spoils, so keep it under a roof.",
 	"scatteredgrain-portions": "Portions left: {0}",
 	"scatteredgrain-soaked": "Soaked by rain: it will spoil soon",
+	"block-vegetablepile-*": "Vegetable pile",
+	"blockdesc-vegetablepile-*": "Four vegetables piled up to set down in the pen: pigs and other vegetable eaters walk to it and eat from it like from a trough. Your own pigs follow you while you carry it, so you can lead them from pen to pen. It holds four portions and gets smaller with each one. Broken, it gives back the vegetables that are left.",
 	"needs-bedding": "Ready to mate, but needs clean straw bedding under a roof"
 }
