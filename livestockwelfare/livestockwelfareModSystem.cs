@@ -34,6 +34,7 @@ public class livestockwelfareModSystem : ModSystem
         AiTaskRegistry.Register<AiTaskLivestockSeekShelter>(AiTaskLivestockSeekShelter.Code);
         AiTaskRegistry.Register<AiTaskLivestockDustBath>(AiTaskLivestockDustBath.Code);
         AiTaskRegistry.Register<AiTaskLivestockFollowFood>(AiTaskLivestockFollowFood.Code);
+        AiTaskRegistry.Register<AiTaskLivestockStayNearHome>(AiTaskLivestockStayNearHome.Code);
         AiTaskRegistry.Register<AiTaskLivestockDogGuard>(AiTaskLivestockDogGuard.Code);
         AiTaskRegistry.Register<AiTaskLivestockDogRest>(AiTaskLivestockDogRest.Code);
         AiTaskRegistry.Register<AiTaskLivestockDogPotty>(AiTaskLivestockDogPotty.Code);

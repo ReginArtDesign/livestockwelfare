@@ -119,5 +119,7 @@ public static class LivestockTreats
         attrs.MarkPathDirty("hunger");
         attrs.SetDouble(NextTreatAttr, now + Math.Max(settings.HandFeedCooldownHours, 0.05));
         entity.World.PlaySoundAt(EatSound, entity, null, randomizePitch: true, range: 12);
+        // A wild one (a hen) gets tamer too, a little each day.
+        LivestockTaming.Trust(entity, (byEntity as EntityPlayer)?.Player as Vintagestory.API.Server.IServerPlayer);
     }
 }

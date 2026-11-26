@@ -89,6 +89,11 @@
 	"blockdesc-scatteredgrain-*": "A handful of grain to scatter on the ground: chickens and other grain-eating birds walk to it and peck it up, one portion at a time, like from a trough. Your own chickens follow you while you carry it. Pigs leave it alone. A handful is four portions; scatter a second one on top for eight. Out in the rain it gets soaked and spoils, so keep it under a roof.",
 	"scatteredgrain-portions": "Portions left: {0}",
 	"scatteredgrain-soaked": "Soaked by rain: it will spoil soon",
+	"tame-fed": "It ate from your hand. Come back tomorrow.",
+	"tame-step": "It trusts you more: it no longer runs away from you.",
+	"tame-done": "It is tame now: it can be led on a rope.",
+	"tame-progress": "Taming: fed {0} of {1} times for the next step",
+	"tame-fedtoday": "fed today",
 	"block-vegetablepile-*": "Vegetable pile",
 	"blockdesc-vegetablepile-*": "Four vegetables piled up to set down in the pen: pigs and other vegetable eaters walk to it and eat from it like from a trough. Your own pigs follow you while you carry it, so you can lead them from pen to pen. It holds four portions and gets smaller with each one. Broken, it gives back the vegetables that are left.",
 	"needs-bedding": "Ready to mate, but needs clean straw bedding under a roof"

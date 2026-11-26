@@ -89,6 +89,11 @@
 	"blockdesc-scatteredgrain-*": "Egy marék gabona, amit a földre szórhatsz: a tyúkok és más magevő madarak odamennek, és adagonként felcsipegetik, mint egy vályúból. A saját tyúkjaid követnek, amíg a kezedben viszed. A disznók nem nyúlnak hozzá. Egy marék négy adag, egy második marékkal rászórva nyolc. Esőben elázik és megromlik, ezért tető alá tedd.",
 	"scatteredgrain-portions": "Maradék adag: {0}",
 	"scatteredgrain-soaked": "Elázott az esőben: hamarosan megromlik",
+	"tame-fed": "Evett a kezedből. Gyere vissza holnap.",
+	"tame-step": "Jobban bízik benned: már nem fut el előled.",
+	"tame-done": "Most már szelíd: kötélen vezetheted.",
+	"tame-progress": "Szelídítés: {0}/{1} etetés a következő lépcsőig",
+	"tame-fedtoday": "ma már evett",
 	"block-vegetablepile-*": "Zöldségkupac",
 	"blockdesc-vegetablepile-*": "Négy zöldség egy kupacban, hogy letedd a karámban: a disznók és más zöldségevő állatok odamennek, és esznek belőle, mint egy vályúból. A saját disznóid követnek, amíg a kezedben viszed, így karámról karámra vezetheted őket. Négy adag van benne, és minden adaggal kisebb lesz. Ha lebontod, visszakapod a maradék zöldséget.",
 	"needs-bedding": "Párzásra kész, de tiszta szalmaalom kell neki tető alatt"

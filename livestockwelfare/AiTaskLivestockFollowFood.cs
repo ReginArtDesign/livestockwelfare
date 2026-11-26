@@ -58,30 +58,85 @@ public class AiTaskLivestockFollowFood : AiTaskBase
         }
     }
 
-    /// <summary>Lured, it doesn't run from players, unless it was hurt.</summary>
+    /// <summary>
+    /// Lured, or calmed by a crouching player holding its food (taming, see LivestockTaming), it
+    /// doesn't run from players or go for them, unless it was hurt.
+    /// </summary>
     public bool KeepsFromFleeing =>
-        Lure != null && entity.GetBehavior<EntityBehaviorEmotionStates>()?.IsInEmotionState(HurtEmotion) != true;
+        (Lure != null || calm != null) && entity.GetBehavior<EntityBehaviorEmotionStates>()?.IsInEmotionState(HurtEmotion) != true;
+
+    // Taming: the crouching player it waits by, since when, and how long it waits before coming.
+    EntityPlayer? calm;
+    Vec3d? calmPos;
+    long calmSinceMs;
+    long patienceMs;
 
     EntityPlayer? FindLure()
     {
-        if (LivestockTreats.Settings is not { } settings || (Lures == null && !LivestockTreats.IsLured(entity))) return null;
+        if (LivestockTreats.Settings is not { } settings)
+        {
+            calm = null;
+            return null;
+        }
+        bool predatorNear = entity.World.GetEntitiesAround(entity.Pos.XYZ, 12, 4,
+            e => e != entity && e.Alive && Predators.Any(code => WildcardUtil.Match(code, e.Code)) && !LivestockUtil.IsKept(e) && !IsYoung(e)).Length > 0;
+        if (predatorNear)
+        {
+            calm = null;
+            return null;
+        }
 
-        double range = settings.FollowRadius;
+        if ((Lures != null || LivestockTreats.IsLured(entity)) && Nearest(settings.FollowRadius, Holds) is { } lured)
+        {
+            calm = null;
+            return lured;
+        }
+        if (Lures != null || !LivestockTaming.IsTamable(entity))
+        {
+            calm = null;
+            return null;
+        }
+
+        // A wild one: it waits by a player crouching with its food, then comes to eat from the hand.
+        var player = Nearest(settings.FollowRadius, p => Crouches(p) && (LivestockTaming.Tempts(entity, p.RightHandItemSlot?.Itemstack) || LivestockTaming.Tempts(entity, p.LeftHandItemSlot?.Itemstack)));
+        long now = entity.World.ElapsedMilliseconds;
+        if (player == null)
+        {
+            calm = null;
+            return null;
+        }
+        // Waiting starts over when the player moves off.
+        if (calm != player || calmPos == null || player.Pos.SquareDistanceTo(calmPos) > 4)
+        {
+            calm = player;
+            calmPos = player.Pos.XYZ;
+            calmSinceMs = now;
+            patienceMs = (long)(settings.TamePatienceSeconds * (0.5 + entity.World.Rand.NextDouble()) * 1000);
+        }
+        if (now - calmSinceMs < patienceMs || LivestockTaming.FedToday(entity)) return null;
+        if (!FarFrom(player, 0.75))
+        {
+            LivestockTaming.FeedFromHand(entity, player);
+            return null;
+        }
+        return player;
+    }
+
+    static bool Crouches(EntityPlayer player) => player.Controls.Sneak || player.Controls.ShiftKey;
+
+    EntityPlayer? Nearest(double range, System.Func<EntityPlayer, bool> wanted)
+    {
         EntityPlayer? nearest = null;
         double nearestDistance = range * range;
         foreach (var player in entity.World.AllOnlinePlayers)
         {
             if (player.Entity is not { Alive: true } playerEntity || player.WorldData.CurrentGameMode == EnumGameMode.Spectator) continue;
             double distance = playerEntity.Pos.SquareDistanceTo(entity.Pos);
-            if (distance > nearestDistance || !Holds(playerEntity)) continue;
+            if (distance > nearestDistance || !wanted(playerEntity)) continue;
             nearest = playerEntity;
             nearestDistance = distance;
         }
-        if (nearest == null) return null;
-
-        bool predatorNear = entity.World.GetEntitiesAround(entity.Pos.XYZ, 12, 4,
-            e => e != entity && e.Alive && Predators.Any(code => WildcardUtil.Match(code, e.Code)) && !LivestockUtil.IsKept(e) && !IsYoung(e)).Length > 0;
-        return predatorNear ? null : nearest;
+        return nearest;
     }
 
     // A wolf pup's brothers and sisters are no danger to it.

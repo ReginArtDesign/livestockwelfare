@@ -609,6 +609,8 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
     // Above sheltering, laying and eating, below being led on a rope (1.45) and getting out of
     // water (1.4). The vanilla run from players (1.5) is held back meanwhile.
     const float FollowFoodPriority = 1.39f;
+    // Below eating (1.32) and sheltering, above idling and wandering.
+    const float StayNearHomePriority = 1.3f;
 
     // Treats (see TreatSettings): it walks after a player holding grain, at a run if it has one.
     void AddFollowFood(EntityAgent agent, EntityBehaviorTaskAI taskAi)
@@ -617,7 +619,16 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
         AiTaskLivestockFollowFood? follow = null;
         LivestockUtil.AddAiTask(agent, AiTaskLivestockFollowFood.Code, FollowFoodPriority, canRun ? 0.015f : walkSpeed * 2, 0, 0,
             (taskConfig, aiConfig) => follow = new AiTaskLivestockFollowFood(agent, taskConfig, aiConfig), canRun ? "run" : "walk");
-        taskAi.TaskManager.OnShouldExecuteTask += task => task is not (AiTaskFleeEntity or AiTaskFleeEntityR) || follow?.KeepsFromFleeing != true;
+        // Calmed by a crouching player with its food (taming), it doesn't go for them either.
+        taskAi.TaskManager.OnShouldExecuteTask += task =>
+            task is not (AiTaskFleeEntity or AiTaskFleeEntityR or AiTaskSeekEntity or AiTaskSeekEntityR or AiTaskMeleeAttack or AiTaskMeleeAttackR)
+            || follow?.KeepsFromFleeing != true;
+        // Fed by hand while wild, it stays around the spot until tame.
+        if (LivestockTaming.CanBeTamed(entity))
+        {
+            LivestockUtil.AddAiTask(agent, AiTaskLivestockStayNearHome.Code, StayNearHomePriority, walkSpeed, 0, 0,
+                (taskConfig, aiConfig) => new AiTaskLivestockStayNearHome(agent, taskConfig, aiConfig));
+        }
         // Waiting by the player, it doesn't graze or wander off: vanilla idle grazing looked as if it
         // ate from the hand.
         taskAi.TaskManager.OnShouldExecuteTask += task => !WaitsForFood(task, follow);
@@ -792,5 +803,6 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
         if (!entity.Alive) return;
 
         if (StatusText() is { Length: > 0 } status) infotext.AppendLine(status);
+        if (LivestockTaming.InfoText(entity) is { } taming) infotext.AppendLine(taming);
     }
 }

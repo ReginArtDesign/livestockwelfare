@@ -396,13 +396,34 @@ public class SelfTest : ModSystem
         var bale = Stack(GroundFood("livestockwelfare:haybale-4"));
         var pile = Stack(GroundFood("livestockwelfare:vegetablepile-carrot-4"));
         var handful = Stack(GroundFood("livestockwelfare:scatteredgrain-spelt-4"));
-        bool sheepLured = LivestockTreats.IsLured(sheep) && LivestockTreats.Lures(sheep, bale) && !LivestockTreats.Lures(sheep, Food("game:drygrass"))
+        bool sheepLured = LivestockTreats.IsLured(sheep) && LivestockTreats.Lures(sheep, bale) && LivestockTreats.Lures(sheep, Food("game:drygrass"))
+            && !LivestockTreats.Lures(sheep, Food("game:grain-spelt"))
             && !LivestockTreats.TakesTreats(sheep) && !LivestockTreats.IsLured(wildSheep) && !LivestockTreats.Lures(wildSheep, bale);
         bool pigLured = LivestockTreats.IsLured(pig) && LivestockTreats.Lures(pig, pile) && !LivestockTreats.Lures(pig, Food("game:vegetable-carrot"))
             && !LivestockTreats.Lures(pig, bale) && !LivestockTreats.TakesTreats(pig);
         bool henLured = LivestockTreats.Lures(hen, handful) && LivestockTreats.Lures(hen, Food("game:grain-spelt"));
-        sapi.Logger.Notification("[lwselftest] lure foods: kept sheep hay bale only, wild sheep not {0}; kept pig vegetable pile only {1}; hen scattered grain and grain {2} — {3}",
+        sapi.Logger.Notification("[lwselftest] lure foods: kept sheep hay bale and dry grass, wild sheep not {0}; kept pig vegetable pile only {1}; hen scattered grain and grain {2} — {3}",
             sheepLured, pigLured, henLured, sheepLured && pigLured && henLured ? "OK" : "FAILED");
+        // Taming: the wild sheep takes dry grass (not a carrot) once a day; three days make it a
+        // generation tamer, six make it tame (generation 2), and from the first it has a home.
+        var grassSlot = new DummySlot(Food("game:drygrass"));
+        grassSlot.Itemstack.StackSize = 10;
+        bool tamable = LivestockTaming.IsTamable(wildSheep) && LivestockTaming.Tempts(wildSheep, grassSlot.Itemstack)
+            && !LivestockTaming.Tempts(wildSheep, Food("game:vegetable-carrot")) && !LivestockTaming.IsTamable(sheep);
+        bool first = LivestockTaming.Feed(wildSheep, grassSlot, null, false);
+        bool twice = LivestockTaming.Feed(wildSheep, grassSlot, null, false);
+        int fed = first ? 1 : 0;
+        for (int day = 1; day < 6; day++)
+        {
+            if (day == 3 && wildSheep.WatchedAttributes.GetInt("generation") != 1) break;
+            LivestockTaming.ForgetFedDay(wildSheep);
+            if (LivestockTaming.Feed(wildSheep, grassSlot, null, false)) fed++;
+        }
+        int generation = wildSheep.WatchedAttributes.GetInt("generation");
+        bool tamed = tamable && first && !twice && fed == 6 && generation == 2 && LivestockTaming.Home(wildSheep) != null
+            && !LivestockTaming.IsTamable(wildSheep) && grassSlot.StackSize == 4;
+        sapi.Logger.Notification("[lwselftest] taming: wild sheep tamable {0}, fed {1} times (twice a day {2}), generation {3}, home {4}, grass left {5} — {6}",
+            tamable, fed, twice, generation, LivestockTaming.Home(wildSheep) != null, grassSlot.StackSize, tamed ? "OK" : "FAILED");
         wildSheep.Die(EnumDespawnReason.Removed);
         pig.Die(EnumDespawnReason.Removed);
         bool follows = hen.GetBehavior<Vintagestory.GameContent.EntityBehaviorTaskAI>()?.TaskManager.AllTasks.Any(t => t is AiTaskLivestockFollowFood) == true;
