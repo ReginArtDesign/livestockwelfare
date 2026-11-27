@@ -614,6 +614,88 @@ public class SelfTest : ModSystem
             tasks?.Any(t => t is AiTaskLivestockSeekWater) == true ? "added" : "MISSING",
             tasks?.Any(t => t is AiTaskLivestockSeekShelter) == true ? "added" : "MISSING");
 
+    // A side and a top view of an animal's model painted with its coat and the 3 old-age stages
+    // (OldCoatRegions: muzzle, spine and legs greyest), as <name>-old3d.png, plus the regions used.
+    void ExportOldCoat3D(string code, string outDir)
+    {
+        var type = sapi.World.GetEntityType(new AssetLocation(code));
+        var client = type?.Client;
+        if (client?.Shape?.Base == null)
+        {
+            sapi.Logger.Notification("[lwselftest] old coat 3d {0}: not installed (type {1}, client {2}, shape {3}, textures {4})", code,
+                type != null, client != null, client?.Shape?.Base, client?.Texture?.Base);
+            return;
+        }
+        var shape = Shape.TryGet(sapi, client.Shape.Base.Clone().WithPathPrefixOnce("shapes/").WithPathAppendixOnce(".json"));
+        if (shape == null) { sapi.Logger.Warning("[lwselftest] old coat 3d {0}: shape {1} not found", code, client.Shape.Base); return; }
+
+        // The texture most faces use.
+        var faceCodes = new Dictionary<string, int>();
+        void Count(ShapeElement e)
+        {
+            if (e.FacesResolved != null) foreach (var f in e.FacesResolved) if (f?.Texture != null) faceCodes[f.Texture] = faceCodes.GetValueOrDefault(f.Texture) + 1;
+            if (e.Children != null) foreach (var c in e.Children) Count(c);
+        }
+        foreach (var e in shape.Elements) Count(e);
+        var textureCode = faceCodes.OrderByDescending(kv => kv.Value).Select(kv => kv.Key).FirstOrDefault();
+        // The entity's own texture for that code, its single texture, or the shape's default.
+        AssetLocation? texBase = textureCode == null ? null
+            : client.Textures != null && client.Textures.TryGetValue(textureCode, out var own) ? own.Base
+            : client.Texture?.Base ?? (shape.Textures != null && shape.Textures.TryGetValue(textureCode, out var dflt) ? dflt : null);
+        if (texBase == null) { sapi.Logger.Warning("[lwselftest] old coat 3d {0}: no texture for {1}", code, textureCode); return; }
+        var texLoc = texBase.Clone().WithPathPrefixOnce("textures/").WithPathAppendixOnce(".png");
+        var asset = sapi.Assets.TryGet(texLoc);
+        if (asset == null) { sapi.Logger.Warning("[lwselftest] old coat 3d {0}: texture {1} not found", code, texLoc); return; }
+        var source = new BitmapExternal(asset.Data, asset.Data.Length, sapi.Logger);
+
+        var regions = OldCoatRegions.Build(shape, textureCode, source.Width, source.Height);
+        if (regions == null) { sapi.Logger.Warning("[lwselftest] old coat 3d {0}: no body found on texture {1}", code, textureCode); return; }
+        var stages = new List<SkiaSharp.SKBitmap>();
+        for (int age = 0; age <= DirtTextures.AgeStages; age++) stages.Add(DirtTextures.PaintBitmap(source, 0, age, regions));
+
+        var pts = regions.Samples;
+        float minX = pts.Min(p => p.Pos.X), maxX = pts.Max(p => p.Pos.X), minY = pts.Min(p => p.Pos.Y), maxY = pts.Max(p => p.Pos.Y);
+        float minZ = pts.Min(p => p.Pos.Z), maxZ = pts.Max(p => p.Pos.Z);
+        bool alongX = maxX - minX >= maxZ - minZ;
+        float Long(Vec3f p) => alongX ? p.X : p.Z;
+        float Across(Vec3f p) => alongX ? p.Z : p.X;
+        float minL = alongX ? minX : minZ, lenL = alongX ? maxX - minX : maxZ - minZ, minA = alongX ? minZ : minX, lenA = alongX ? maxZ - minZ : maxX - minX;
+        float scale = 300f / Math.Max(1, Math.Max(lenL, maxY - minY));
+        int viewW = (int)(lenL * scale) + 20, sideH = (int)((maxY - minY) * scale) + 20, topH = (int)(lenA * scale) + 20;
+        using var img = new SkiaSharp.SKBitmap(viewW * stages.Count, sideH + topH);
+        img.Erase(new SkiaSharp.SKColor(90, 90, 90));
+        int dot = Math.Max(2, (int)Math.Ceiling(scale / 2));
+        for (int s = 0; s < stages.Count; s++)
+        {
+            var side = new Dictionary<(int, int), (float, SkiaSharp.SKColor)>();
+            var top = new Dictionary<(int, int), (float, SkiaSharp.SKColor)>();
+            foreach (var (x, y, pos) in pts)
+            {
+                var c = stages[s].GetPixel(x, y);
+                if (c.Alpha == 0) continue;
+                var k1 = (s * viewW + 10 + (int)((Long(pos) - minL) * scale), 10 + (int)((maxY - pos.Y) * scale));
+                if (!side.TryGetValue(k1, out var o1) || o1.Item1 < Across(pos)) side[k1] = (Across(pos), c);
+                var k2 = (s * viewW + 10 + (int)((Long(pos) - minL) * scale), sideH + 10 + (int)((Across(pos) - minA) * scale));
+                if (!top.TryGetValue(k2, out var o2) || o2.Item1 < pos.Y) top[k2] = (pos.Y, c);
+            }
+            foreach (var d in new[] { side, top })
+            {
+                foreach (var ((px, py), (_, c)) in d)
+                {
+                    for (int ox = 0; ox < dot; ox++)
+                        for (int oy = 0; oy < dot; oy++)
+                            if (px + ox < img.Width && py + oy < img.Height) img.SetPixel(px + ox, py + oy, c);
+                }
+            }
+        }
+        string name = code.Replace(':', '-');
+        using (var data = SkiaSharp.SKImage.FromBitmap(img).Encode(SkiaSharp.SKEncodedImageFormat.Png, 100))
+            System.IO.File.WriteAllBytes(System.IO.Path.Combine(outDir, $"{name}-old3d.png"), data.ToArray());
+        foreach (var b in stages) b.Dispose();
+        sapi.Logger.Notification("[lwselftest] old coat 3d {0}: texture {1}, muzzle {2} px, spine {3} px, legs {4} px", code, textureCode,
+            regions.Muzzle.Count(m => m), regions.Spine.Count(v => !float.IsNaN(v)), regions.Leg.Count(v => !float.IsNaN(v)));
+    }
+
         // A full barrel (50 litres) of water next to the flock; the sheep in the hut has none.
         // 9 blocks away by default: beyond the 6-block radius for drinking without walking.
         PlaceWaterBarrel(spawn.AddCopy(0, 0, 0).Set(spawn.X - BarrelDistance, y, spawn.Z), 50);
@@ -654,6 +736,15 @@ public class SelfTest : ModSystem
         sapi.Event.RegisterGameTickListener(_ =>
         {
             step++;
+        foreach (string code in new[] {
+            "game:wolf-eurasian-adult-male", "game:bear-brown-adult-male", "game:pig-eurasian-adult-female",
+            "game:sheep-bighorn-adult-female", "game:goat-mountain-adult-female", "game:fox-red-adult-male",
+            "tradlivestock:cow-adult-female",
+            "wolftaming:dog-shepherd-male", "game:sheep-bighorn-adult-male", "game:goat-valais-adult-male", "game:goat-valais-adult-female" })
+        {
+            ExportOldCoat3D(code, outDir);
+        }
+
             if (step == 1) sapi.Logger.Notification("[lwselftest] muck after digging out its ground: {0}", sapi.World.BlockAccessor.GetBlock(floatingMuck).Code);
             if (step == 2) HeatTest();
             if (step == 3) NightTest();

@@ -129,27 +129,7 @@ public class EntityBehaviorLivestockHygiene : EntityBehavior
     // Animals whose textures another mod already replaces (e.g. genelib) keep that mod's look.
     public override ITexPositionSource? GetTextureSource(ref EnumHandling handling)
     {
-        int stage = DirtStage, ageStage = AgeStage;
-        if ((stage == 0 && ageStage == 0) || entity.Api is not ICoreClientAPI capi) return null;
-
-        var textures = entity.Properties.Client?.Textures;
-        if (textures == null || textures.Count == 0) return null;
-
-        int textureIndex = entity.WatchedAttributes.GetInt("textureIndex");
-        var subIds = new Dictionary<string, int>();
-        foreach (var (code, texture) in textures)
-        {
-            var baked = texture.Baked;
-            if (baked?.BakedName == null) continue;
-            // Same alternate selection as the vanilla tesselator.
-            if (baked.BakedVariants is { Length: > 1 } variants) baked = variants[textureIndex % variants.Length];
-            subIds[code] = DirtTextures.GetSubId(capi, baked.BakedName, stage, ageStage);
-        }
-
-        var fallback = capi.Tesselator.GetTextureSource(entity, null, textureIndex);
-        // Stop here: a later behavior returning null would otherwise wipe out our result.
-        handling = EnumHandling.PreventSubsequent;
-        return new DirtyTextureSource(subIds, capi.EntityTextureAtlas, fallback);
+        return DirtTextures.TextureSource(entity, DirtStage, AgeStage, ref handling);
     }
 
     public override void AfterInitialized(bool onFirstSpawn)

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Text;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
@@ -43,7 +44,28 @@ public class EntityBehaviorLivestockAge : EntityBehavior
         base.Initialize(properties, attributes);
         species = attributes["species"].AsString("");
         baby = attributes["baby"].AsBool(false);
+
+        // Animals without the hygiene behavior (small animals) grey with age through this one;
+        // the hygiene behavior does it for the others, together with the mud.
+        if (entity.World.Side == EnumAppSide.Client && !properties.Client.BehaviorsAsJsonObj.Any(b => b["code"].AsString() == EntityBehaviorLivestockHygiene.Code))
+        {
+            greysHere = true;
+            shownAgeLook = AgeLook;
+            entity.WatchedAttributes.RegisterModifiedListener(AgeLookAttr, () =>
+            {
+                if (AgeLook == shownAgeLook) return;
+                shownAgeLook = AgeLook;
+                entity.MarkShapeModified();
+            });
+        }
     }
+
+    bool greysHere;
+    int shownAgeLook;
+    int AgeLook => Math.Clamp(entity.WatchedAttributes.GetInt(AgeLookAttr), 0, DirtTextures.AgeStages);
+
+    public override Vintagestory.API.Client.ITexPositionSource? GetTextureSource(ref EnumHandling handling) =>
+        greysHere ? DirtTextures.TextureSource(entity, 0, AgeLook, ref handling) : null;
 
     // Babies only count their age; old age starts once they have grown up (and their age is carried over).
     bool baby;
